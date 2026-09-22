@@ -1,0 +1,61 @@
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Relation,
+} from "typeorm";
+import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
+import { Tag } from "../../tags/entities/tag.entity";
+import { SongPlayStat } from "./song-play-stat.entity";
+
+@Entity("songs")
+export class Song extends BaseAuditEntity {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @Column({ type: "varchar" })
+  title!: string;
+
+  @Column({ type: "varchar" })
+  artist!: string;
+
+  /** Tonalidad original, ej. "G", "Bm" */
+  @Column({ type: "varchar" })
+  key!: string;
+
+  @Column({ type: "int" })
+  bpm!: number;
+
+  /** Duración en segundos */
+  @Column({ type: "int" })
+  duration!: number;
+
+  /** Gradiente CSS usado como portada mientras no hay imagen real */
+  @Column({ type: "varchar" })
+  cover!: string;
+
+  /** Key del objeto en el bucket S3/MinIO (no la URL firmada, que expira) */
+  @Column({ type: "varchar", nullable: true })
+  audioKey!: string | null;
+
+  /** Estilo ChordPro: acordes entre [] antes de la sílaba, {sección} entre llaves */
+  @Column({ type: "text" })
+  chordpro!: string;
+
+  @Column({ type: "varchar", nullable: true })
+  lyricsImageKey!: string | null;
+
+  @ManyToMany(() => Tag)
+  @JoinTable({
+    name: "song_tags",
+    joinColumn: { name: "song_id" },
+    inverseJoinColumn: { name: "tag_id" },
+  })
+  tags!: Relation<Tag>[];
+
+  @OneToMany(() => SongPlayStat, (stat) => stat.song)
+  playStats!: Relation<SongPlayStat>[];
+}

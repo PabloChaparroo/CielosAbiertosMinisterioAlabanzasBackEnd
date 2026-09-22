@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-cielos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cielos}
+      POSTGRES_DB: ${DB_NAME:-cielos_abiertos_alabanzas}
+    ports:
+      - "${DB_PORT:-5435}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    # el AGPL de MinIO ya no se publica en Docker Hub, solo en quay.io
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-cielos_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-cielos_minio_secret}
+    ports:
+      - "9002:9000" # 9000/9001 ya usados por otro proyecto local (backproyectofinal)
+      - "9003:9001"
+    volumes:
+      - minio_data:/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${QUEUE_REDIS_PORT:-6380}:6379"
+
+volumes:
+  postgres_data:
+  minio_data:
