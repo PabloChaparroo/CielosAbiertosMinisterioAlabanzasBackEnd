@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
 import { Tag } from "../../tags/entities/tag.entity";
+import { AudioTrack } from "./audio-track.entity";
 import { SongPlayStat } from "./song-play-stat.entity";
 
 @Entity("songs")
@@ -58,4 +59,8 @@ export class Song extends BaseAuditEntity {
 
   @OneToMany(() => SongPlayStat, (stat) => stat.song)
   playStats!: Relation<SongPlayStat>[];
+
+  /** Pistas adicionales (click, guía, solo de instrumento, etc.). No confundir con audioKey (audio original/cover). */
+  @OneToMany(() => AudioTrack, (track) => track.song)
+  tracks!: Relation<AudioTrack>[];
 }

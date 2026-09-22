@@ -45,6 +45,7 @@ classDiagram
     +chordpro: string
     +lyricsImageKey: string?
   }
+  note for Song "audioKey es el audio original/cover de la canción.<br/>Es un campo aparte y conceptualmente distinto de AudioTrack.audioKey (pistas de ensayo/servicio) — no hay migración de datos entre uno y otro."
 
   class SongPlayStat {
     <<tabla: song_play_stats>>
@@ -52,11 +53,16 @@ classDiagram
     +month: string
     +plays: number
   }
-  note for SongPlayStat "PK compuesta (songId, month); índice único (song, month).
-Relación circular Song ↔ SongPlayStat: se resolvió tipando ambos lados
-(Song.playStats y SongPlayStat.song) como Relation&lt;T&gt; de typeorm,
-para evitar el ReferenceError de dependencia circular entre módulos
-compilados que rompía el arranque (ver AGENTS/sesión de scaffolding)."
+  note for SongPlayStat "PK compuesta (songId, month); índice único (song, month).<br/>Relación circular Song ↔ SongPlayStat: se resolvió tipando ambos lados (Song.playStats y SongPlayStat.song) como Relation&lt;T&gt; de typeorm, para evitar el ReferenceError de dependencia circular entre módulos compilados que rompía el arranque."
+
+  class AudioTrack {
+    <<tabla: audio_tracks>>
+    +id: string
+    +label: string
+    +audioKey: string
+    +order: number
+  }
+  note for AudioTrack "label es texto libre puesto por quien sube la pista (ej. 'Click y guía', 'Sin click', 'Solo bajo') — a propósito NO tiene catálogo fijo ni CHECK, a diferencia de Tag.valor.<br/>Misma relación circular que Song ↔ SongPlayStat, resuelta igual: ambos lados (Song.tracks y AudioTrack.song) tipados con Relation&lt;T&gt;.<br/>No extiende BaseAuditEntity (igual que SetlistItem, Tag y Favorite): no tiene soft delete, el DELETE es físico."
 
   class Setlist {
     <<tabla: setlists>>
@@ -74,11 +80,7 @@ compilados que rompía el arranque (ver AGENTS/sesión de scaffolding)."
     +note: string?
     +position: number
   }
-  note for SetlistItem "SNAPSHOT INMUTABLE: 'key' es la tonalidad elegida
-para ESE evento puntual, copiada al armar el setlist. NO es una referencia
-en vivo a Song.key — si la tonalidad original de la canción cambia después,
-este valor no se actualiza (comentario textual en el código: 'puede diferir
-de la tonalidad original de la canción')."
+  note for SetlistItem "SNAPSHOT INMUTABLE: 'key' es la tonalidad elegida para ESE evento puntual, copiada al armar el setlist.<br/>NO es una referencia en vivo a Song.key — si la tonalidad original de la canción cambia después, este valor no se actualiza (comentario textual en el código: 'puede diferir de la tonalidad original de la canción')."
 
   class Annotation {
     <<tabla: annotations>>
@@ -91,17 +93,14 @@ de la tonalidad original de la canción')."
     +userId: string
     +songId: string
   }
-  note for Favorite "PK compuesta (userId, songId). No extiende BaseAuditEntity:
-solo tiene fechaHoraAlta (creación), sin soft delete ni fecha de modificación."
+  note for Favorite "PK compuesta (userId, songId). No extiende BaseAuditEntity: solo tiene fechaHoraAlta (creación), sin soft delete ni fecha de modificación."
 
   class RolePermission {
     <<tabla: role_permissions>>
     +role: string
     +permission: string
   }
-  note for RolePermission "PK compuesta (role, permission). NO tiene relación
-FK real en el código: 'role' se compara por valor de string contra User.role,
-no hay @ManyToOne/@OneToMany declarado — es un catálogo, no una asociación."
+  note for RolePermission "PK compuesta (role, permission). NO tiene relación FK real en el código: 'role' se compara por valor de string contra User.role, no hay @ManyToOne/@OneToMany declarado — es un catálogo, no una asociación."
 
   BaseAuditEntity <|-- User
   BaseAuditEntity <|-- Song
@@ -110,6 +109,7 @@ no hay @ManyToOne/@OneToMany declarado — es un catálogo, no una asociación."
 
   Song "*" --> "*" Tag : tags
   Song "1" --> "*" SongPlayStat : playStats / song
+  Song "1" --> "*" AudioTrack : tracks / song
   Setlist "*" --> "1" User : leader
   Setlist "1" --> "*" SetlistItem : items / setlist
   Setlist "*" --> "*" User : team
@@ -122,8 +122,9 @@ no hay @ManyToOne/@OneToMany declarado — es un catálogo, no una asociación."
 
 ## Notas sobre fidelidad al código
 
-- **Todas las entidades listadas existen literalmente** como archivos `*.entity.ts` bajo `src/modules/**` y `src/common/authorization/`: `Song`, `SongPlayStat`, `User`, `Setlist`, `SetlistItem`, `Annotation`, `Favorite`, `Tag`, `RolePermission`. No hay ninguna entidad adicional en el proyecto.
-- **`BaseAuditEntity`** no es una tabla propia (no tiene `@Entity`): es la clase abstracta de `src/common/entities/base-audit.entity.ts` que `User`, `Song`, `Setlist` y `Annotation` extienden. `SetlistItem`, `SongPlayStat`, `Tag`, `RolePermission` y `Favorite` **no** la extienden — `Favorite` sólo tiene su propio `fechaHoraAlta`, y el resto no tiene ninguna columna de auditoría.
-- **Todas las relaciones son unidireccionales salvo dos**: `Song ↔ SongPlayStat` (vía `Song.playStats` / `SongPlayStat.song`) y `Setlist ↔ SetlistItem` (vía `Setlist.items` / `SetlistItem.setlist`) son las únicas con `@OneToMany` + `@ManyToOne` declarados en ambos lados. El resto (`Song.tags`, `Setlist.leader`, `Setlist.team`, `SetlistItem.song`, `Annotation.song`, `Annotation.author`, `Favorite.user`, `Favorite.song`) sólo tiene el decorador en un lado — el otro lado del código no declara ningún campo inverso.
+- **Todas las entidades listadas existen literalmente** como archivos `*.entity.ts` bajo `src/modules/**` y `src/common/authorization/`: `Song`, `SongPlayStat`, `AudioTrack`, `User`, `Setlist`, `SetlistItem`, `Annotation`, `Favorite`, `Tag`, `RolePermission`. No hay ninguna entidad adicional en el proyecto.
+- **`BaseAuditEntity`** no es una tabla propia (no tiene `@Entity`): es la clase abstracta de `src/common/entities/base-audit.entity.ts` que `User`, `Song`, `Setlist` y `Annotation` extienden. `SetlistItem`, `SongPlayStat`, `AudioTrack`, `Tag`, `RolePermission` y `Favorite` **no** la extienden — `Favorite` sólo tiene su propio `fechaHoraAlta`, y el resto no tiene ninguna columna de auditoría.
+- **Todas las relaciones son unidireccionales salvo tres**: `Song ↔ SongPlayStat` (vía `Song.playStats` / `SongPlayStat.song`), `Song ↔ AudioTrack` (vía `Song.tracks` / `AudioTrack.song`) y `Setlist ↔ SetlistItem` (vía `Setlist.items` / `SetlistItem.setlist`) son las únicas con `@OneToMany` + `@ManyToOne` declarados en ambos lados — las tres resueltas con `Relation<T>` para evitar el mismo problema de dependencia circular. El resto (`Song.tags`, `Setlist.leader`, `Setlist.team`, `SetlistItem.song`, `Annotation.song`, `Annotation.author`, `Favorite.user`, `Favorite.song`) sólo tiene el decorador en un lado — el otro lado del código no declara ningún campo inverso.
+- **`AudioTrack` no tiene recurso de permisos propio**: se gestiona con `cancion:*` (igual que `SetlistItem` se gestiona con `setlist:*`), porque no tiene ciclo de vida ni actor de negocio independiente de la canción a la que pertenece.
 - **`RolePermission` no está unida por clave foránea** a `User`: su columna `role` es un `varchar` que se compara por valor contra `User.role` en `AuthorizationService`, no hay relación TypeORM entre ambas entidades.
-- El único snapshot inmutable real del modelo es `SetlistItem.key`, documentado como tal en el propio código.
+- Los snapshots inmutables reales del modelo son `SetlistItem.key`, documentado como tal en el propio código. `AudioTrack` no es un snapshot de nada: es contenido nuevo (una pista de audio) sin relación con el `audioKey` de `Song`.
