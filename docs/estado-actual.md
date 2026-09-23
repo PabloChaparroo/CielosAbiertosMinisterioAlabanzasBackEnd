@@ -4,6 +4,23 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Diagnóstico de Estadísticas + guard de loading (frontend)
+
+**Motivo:** verificar si el módulo de Estadísticas (`EstadisticasPage`) seguía funcionando correctamente desde que `Song`/`playStats` pasaron a ser reales, o si había quedado algún bug silencioso de shape/formato heredado del mock.
+
+**Diagnóstico (investigación, no se tocó nada hasta confirmar):** la página ya leía `useApp().songs` real, sin ningún resto de mock. Se verificaron los 5 puntos pedidos inyectando `SongPlayStat` de prueba con meses/cantidades conocidos a propósito (la tabla real está hoy en **0 filas** — no "pocos datos", cero — así que no había forma de confirmar los cálculos solo mirando el gráfico vacío):
+- **Más tocadas por mes**, **comparativa anual**, **distribución por tema** y **ranking histórico**: los cuatro dieron exactamente el resultado esperado, tanto replicando la lógica de forma aislada contra la respuesta real de `GET /canciones` como en el navegador real. `Song.tags` ya llega como `string[]` plano (no había desajuste de shape con `{id,valor}[]`) y el formato de `month` del backend (`"2026-09"`, vía `currentMonthKey()`) coincide exactamente con el que ya esperaba el frontend.
+- La comparativa anual se va a ver vacía en producción hasta que exista más de un año de historial real — eso es falta de datos, no un cálculo roto (aclarado explícitamente para no confundir un caso con el otro).
+- **Guard de carga:** mismo patrón que ya se había encontrado y corregido en `InicioPage`/`AcordesPage`/`SetlistsPage` (asumir `songs` no vacío por costumbre del mock), pero acá **no crasheaba** — ningún `useMemo` de esta página asume un elemento existente (no hay `songs[0]!`), así que con `songs=[]` durante el fetch los gráficos de Recharts simplemente se renderizaban vacíos un instante, sin romper nada. Se agregó igual el mismo guard por consistencia con el resto de los módulos ya parchados, no porque hiciera falta para evitar un crash.
+
+**Fix aplicado (una línea, mismo patrón que `SetlistsPage`, con la salvedad de dónde va):** se agregó `songsLoadState` a la desestructuración y un `if (songsLoadState !== "ready") return <Skeletons rows={5} />` — pero el guard se puso **después** de todos los `useMemo` de la página, no antes (a diferencia de `SetlistsPage`, que no tiene hooks después de su guard). Esto es a propósito: `EstadisticasPage` sí tiene varios `useMemo` que dependen de `songs`, y ponerlos condicionalmente detrás de un `return` temprano violaría la regla de hooks — mismo criterio ya aplicado en `AcordesPage` cuando apareció este mismo problema.
+
+**Verificado:** los cinco cálculos siguieron dando los mismos resultados correctos después de agregar el guard (se re-corrió la verificación con navegador real). Se limpiaron los `SongPlayStat` de prueba al terminar — la tabla volvió a 0 filas.
+
+**Alcance respetado:** no se tocó ningún otro módulo.
+
+---
+
 ## 2026-09-24 — Fix: `POST /canciones` no devolvía `playStats` (backend)
 
 **Motivo:** deuda anotada en el ticket de audio real — `POST /canciones` no incluía `playStats` en la respuesta, a diferencia de `GET /canciones`/`GET /canciones/:id`, que sí la cargan. El frontend lo toleraba con `raw.playStats ?? []` en `mapSong`, pero eso era un parche, no una solución — el objetivo acá era que el shape de respuesta fuera consistente entre crear y leer.
