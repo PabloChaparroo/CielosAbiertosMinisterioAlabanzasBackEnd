@@ -4,6 +4,43 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-23 — Rediseño visual de LoginPage + fix de un bug real en el interceptor de 401 (frontend)
+
+**Motivo de negocio:** la pantalla de login ya funcionaba (ticket anterior), pero Pablo pidió verificar si tenía el mismo nivel de cuidado visual que el resto de la app — es lo primero que ve cualquiera que entra al sistema — y, si no, rediseñarla sin tocar la lógica de auth ya probada.
+
+**Alcance:** exclusivamente la capa visual de `LoginPage.tsx`, más una excepción mínima y explícitamente autorizada en `api-client.ts` (ver bug abajo). No se tocó `auth-store.ts` ni `AuthGate`, ni se agregó funcionalidad nueva (recuperar contraseña, "recordarme", registro).
+
+**Estado real encontrado antes de tocar nada** (verificado con capturas de pantalla y no asumido): la pantalla ya usaba los tokens reales de `styles.css` — no era un formulario genérico sin estilo — pero le faltaba la jerarquía visual del resto de la app (wordmark chico, sin el gradiente dorado que "Abiertos" tiene en Inicio, sin el fondo `gradient-sky` del hero).
+
+**Bug real encontrado de paso (no cosmético):** al probar el flujo de contraseña incorrecta, la página recargaba por completo (confirmado viendo dos eventos "`[vite] connecting`" en la consola del browser durante un mismo intento) y el mensaje de error nunca llegaba a pintarse. Causa: el interceptor global de 401 en `api-client.ts` — pensado para detectar que una sesión activa expiró y forzar `logout()` + redirect — se disparaba también ante un 401 de la propia llamada a `POST /auth/login`, que no es una sesión expirada sino simplemente una contraseña incorrecta. El `catch` de `LoginPage` nunca llegaba a ejecutarse porque el `window.location.assign("/login")` ya estaba en curso.
+
+**Detalle técnico:**
+- `src/lib/api-client.ts`: excepción de una línea — un 401 con `path === "/auth/login"` ya no dispara `onUnauthorized()`. Se pidió confirmación explícita antes de tocar este archivo (estaba marcado fuera de alcance en el ticket anterior) porque no había forma de cumplir "estados de error claros" sin esta corrección.
+- `src/features/auth/pages/LoginPage.tsx`: wordmark con el mismo tratamiento `text-gradient-gold` que usa "Abiertos" en `InicioPage`, fondo con `gradient-sky` sutil (mismo gradiente del hero de Inicio, en baja opacidad), `glow` en el ícono, validación propia de campos vacíos vía `noValidate` (en vez del tooltip nativo del browser, inconsistente entre navegadores), y el mensaje de error real del backend en una caja con ícono y borde en vez de un párrafo de texto suelto.
+
+**Verificado con navegador real** (Playwright, con capturas — no solo lectura de código): desktop (1440px) y mobile (390px, viewport tipo iPhone) del estado limpio; contraseña incorrecta mostrando el mensaje real del backend ("Credenciales inválidas") sin ningún reload (0 reloads detectados) y sin salir de `/login`, en ambos tamaños de pantalla; campos vacíos mostrando el mensaje propio sin navegar; estado de loading confirmado con la respuesta de login demorada artificialmente (botón `disabled`, texto "Ingresando…", sin doble submit al clickear de nuevo mientras carga) y el login terminando bien después.
+
+**Sin verificar:** accesibilidad con lector de pantalla (no se probó con uno real, solo se agregaron `label`/`htmlFor`/`role="alert"` razonables). Tampoco se probó en un browser real de gama baja/con red lenta real (solo se simuló latencia con Playwright).
+
+---
+
+## 2026-09-23 — Extensión de JWT_EXPIRES_IN de 15m a 8h (backend)
+
+**Motivo de negocio:** con expiración de 15 minutos y sin endpoint de refresh, cualquier ensayo o servicio real (más largo que 15 minutos) iba a deslogueaar a los músicos en medio del uso. Pablo pidió extenderlo a 8hs — para una app interna de equipo de iglesia, el riesgo de seguridad de una sesión más larga es aceptable.
+
+**Alcance:** exclusivamente el valor de expiración del JWT y su configuración asociada. No se implementó un endpoint de refresh (queda para más adelante si hace falta) y no se tocó nada del flujo de `AuthGate`/login ya commiteado.
+
+**Investigación previa a tocar el valor** (pedida explícitamente antes de asumir nada):
+- Se encontraron **4 lugares** con el valor `15m`, no uno: `.env` (real, no versionado), `.env.example`, el fallback en `src/config/configuration.ts`, y el default de Joi en `src/config/env.validation.ts`. Se actualizaron los 4 juntos para que no queden desincronizados.
+- **No hay ningún test en el proyecto** (confirmado con `find`: cero `.spec.ts`/`.test.ts`, y los configs `vitest.*.config.ts` que `package.json` referencia ni siquiera existen) — nada dependía del valor corto.
+- **Los tokens ya emitidos no se ven afectados**: el `exp` se calcula y graba dentro del JWT en el momento de firmarlo (`jwtService.signAsync`), no se recalcula después. Quien esté logueado con un token viejo sigue expirando a los 15 minutos originales; solo los tokens nuevos (emitidos tras reiniciar con la variable nueva) duran 8hs.
+
+**Verificado con login real:** reinicio del backend con `JWT_EXPIRES_IN=8h`, login real contra `martin@cielosabiertos.org`, y decodificación manual del JWT resultante — `iat` y `exp` con exactamente 8 horas de diferencia, no 15 minutos.
+
+**Sin verificar:** comportamiento real durante un servicio de 8+ horas (no se simuló ese caso límite).
+
+---
+
 ## 2026-09-23 — Login real en el frontend (reemplazo del selector de rol mock)
 
 **Motivo de negocio:** el frontend elegía "quién sos" con un `<select>` de rol mockeado en el Sidebar. Pablo pidió reemplazarlo por completo por un login real contra `POST /auth/login` + `GET /auth/me`, sin que conviva ningún "modo demo sin sesión" — si no hay sesión válida, se va a `/login`, sin excepción.
