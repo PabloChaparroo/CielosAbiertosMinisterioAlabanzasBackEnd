@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { Permissions } from "../../../common/decorators/permissions.decorator";
 import { crudPermission } from "../../../common/authorization/permission.catalog";
@@ -19,8 +20,8 @@ export class UsersController {
 
   @Get()
   @Permissions(crudPermission("equipo", "read"))
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query("incluirBajas") incluirBajas?: string) {
+    return this.usersService.findAll(incluirBajas === "true");
   }
 
   @Get(":id")

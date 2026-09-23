@@ -14,8 +14,12 @@ export class UsersService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  findAll(): Promise<User[]> {
-    return this.userRepo.find({ relations: { roles: true }, order: { fechaHoraAlta: "ASC" } });
+  findAll(incluirBajas = false): Promise<User[]> {
+    return this.userRepo.find({
+      relations: { roles: true },
+      order: { fechaHoraAlta: "ASC" },
+      withDeleted: incluirBajas,
+    });
   }
 
   async findById(id: string): Promise<User> {
