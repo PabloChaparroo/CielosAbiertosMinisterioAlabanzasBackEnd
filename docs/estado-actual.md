@@ -4,6 +4,34 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — UI de multitracks (`AudioTrack`): feature nueva de cero (frontend)
+
+**Motivo de negocio:** `AudioTrack` (pistas adicionales de una canción — click y guía, sin click, solo de un instrumento, etc.) tenía el backend construido de un ticket anterior (`POST/GET /canciones/:songId/pistas`, `PATCH/DELETE /pistas/:id`) pero **nunca existió ninguna UI, ni siquiera mockeada**. Es una feature nueva de cero, no un mock→real.
+
+**Investigación previa:** confirmé el shape real (`{id, label, audioKey, order}`, sin relaciones anidadas en la respuesta) y que los permisos ya habían quedado resueltos con el mismo criterio que después usé en Setlists, sin que hiciera falta re-decidir nada: `POST` → `cancion:write`, `PATCH`/`DELETE` → `cancion:update`/`cancion:delete`, `GET` → `cancion:read`. Se reutilizó `src/lib/storage-client.ts` (subida vía URL firmada + progreso real por XHR) tal cual, sin tocarlo.
+
+**Decisiones tomadas, dos tenían que confirmarse con Pablo antes de construir algo no pedido:**
+- **Ubicación de la UI:** modal aparte ("Pistas adicionales"), abierto con un ícono nuevo por fila en "Escuchar y Subir" — no un acordeón inline (la tabla ya está apretada, sobre todo en mobile) ni una sub-sección del `UploadModal` existente (que es sobre metadata de la canción, no sobre este sub-recurso).
+- **Reproducción simultánea con el audio principal — pregunta de producto, confirmada explícitamente por Pablo, no asumida:** reproducir una pista pausa el audio principal si estaba sonando (un solo audio a la vez en la app). Implementado sin agregar ninguna API nueva a `useApp`: si `isPlaying` es `true` al arrancar una pista, se llama `toggle()` una vez. **Gap menor conocido, no resuelto:** si el modal de pistas está abierto con una pista sonando y el usuario le pega al play del `MiniPlayer` (que sigue visible, pegado abajo, para la canción ya cargada), ambos audios sonarían a la vez — coordinar la dirección inversa es bastante más trabajo por un caso muy marginal (el modal tapa el listado; solo se dispara tocando específicamente el `MiniPlayer` con el modal todavía abierto).
+- **Orden:** no se construyó reorder (no fue pedido). Las pistas se muestran en el orden que ya devuelve el backend (`ORDER BY order ASC`). Único default decidido: al subir una pista nueva se manda `order: pistasActuales.length` en vez de dejar que caiga en el default `0` del backend, que las dejaría todas empatadas.
+
+**Combinación de permisos no verificada, mismo criterio que en Setlists — anotada, no descartada:** `cancion:delete` **nunca se había ejercido en el frontend antes de este ticket** (confirmé por grep: cero usos). Igual que con `setlist:write`/`setlist:update`, confirmé contra el seed real: los 4 roles demo llevan `cancion:write`/`cancion:update`/`cancion:delete` siempre juntos (Admin, Líder y Sudo tienen las cuatro acciones de `cancion`; Músico solo `read`) — ninguno los tiene desacoplados hoy. Si alguien crea desde Roles y Permisos un rol con `cancion:write` pero sin `cancion:delete` (o viceversa), ese escenario no fue probado con un usuario real.
+
+**Detalle técnico:**
+- Nuevo `src/features/canciones/lib/audio-validation.ts`: extrae la whitelist de tipos de audio y el límite de 20MB, que hasta ahora vivían duplicados dentro de `UploadModal` — se iban a triplicar con este ticket, así que se sacaron a un helper compartido (`validateAudioFile`) y `UploadModal` se actualizó para usarlo (sin cambiar su comportamiento).
+- Nuevos `src/features/canciones/types/audio-track.ts` y `src/features/canciones/services/audio-tracks.service.ts` (`listBySong`, `create`, `remove`).
+- Nuevo `src/features/musica/escuchar/components/AudioTracksModal.tsx`: lista + reproducción (un `<audio>` local al modal, no el `audioRef` global de `useApp`) + alta con barra de progreso + borrado, gateado por `can("editSongs")` (alta) y la nueva `can("removeAudioTrack")` (borrado) — un usuario sin esos permisos ve la lista y puede reproducir, sin ver el form ni el ícono de borrar.
+- `EscucharPage.tsx`: ícono `Layers` nuevo por fila, visible para cualquiera que vea el listado (no gateado — ver la lista de pistas no requiere más que `cancion:read`, que ya hace falta para llegar a esta pantalla).
+- `core/auth/auth-store.ts`: nueva `AppAction` `removeAudioTrack` → `cancion:delete`.
+
+**Verificado con navegador real** (Playwright, con capturas): subidas 2 pistas con nombres distintos a "Océanos" ("Click y guía", "Solo bajo"), ambas aparecieron listadas. Reproducción confirmada de punta a punta (`readyState:4`, `currentTime` avanzando, sin error). Borrado de "Solo bajo": desapareció de inmediato y, tras un refresh real de la página (no solo estado de cliente), siguió sin aparecer — "Click y guía" sí persistió. Logueado como Joaquín (Músico, sin `cancion:write`/`cancion:delete`): ve la pista restante y puede reproducirla, pero no ve el form de alta ni el botón de borrar. Se borró la pista de prueba restante al terminar — "Océanos" quedó sin ninguna pista adicional, igual que las otras 20 canciones reales.
+
+**Alcance respetado:** no se tocó `Song.audioKey`, `UploadModal` (salvo la extracción del helper de validación) ni `MiniPlayer` del flujo principal — la única interacción nueva con ese flujo es la llamada a `toggle()` para pausarlo. No se tocó Setlists, Equipo, Roles y Permisos, Anotaciones, Favoritos, login. No se arregló el bug de `playStats` en `POST /canciones`.
+
+**Sin verificar:** el escenario de permisos desacoplados de arriba. El gap menor de reproducción simultánea en la dirección MiniPlayer→pista. Concurrencia de dos personas subiendo/borrando pistas de la misma canción a la vez.
+
+---
+
 ## 2026-09-24 — Audio real: subida y reproducción (gap prioritario resuelto)
 
 **Motivo de negocio:** desde el ticket de Canciones había quedado documentado como gap prioritario que "Escuchar y Subir" permitía dar de alta canciones pero no subir audio real — `StorageService.getDownloadUrl` estaba escrito pero no expuesto, y no había UI de carga de archivo. Este ticket lo cierra.
