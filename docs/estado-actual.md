@@ -4,6 +4,34 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Conexión real de la pantalla "Roles y Permisos" (frontend)
+
+**Motivo de negocio:** la pantalla de Roles y Permisos seguía mockeada desde el ticket original. Pablo pidió conectarla al backend real, eliminando el mock por completo (sin fallback, sin convivencia) — mismo patrón de reemplazo ya usado en el ticket de login.
+
+**Alcance:** exclusivamente esta pantalla (`features/roles-permisos/`). No se tocó login/`AuthGate`, no se implementó asignación de roles a usuarios (ver hueco funcional abajo), y el badge del Sidebar quedó **explícitamente sin resolver** — es un mock separado (`members` en `mocks/data.ts`, con su propio campo `role` fijo), compartido con `EquipoPage`/`MemberModal`/`InicioPage`, no con esta pantalla. Conectarlo implica el módulo Equipo completo y es un ticket aparte.
+
+**Shapes reales confirmados contra el backend antes de escribir el service** (no asumidos del diseño original):
+- `GET /permisos` → `Array<{ resource, permissions: string[] }>`, sin wrapper de paginación — coincide con el diseño original.
+- `GET /roles` → `Array<{ id, name, permissionsCount }>`, array plano.
+- `GET /roles/:id/permisos` → `string[]` — **endpoint separado por rol**, no viene incluido en `GET /roles`. Esto cambió el diseño de datos respecto al mock (que tenía un único mapa `Record<roleId, string[]>` en memoria): ahora cada `RoleCard` pide sus propios permisos al expandirse por primera vez, sin ningún estado compartido entre tarjetas.
+- `POST /roles` → devuelve `{ id, name }`, **sin** `permissionsCount` (el frontend asume 0 al insertarlo localmente en la lista).
+- `PATCH /roles/:id/permisos` → devuelve `string[]` (el set que quedó guardado).
+
+**Detalle técnico:**
+- `features/roles-permisos/types/role.ts` (nuevo, reemplaza al `src/types/role.ts` global — ya no lo usaba nada fuera de esta feature) y `features/roles-permisos/services/roles.service.ts` (wrapper fino sobre el mismo `apiRequest` del ticket de login, sin tocarlo).
+- `RoleCard` ya no recibe el mapa completo de permisos por props: al expandirse por primera vez pide `GET /roles/:id/permisos` y guarda su propio estado de carga/guardado. Al guardar, la página padre solo actualiza el `permissionsCount` de ESE rol en la lista (`.map()` puntual, nunca un refetch completo de `/roles`) — así, tener otra tarjeta expandida con cambios sin guardar y guardar una no la toca ni la resetea (se verificó con dos tarjetas expandidas a la vez).
+- `lib/permissions.ts`: se sacó el catálogo mock (`CRUD_RESOURCES`/`CRUD_ACTIONS`/`PERMISSION_CATALOG`/`crudPermission`) — el catálogo real viene siempre de `/permisos`. Quedaron `resourceLabel()`/`actionLabel()` (antes `Record` tipados) como funciones con fallback al string crudo, porque ya no hay garantía en compile-time de qué recursos existen.
+- `useApp.tsx`: se sacaron `roles`, `rolePermissions`, `addRole`, `updateRolePermissions` de `AppState` sin dejar rastro — nada más los consumía.
+- El gate `can("manageRoles")` no necesitó ningún cambio: ya delegaba en el `useAuth()` real desde el ticket de login (`can: canReal` en `useApp.tsx`). Este ticket solo conectó los *datos* de la pantalla, el *acceso* a la pantalla ya era real.
+
+**Hueco funcional conocido, no solo alcance recortado:** hasta que exista una pantalla de asignación de roles a usuarios (probablemente en Equipo, ver `POST/DELETE /equipo/:userId/roles/:roleId` que el backend ya expone pero el frontend no consume), **cualquier rol nuevo creado desde esta pantalla no se le puede asignar a nadie desde el frontend**. Sirve para definir el set de permisos de un rol, pero conectarlo a una persona real hoy solo se puede hacer pegándole directo a la API (como se hizo a mano para Sudo→Ana en el ticket anterior). No es una limitación de diseño a propósito, es una pieza que todavía no se construyó.
+
+**Verificado con navegador real** (Playwright, con capturas): login como Martín (Admin) mostrando las 4 tarjetas reales — Admin, Líder, Músico y Sudo con sus 28 permisos, **sin ningún caso especial en el código** para mostrar Sudo (el diseño por catálogo genérico funcionó tal cual). Rol nuevo creado ("Prueba QA") mostrando "0 permisos" en la tarjeta colapsada antes de expandirla, no un texto raro. Edité los permisos de Líder (tildé `estadisticas:write`), guardé, **refresqué la página entera**, y confirmé que el cambio persistió contra la base real (16 → 17 permisos, checkbox tildado tras el reload) — no era solo un cambio visual que se perdía al recargar. Revertí ese cambio de prueba y borré el rol "Prueba QA" al final para no dejar basura en la base. Login como Joaquín (Músico) confirmando que sigue viendo "Sección restringida", ahora con el gate real de punta a punta.
+
+**Sin verificar:** el borrado de un rol desde la UI (no hay botón de eliminar en el diseño de esta pantalla; se probó el `DELETE` directo contra la API solo para la limpieza post-test, no a través de la pantalla). Tampoco se probó qué pasa si dos personas editan el mismo rol al mismo tiempo desde dos sesiones distintas (último `PATCH` gana, sin ningún aviso de conflicto).
+
+---
+
 ## 2026-09-24 — Rol Sudo (soporte técnico) con todos los permisos del catálogo
 
 **Motivo de negocio:** Pablo pidió un cuarto rol, "Sudo", con absolutamente todos los permisos del catálogo sin excepción (incluido `rol:write`), asignado a un usuario existente del seed — no uno nuevo, para no caer en el fallback a `members[0]` del frontend que ya habíamos identificado como limitación conocida.
