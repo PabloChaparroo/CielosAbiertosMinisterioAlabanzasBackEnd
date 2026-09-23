@@ -1,11 +1,8 @@
-import { Check, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, Relation } from "typeorm";
 import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
-
-export const SYSTEM_ROLES = ["admin", "lider", "musico"] as const;
-export type SystemRole = (typeof SYSTEM_ROLES)[number];
+import { Role } from "../../roles/entities/role.entity";
 
 @Entity("users")
-@Check(`"role" IN ('admin','lider','musico')`)
 export class User extends BaseAuditEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -20,9 +17,6 @@ export class User extends BaseAuditEntity {
   name!: string;
 
   @Column({ type: "varchar" })
-  role!: SystemRole;
-
-  @Column({ type: "varchar" })
   ministryRole!: string;
 
   @Column({ type: "text", array: true, default: () => "'{}'" })
@@ -33,4 +27,12 @@ export class User extends BaseAuditEntity {
 
   @Column({ type: "varchar", length: 4 })
   initials!: string;
+
+  @ManyToMany(() => Role)
+  @JoinTable({
+    name: "user_roles",
+    joinColumn: { name: "user_id" },
+    inverseJoinColumn: { name: "role_id" },
+  })
+  roles!: Relation<Role>[];
 }

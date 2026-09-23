@@ -20,12 +20,11 @@ export class AuthService {
     const passwordOk = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordOk) throw new UnauthorizedException("Credenciales inválidas");
 
-    const permissions = await this.authorizationService.getPermissionsForRole(user.role);
+    const permissions = await this.authorizationService.getPermissionsForUser(user.id);
 
     const accessToken = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
-      role: user.role,
       permissions,
     });
 
@@ -35,7 +34,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        roles: user.roles.map((r) => r.name),
         permissions,
       },
     };
@@ -43,12 +42,12 @@ export class AuthService {
 
   async me(userId: string) {
     const user = await this.usersService.findById(userId);
-    const permissions = await this.authorizationService.getPermissionsForRole(user.role);
+    const permissions = await this.authorizationService.getPermissionsForUser(user.id);
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      roles: user.roles.map((r) => r.name),
       ministryRole: user.ministryRole,
       instruments: user.instruments,
       avatarColor: user.avatarColor,

@@ -8,7 +8,6 @@ import { AuthenticatedUser } from "../types/authenticated-user";
 interface JwtPayload {
   sub: string;
   email: string;
-  role: AuthenticatedUser["role"];
   permissions: AuthenticatedUser["permissions"];
 }
 
@@ -26,7 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       email: payload.email,
-      role: payload.role,
       permissions: payload.permissions,
     };
   }

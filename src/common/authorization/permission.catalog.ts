@@ -8,6 +8,7 @@ export const CRUD_RESOURCES = [
   "anotacion",
   "anotacion-propia", // el músico puede editar/borrar solo sus propias anotaciones
   "estadisticas",
+  "rol", // administración de roles: crear/borrar roles, editar sus permisos, asignarlos a usuarios
 ] as const;
 export type CrudResource = (typeof CRUD_RESOURCES)[number];
 

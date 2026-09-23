@@ -1,6 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { ArrayNotEmpty, IsArray, IsEmail, IsIn, IsString, MinLength } from "class-validator";
-import { SYSTEM_ROLES, SystemRole } from "../entities/user.entity";
+import { ArrayNotEmpty, IsArray, IsEmail, IsString, MinLength } from "class-validator";
 
 export class CreateUserDto {
   @IsEmail()
@@ -12,9 +11,6 @@ export class CreateUserDto {
 
   @IsString()
   name!: string;
-
-  @IsIn(SYSTEM_ROLES)
-  role!: SystemRole;
 
   @IsString()
   ministryRole!: string;

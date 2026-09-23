@@ -162,22 +162,34 @@ async function run() {
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
+  const roleRows: Array<{ id: string; name: string }> = await runner.query(`SELECT id, name FROM "roles"`);
+  const roleIdByName = new Map(roleRows.map((r) => [r.name, r.id]));
+  const roleIdForDemoRole = (role: DemoUser["role"]): string => {
+    const name = role === "admin" ? "Admin" : role === "lider" ? "Líder" : "Músico";
+    const id = roleIdByName.get(name);
+    if (!id) throw new Error(`[seed] No se encontró el rol '${name}' — ¿corriste las migraciones?`);
+    return id;
+  };
+
   for (const user of users) {
     await runner.query(
-      `INSERT INTO "users" (id, email, password_hash, name, role, ministry_role, instruments, avatar_color, initials)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      `INSERT INTO "users" (id, email, password_hash, name, ministry_role, instruments, avatar_color, initials)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
         user.id,
         user.email,
         passwordHash,
         user.name,
-        user.role,
         user.ministryRole,
         user.instruments,
         user.avatarColor,
         user.initials,
       ],
     );
+    await runner.query(`INSERT INTO "user_roles" (user_id, role_id) VALUES ($1,$2)`, [
+      user.id,
+      roleIdForDemoRole(user.role),
+    ]);
   }
 
   const tagRows: Array<{ id: string; valor: string }> = await runner.query(`SELECT id, valor FROM "tags"`);

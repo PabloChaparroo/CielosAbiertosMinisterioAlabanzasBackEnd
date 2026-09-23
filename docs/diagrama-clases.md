@@ -17,13 +17,18 @@ classDiagram
     +email: string
     +passwordHash: string
     +name: string
-    +role: string
     +ministryRole: string
     +instruments: string[]
     +avatarColor: string
     +initials: string
   }
-  note for User "CHECK: role IN ('admin','lider','musico')"
+
+  class Role {
+    <<tabla: roles>>
+    +id: string
+    +name: string
+  }
+  note for Role "Texto libre, creado por un admin desde la pantalla de administración — a propósito SIN @Check ni catálogo fijo, a diferencia de Tag.valor o del User.role original (ya eliminado)."
 
   class Tag {
     <<tabla: tags>>
@@ -97,10 +102,10 @@ classDiagram
 
   class RolePermission {
     <<tabla: role_permissions>>
-    +role: string
+    +roleId: string
     +permission: string
   }
-  note for RolePermission "PK compuesta (role, permission). NO tiene relación FK real en el código: 'role' se compara por valor de string contra User.role, no hay @ManyToOne/@OneToMany declarado — es un catálogo, no una asociación."
+  note for RolePermission "PK compuesta (roleId, permission), roleId con FK real a Role (@ManyToOne, onDelete CASCADE) — a diferencia del diseño anterior, donde 'role' era un varchar comparado por valor sin relación TypeORM."
 
   BaseAuditEntity <|-- User
   BaseAuditEntity <|-- Song
@@ -118,13 +123,16 @@ classDiagram
   Annotation "*" --> "1" User : author
   Favorite "*" --> "1" User : user
   Favorite "*" --> "1" Song : song
+  User "*" --> "*" Role : roles
+  Role "1" --> "*" RolePermission : role
 ```
 
 ## Notas sobre fidelidad al código
 
-- **Todas las entidades listadas existen literalmente** como archivos `*.entity.ts` bajo `src/modules/**` y `src/common/authorization/`: `Song`, `SongPlayStat`, `AudioTrack`, `User`, `Setlist`, `SetlistItem`, `Annotation`, `Favorite`, `Tag`, `RolePermission`. No hay ninguna entidad adicional en el proyecto.
-- **`BaseAuditEntity`** no es una tabla propia (no tiene `@Entity`): es la clase abstracta de `src/common/entities/base-audit.entity.ts` que `User`, `Song`, `Setlist` y `Annotation` extienden. `SetlistItem`, `SongPlayStat`, `AudioTrack`, `Tag`, `RolePermission` y `Favorite` **no** la extienden — `Favorite` sólo tiene su propio `fechaHoraAlta`, y el resto no tiene ninguna columna de auditoría.
-- **Todas las relaciones son unidireccionales salvo tres**: `Song ↔ SongPlayStat` (vía `Song.playStats` / `SongPlayStat.song`), `Song ↔ AudioTrack` (vía `Song.tracks` / `AudioTrack.song`) y `Setlist ↔ SetlistItem` (vía `Setlist.items` / `SetlistItem.setlist`) son las únicas con `@OneToMany` + `@ManyToOne` declarados en ambos lados — las tres resueltas con `Relation<T>` para evitar el mismo problema de dependencia circular. El resto (`Song.tags`, `Setlist.leader`, `Setlist.team`, `SetlistItem.song`, `Annotation.song`, `Annotation.author`, `Favorite.user`, `Favorite.song`) sólo tiene el decorador en un lado — el otro lado del código no declara ningún campo inverso.
+- **Todas las entidades listadas existen literalmente** como archivos `*.entity.ts` bajo `src/modules/**` y `src/common/authorization/`: `Song`, `SongPlayStat`, `AudioTrack`, `User`, `Role`, `Setlist`, `SetlistItem`, `Annotation`, `Favorite`, `Tag`, `RolePermission`. No hay ninguna entidad adicional en el proyecto.
+- **`BaseAuditEntity`** no es una tabla propia (no tiene `@Entity`): es la clase abstracta de `src/common/entities/base-audit.entity.ts` que `User`, `Song`, `Setlist` y `Annotation` extienden. `SetlistItem`, `SongPlayStat`, `AudioTrack`, `Tag`, `Role`, `RolePermission` y `Favorite` **no** la extienden — `Favorite` sólo tiene su propio `fechaHoraAlta`, y el resto no tiene ninguna columna de auditoría.
+- **Todas las relaciones son unidireccionales salvo tres**: `Song ↔ SongPlayStat` (vía `Song.playStats` / `SongPlayStat.song`), `Song ↔ AudioTrack` (vía `Song.tracks` / `AudioTrack.song`) y `Setlist ↔ SetlistItem` (vía `Setlist.items` / `SetlistItem.setlist`) son las únicas con `@OneToMany` + `@ManyToOne` declarados en ambos lados — las tres resueltas con `Relation<T>` para evitar el mismo problema de dependencia circular. El resto (`Song.tags`, `Setlist.leader`, `Setlist.team`, `SetlistItem.song`, `Annotation.song`, `Annotation.author`, `Favorite.user`, `Favorite.song`, `User.roles`, `RolePermission.role`) sólo tiene el decorador en un lado — el otro lado del código no declara ningún campo inverso.
 - **`AudioTrack` no tiene recurso de permisos propio**: se gestiona con `cancion:*` (igual que `SetlistItem` se gestiona con `setlist:*`), porque no tiene ciclo de vida ni actor de negocio independiente de la canción a la que pertenece.
-- **`RolePermission` no está unida por clave foránea** a `User`: su columna `role` es un `varchar` que se compara por valor contra `User.role` en `AuthorizationService`, no hay relación TypeORM entre ambas entidades.
+- **`User.role` (columna fija con `@Check`) ya no existe** — se reemplazó por `User.roles`, una relación M:N real hacia `Role` (`@ManyToMany` + `@JoinTable("user_roles")`, sin ventana de vigencia: decisión explícita, alcanza con la relación simple). `RolePermission.roleId` ahora es una FK real a `Role` con `@ManyToOne`, a diferencia del diseño anterior donde `role` era un `varchar` comparado por valor sin relación TypeORM. La migración `AddRolesAndPermissions` hace el reemplazo completo, migrando los usuarios existentes a roles equivalentes.
+- `AnnotationsService.assertCanEdit` dejó de comparar `user.role === "admin" || user.role === "lider"` (ya no existe ese campo) y ahora chequea `user.permissions.includes("anotacion:update"/"anotacion:delete")` — el mismo criterio, expresado en términos del catálogo de permisos en vez de un nombre de rol hardcodeado.
 - Los snapshots inmutables reales del modelo son `SetlistItem.key`, documentado como tal en el propio código. `AudioTrack` no es un snapshot de nada: es contenido nuevo (una pista de audio) sin relación con el `audioKey` de `Song`.

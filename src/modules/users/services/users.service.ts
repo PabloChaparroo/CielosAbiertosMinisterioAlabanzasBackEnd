@@ -15,11 +15,11 @@ export class UsersService {
   ) {}
 
   findAll(): Promise<User[]> {
-    return this.userRepo.find({ order: { fechaHoraAlta: "ASC" } });
+    return this.userRepo.find({ relations: { roles: true }, order: { fechaHoraAlta: "ASC" } });
   }
 
   async findById(id: string): Promise<User> {
-    const user = await this.userRepo.findOne({ where: { id } });
+    const user = await this.userRepo.findOne({ where: { id }, relations: { roles: true } });
     if (!user) throw new NotFoundException("Integrante no encontrado");
     return user;
   }
@@ -28,6 +28,7 @@ export class UsersService {
     return this.userRepo
       .createQueryBuilder("user")
       .addSelect("user.passwordHash")
+      .leftJoinAndSelect("user.roles", "roles")
       .where("user.email = :email", { email })
       .getOne();
   }
@@ -38,7 +39,6 @@ export class UsersService {
       email: dto.email,
       passwordHash,
       name: dto.name,
-      role: dto.role,
       ministryRole: dto.ministryRole,
       instruments: dto.instruments,
       avatarColor: dto.avatarColor,
@@ -55,7 +55,6 @@ export class UsersService {
     Object.assign(user, {
       ...(dto.email !== undefined && { email: dto.email }),
       ...(dto.name !== undefined && { name: dto.name }),
-      ...(dto.role !== undefined && { role: dto.role }),
       ...(dto.ministryRole !== undefined && { ministryRole: dto.ministryRole }),
       ...(dto.instruments !== undefined && { instruments: dto.instruments }),
       ...(dto.avatarColor !== undefined && { avatarColor: dto.avatarColor }),

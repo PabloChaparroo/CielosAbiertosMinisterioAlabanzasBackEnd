@@ -14,6 +14,7 @@ import { HealthController } from "./health.controller";
 import { AnnotationsModule } from "./modules/annotations/annotations.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { FavoritesModule } from "./modules/favorites/favorites.module";
+import { RolesModule } from "./modules/roles/roles.module";
 import { SetlistsModule } from "./modules/setlists/setlists.module";
 import { SongsModule } from "./modules/songs/songs.module";
 import { TagsModule } from "./modules/tags/tags.module";
@@ -48,6 +49,7 @@ import { UsersModule } from "./modules/users/users.module";
     StorageModule,
     AuthModule,
     UsersModule,
+    RolesModule,
     TagsModule,
     SongsModule,
     SetlistsModule,
