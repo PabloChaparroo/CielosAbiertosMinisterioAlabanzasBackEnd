@@ -11,7 +11,7 @@ export const envValidationSchema = Joi.object({
   DB_NAME: Joi.string().required(),
 
   JWT_SECRET: Joi.string().required(),
-  JWT_EXPIRES_IN: Joi.string().default("15m"),
+  JWT_EXPIRES_IN: Joi.string().default("8h"),
 
   S3_ENDPOINT: Joi.string().required(),
   S3_REGION: Joi.string().required(),

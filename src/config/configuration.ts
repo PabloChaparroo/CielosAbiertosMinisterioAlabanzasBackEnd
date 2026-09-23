@@ -41,7 +41,7 @@ export default (): AppConfig => ({
   },
   jwt: {
     secret: process.env.JWT_SECRET ?? "change-me-in-production",
-    expiresIn: process.env.JWT_EXPIRES_IN ?? "15m",
+    expiresIn: process.env.JWT_EXPIRES_IN ?? "8h",
   },
   s3: {
     endpoint: process.env.S3_ENDPOINT ?? "http://localhost:9000",
