@@ -4,6 +4,48 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Audio real: subida y reproducción (gap prioritario resuelto)
+
+**Motivo de negocio:** desde el ticket de Canciones había quedado documentado como gap prioritario que "Escuchar y Subir" permitía dar de alta canciones pero no subir audio real — `StorageService.getDownloadUrl` estaba escrito pero no expuesto, y no había UI de carga de archivo. Este ticket lo cierra.
+
+**Investigación previa:** `StorageService.getUploadUrl(folder, contentType)` ya existía (usado por `POST /storage/upload-url`), sin ninguna validación de tipo ni tamaño. `getDownloadUrl` existía pero sin controller. El DTO de canción ya aceptaba `audioKey?: string` — no hizo falta tocarlo.
+
+**Flujo implementado (URL firmada, el binario nunca pasa por Nest):**
+1. El cliente valida tipo (whitelist de audio) y tamaño (≤20MB) antes de pedir nada.
+2. `POST /storage/upload-url` con `{folder:"audios", contentType}` — el backend valida `contentType` contra la misma whitelist **antes** de firmar nada (si no matchea, `400` con mensaje claro, nunca un error crudo de S3/MinIO).
+3. El browser sube el binario directo a MinIO con esa URL, vía `XMLHttpRequest` (no `fetch`, que no expone progreso de subida) — barra de progreso real, no un spinner.
+4. Recién con el `audioKey` confirmado, se manda el alta/edición de la canción (`POST`/`PATCH /canciones`).
+5. Reproducción: `GET /storage/download-url?key=...` (nuevo endpoint, `getDownloadUrl` ya escrito) resuelto bajo demanda en `MiniPlayer` cuando cambia la canción actual — nunca precacheado al listar (las URLs firmadas expiran en 1h).
+
+**Decisiones evaluadas explícitamente, no heredadas:**
+- **`GET /storage/download-url` sin permiso especial, solo JWT** — confirmado antes de exponerlo así: los 4 roles del seed (incluido Músico) tienen `cancion:read`, `Song` no tiene owner ni flag de visibilidad, y `GET /canciones` no filtra por usuario. No existe ningún caso hoy donde alguien vea una canción en el listado pero no debería poder escucharla — quien puede verla, puede reproducirla. Duplicar `cancion:read` como gate acá sería redundante, no más seguro.
+- **Límite de 20MB: solo client-side, y esto tiene una implicancia real, no una limitación abstracta.** Un `PutObjectCommand` firmado así no lleva restricción de tamaño — **cualquiera con las devtools puede editar el `File` antes de la subida o pegarle directo a la URL firmada con un archivo más grande, y el límite de 20MB no lo va a detener.** Hacerlo cumplir de verdad requeriría cambiar a un presigned POST con política `content-length-range`, cambio de arquitectura fuera de alcance para esta app interna de una iglesia. Se acepta el riesgo explícitamente: no hay un actor malicioso realista en este contexto, pero quede escrito que no es una barrera de seguridad.
+- **Cierre del modal a mitad de subida cancela, no sigue en segundo plano** — no hay infraestructura de tareas en background en la app, y el `audioKey` recién se manda al backend después de que la subida terminó con éxito, así que cancelar nunca deja una canción con un audio a medio subir. `AbortController` en un `useEffect` de desmontaje cubre también el caso de navegar a otra pantalla sin pasar por el botón de cerrar.
+- **Un solo `UploadModal` con `song?: Song` opcional, no dos componentes separados** (a diferencia de Equipo, donde alta y edición sí tenían flujos realmente distintos — contraseña generada vs. no). Acá es el mismo formulario completo en ambos casos, solo cambia el submit (`POST` vs `PATCH`) y la precarga.
+
+**Feature nueva agregada de paso, documentada como tal:** `EscucharPage` no tenía ningún botón de editar una canción existente — se agregó un ícono de lápiz por fila (gateado por `can("editSongs")`) porque la tarea pedía explícitamente poder subir audio "al dar de alta **o editar**", y no había ningún punto de entrada para lo segundo.
+
+**Bugs de infraestructura/backend descubiertos de paso (no introducidos por este ticket, bloqueaban su verificación):**
+1. **El bucket de MinIO nunca fue creado** — ni `docker-compose.yml` ni ningún script lo hacían. Nadie lo había notado porque hasta este ticket nadie había intentado subir un archivo real (todas las canciones tenían `audioKey: null`). `getUploadUrl()` firmaba una URL perfectamente válida contra un bucket inexistente, y el `PUT` real a MinIO devolvía 404. Se arregló agregando un chequeo idempotente en `StorageService.onModuleInit()` (`HeadBucketCommand`, y si no existe, `CreateBucketCommand`) — así cualquier entorno nuevo (clonar + `docker compose up`) funciona sin un paso manual extra, sin agregar un contenedor `mc` aparte. No es fatal si falla al bootear (solo loggea un warning).
+2. **La respuesta de `POST /canciones` (alta) no incluye `playStats`** — a diferencia de `GET /canciones`, que sí la carga. Al probar el alta real por primera vez con el flujo completo (audio + form), el frontend crasheaba en `mapSong` al hacer `.map()` sobre `undefined`. Es un bug real del `create()` del backend de Canciones (`songRepo.save()` no recarga esa relación), pero **Canciones estaba fuera de alcance en este ticket** — se corrigió únicamente en el mapeo del frontend (`raw.playStats ?? []`), sin tocar el backend de Canciones. Queda pendiente para quien toque ese módulo de nuevo.
+
+**Detalle técnico:**
+- `types/song.ts`: `audioUrl: string` → `audioKey: string | null` (ya no se inventa una URL vacía; se guarda la key cruda, honesto con lo que realmente es).
+- Nuevo `src/lib/storage-client.ts` (`getUploadUrl`, `getDownloadUrl`, `uploadFileWithProgress` con XHR) — vive en `lib/` por ser infraestructura transversal, no una entidad de dominio.
+- `songs.service.ts`: `mapSong` ya no fabrica `audioUrl`; nuevo `SongsService.updateSong(id, dto)`.
+- `useApp.tsx`: nuevo `updateSong(song)` (reemplazo local, mismo patrón que `addSong`).
+- `UploadModal.tsx`: prop `song?: Song`, campo de audio real con validación de tipo/tamaño, barra de progreso, cancelación por `AbortController`.
+- `EscucharPage.tsx`: botón "Editar" por fila.
+- `MiniPlayer.tsx`: resuelve `getDownloadUrl` bajo demanda por canción; sin audio (`audioKey: null`) sigue sin sonar, silenciosamente, igual que antes de este ticket.
+
+**Verificado con navegador real** (Playwright, con capturas): archivo no-audio (`.png` renombrado) rechazado con el mensaje claro **antes** de pegarle a MinIO. Archivo `.wav` real (2 segundos, generado localmente) subido con barra de progreso, canción creada con `audioKey` real persistido. Reproducción confirmada de punta a punta: `audio.readyState === 4` (`HAVE_ENOUGH_DATA`), `currentTime` avanzando hasta el final del clip sin ningún error — no un `<audio>` con `src` vacío. Repetí el mismo flujo editando una canción **existente** ("Bendito El Que Viene"): mostró "Todavía sin audio cargado", se le subió el `.wav`, quedó "Ya tiene audio cargado", y se reprodujo igual de bien. Confirmé que canciones con `audioKey: null` siguen sin sonar, sin ningún error visible (mismo comportamiento tolerante de antes). Al terminar, se revirtió `audioKey` de "Bendito El Que Viene" a `null` y se borraron todas las canciones de prueba creadas durante la verificación — las 21 canciones reales quedaron exactamente como estaban, todas con `audioKey: null`.
+
+**Alcance respetado:** no se tocó multitracks, Setlists, Equipo, Roles y Permisos, Anotaciones, Favoritos ni login.
+
+**Sin verificar:** comportamiento en una red realmente lenta/inestable (el ambiente de prueba es local, la barra de progreso se probó pero no bajo condiciones de red adversas). Múltiples subidas concurrentes desde dos sesiones distintas.
+
+---
+
 ## 2026-09-24 — Fix: `DELETE /setlists/:id` respondía 500 (backend)
 
 **Motivo:** bug real encontrado en el ticket anterior al limpiar datos de prueba — `DELETE /setlists/:id` devolvía 500 para cualquier setlist con items (todos, porque `items` no puede estar vacío al crear).
