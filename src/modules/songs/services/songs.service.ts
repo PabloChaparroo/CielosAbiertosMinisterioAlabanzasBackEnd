@@ -65,7 +65,12 @@ export class SongsService {
       lyricsImageKey: dto.lyricsImageKey ?? null,
       tags,
     });
-    return this.songRepo.save(song);
+    const saved = await this.songRepo.save(song);
+    // save() devuelve el mismo objeto que se le pasó, sin autopoblar
+    // relaciones que nunca se asignaron (acá, playStats) — se recarga por
+    // findById() para que la respuesta de POST tenga el mismo shape que
+    // GET /canciones/:id, igual que ya hace update().
+    return this.findById(saved.id);
   }
 
   async update(id: string, dto: UpdateSongDto): Promise<Song> {

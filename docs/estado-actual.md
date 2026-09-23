@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Fix: `POST /canciones` no devolvía `playStats` (backend)
+
+**Motivo:** deuda anotada en el ticket de audio real — `POST /canciones` no incluía `playStats` en la respuesta, a diferencia de `GET /canciones`/`GET /canciones/:id`, que sí la cargan. El frontend lo toleraba con `raw.playStats ?? []` en `mapSong`, pero eso era un parche, no una solución — el objetivo acá era que el shape de respuesta fuera consistente entre crear y leer.
+
+**Causa real confirmada (no asumida):** en `SongsService.create()`, el objeto `Song` se arma con `songRepo.create({...})` sin tocar nunca `playStats`, y se devuelve directo el resultado de `save()`. `save()` de TypeORM devuelve el mismo objeto que se le pasó (con los campos generados) — **no autopuebla relaciones que nunca se asignaron**. Como `playStats` nunca se tocó, simplemente no existe en el objeto devuelto ni, por lo tanto, en el JSON de respuesta.
+
+**`PATCH /canciones/:id` no tenía este bug** — confirmado leyendo el código, no asumido: `update()` arranca con `this.findById(id)`, que ya carga `relations: { tags: true, playStats: true }` antes de mutar nada, así que el objeto que termina guardándose y devolviéndose ya trae `playStats` cargado de entrada. Solo hacía falta arreglar `create()`.
+
+**Fix:** después del `save()`, `create()` recarga la entidad vía `this.findById(saved.id)` — el mismo método que ya usa `update()` y que expone `GET /canciones/:id` — en vez de devolver el objeto crudo de `save()`. Esto no parchea solo `playStats`: garantiza que la respuesta de `POST` tenga el mismo shape que `GET` para cualquier relación de `Song`, presente o futura (si mañana se agrega otra relación, no va a volver a divergir). Costo: un `findOne` por PK extra, trivial.
+
+**Alcance respetado:** no se tocó el `?? []` defensivo de `mapSong` en el frontend — sigue siendo una buena defensa aunque el backend ya esté arreglado (tolerar un array vacío nunca está de más). No se tocó Multitracks, Setlists, Equipo, Roles y Permisos, Anotaciones, Favoritos, login.
+
+**Verificado contra la base real:** `POST /canciones` de prueba devolvió `playStats: []` en la respuesta (antes, el campo directamente no existía). `PATCH /canciones/:id` sobre la misma canción siguió devolviendo `playStats: []` sin ningún cambio de comportamiento. Alta real desde la UI ("Escuchar y Subir") sin ningún error de consola — `useApp`/`mapSong` siguen funcionando igual (el `?? []` ahora es un defensivo que nunca hace falta, no uno que tapaba un bug). Se borró la canción de prueba al terminar.
+
+**Deuda resuelta, no solo parchada:** esta era la última pieza pendiente de la lista de gaps del ticket de audio real — el shape de `POST`/`GET`/`PATCH /canciones` es consistente de punta a punta.
+
+---
+
 ## 2026-09-24 — UI de multitracks (`AudioTrack`): feature nueva de cero (frontend)
 
 **Motivo de negocio:** `AudioTrack` (pistas adicionales de una canción — click y guía, sin click, solo de un instrumento, etc.) tenía el backend construido de un ticket anterior (`POST/GET /canciones/:songId/pistas`, `PATCH/DELETE /pistas/:id`) pero **nunca existió ninguna UI, ni siquiera mockeada**. Es una feature nueva de cero, no un mock→real.
