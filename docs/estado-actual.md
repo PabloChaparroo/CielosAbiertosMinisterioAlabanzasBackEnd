@@ -4,6 +4,27 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Rol Sudo (soporte técnico) con todos los permisos del catálogo
+
+**Motivo de negocio:** Pablo pidió un cuarto rol, "Sudo", con absolutamente todos los permisos del catálogo sin excepción (incluido `rol:write`), asignado a un usuario existente del seed — no uno nuevo, para no caer en el fallback a `members[0]` del frontend que ya habíamos identificado como limitación conocida.
+
+**Alcance:** exclusivamente seed y migración de datos. No se conectó la pantalla de Roles y Permisos (sigue mockeada) ni se tocó nada del flujo de login/`AuthGate`.
+
+**A quién se le asignó y por qué:** a **Ana Ferrari** (`ana@cielosabiertos.org`, hoy Sonido/Consola), reemplazando su rol Músico — no a Martín (queda como único ejemplo de Admin) ni a Joaquín (a pedido explícito, se sigue usando como referencia de "Músico sin permisos"). Líder queda con sus dos ejemplos intactos (Sofía, Lucía) y Músico con cuatro (Joaquín, Camila, Nicolás, Diego) — ningún rol original quedó sin representante en el seed.
+
+**Decisiones explícitas, con su razón:**
+- **Sudo reemplaza a Músico en Ana, no convive con él.** Matemáticamente daba lo mismo para la propiedad de inmunidad buscada (`getPermissionsForUser` calcula la unión de permisos de todos los roles de un usuario, así que tener Sudo alcanza para ser inmune a que alguien le achique los permisos a otro rol, sin importar si además tiene ese otro rol o no) — se eligió reemplazar por claridad semántica: evita la pregunta de "por qué este usuario tiene dos roles a la vez".
+- **El catálogo de Sudo es un snapshot fijo (28 permisos hardcodeados en la migración), no dinámico.** Se decidió así por consistencia con Admin/Líder/Músico, que ya funcionan igual — ninguno de los roles del sistema es "dinámico", todos son filas fijas en `role_permissions`. La alternativa (un caso especial en `AuthorizationService` que detecte el rol por nombre y le devuelva todo el catálogo en runtime) se descartó por frágil: se rompería si alguien renombra el rol "Sudo" desde la pantalla de administración. **Consecuencia a recordar:** si el catálogo de permisos crece (nuevo recurso), Sudo NO se entera solo — hace falta una migración nueva que le otorgue el permiso nuevo, tal como ya pasó cuando se agregó el recurso `rol` y hubo que dárselo a mano a Admin/Líder/Músico.
+- **La migración funciona tanto contra la base ya poblada de este entorno como contra una instalación nueva desde cero**, porque se tocaron dos lugares a propósito: la migración (`AddSudoRole`) hace el swap de Ana si ya existe como usuario, y `run-seed.ts` también sabe darle "sudo" a Ana desde el arranque — sin este segundo cambio, alguien que clonara el repo y corriera el seed por primera vez habría terminado con Ana como Músico normal, no Sudo.
+
+**Verificado con login real:** login contra `POST /auth/login` con `ana@cielosabiertos.org`, confirmando por API que su token trae `roles: ["Sudo"]` y 28 permisos (incluido `rol:write`). En el navegador: acceso sin restricción a `/roles-permisos` (no aparece "Sección restringida"), y visibles los botones "Agregar miembro" (Equipo), "Subir canción" (Escuchar) y "Nuevo setlist" (Setlists) — los mismos gates que antes solo dejaban pasar a Admin.
+
+**Aclaración para no confundir en capturas futuras:** el badge del Sidebar y la lista de roles que muestra la propia pantalla de Roles y Permisos siguen viniendo del mock `useApp` (desconectado del backend real, documentado como deuda desde el ticket de login) — por eso Ana sigue apareciendo con el badge "Músico" ahí y "Sudo" no aparece en esa lista de 3 roles mockeados, aunque su sesión real tenga los 28 permisos. El gate de acceso (`can("manageRoles")`) sí usa el permiso real y la dejó entrar correctamente.
+
+**Sin verificar:** el comportamiento de la migración `down()` (rollback) no se ejecutó, solo se revisó por lectura de código.
+
+---
+
 ## 2026-09-23 — Rediseño visual de LoginPage + fix de un bug real en el interceptor de 401 (frontend)
 
 **Motivo de negocio:** la pantalla de login ya funcionaba (ticket anterior), pero Pablo pidió verificar si tenía el mismo nivel de cuidado visual que el resto de la app — es lo primero que ve cualquiera que entra al sistema — y, si no, rediseñarla sin tocar la lógica de auth ya probada.

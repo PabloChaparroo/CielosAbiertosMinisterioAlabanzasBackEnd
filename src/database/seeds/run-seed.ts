@@ -15,7 +15,7 @@ interface DemoUser {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "lider" | "musico";
+  role: "admin" | "lider" | "musico" | "sudo";
   ministryRole: string;
   instruments: string[];
   avatarColor: string;
@@ -97,7 +97,7 @@ const users: DemoUser[] = [
     id: "11111111-0000-4000-8000-000000000008",
     email: "ana@cielosabiertos.org",
     name: "Ana Ferrari",
-    role: "musico",
+    role: "sudo",
     ministryRole: "Sonido",
     instruments: ["Consola", "Sonido"],
     avatarColor: "linear-gradient(135deg,#fbbf24,#fb7185)",
@@ -165,7 +165,8 @@ async function run() {
   const roleRows: Array<{ id: string; name: string }> = await runner.query(`SELECT id, name FROM "roles"`);
   const roleIdByName = new Map(roleRows.map((r) => [r.name, r.id]));
   const roleIdForDemoRole = (role: DemoUser["role"]): string => {
-    const name = role === "admin" ? "Admin" : role === "lider" ? "Líder" : "Músico";
+    const name =
+      role === "admin" ? "Admin" : role === "lider" ? "Líder" : role === "sudo" ? "Sudo" : "Músico";
     const id = roleIdByName.get(name);
     if (!id) throw new Error(`[seed] No se encontró el rol '${name}' — ¿corriste las migraciones?`);
     return id;
