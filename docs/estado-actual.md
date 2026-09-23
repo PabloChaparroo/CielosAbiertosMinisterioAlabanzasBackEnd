@@ -4,6 +4,34 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Fix: `DELETE /setlists/:id` respondía 500 (backend)
+
+**Motivo:** bug real encontrado en el ticket anterior al limpiar datos de prueba — `DELETE /setlists/:id` devolvía 500 para cualquier setlist con items (todos, porque `items` no puede estar vacío al crear).
+
+**Causa confirmada (no asumida por el resumen del ticket anterior):** `SetlistsService.remove()` llama `this.setlistRepo.softRemove(setlist)` con `setlist.items` ya cargado. `Setlist.items` estaba declarado `@OneToMany(..., { cascade: true })`, y `cascade: true` en TypeORM habilita los cinco tipos de cascada, incluido `"soft-remove"`. Al hacer `softRemove()` del padre, TypeORM intenta cascadear el soft-remove a cada `SetlistItem`, que no extiende `BaseAuditEntity` (no tiene `fecha_hora_baja`) — de ahí el 500 exacto (`Entity "SetlistItem" does not have delete date columns`).
+
+**Decisión evaluada — dos caminos, elegido el de borrado físico de items:**
+1. `SetlistItem` pasa a extender `BaseAuditEntity` (requiere migración).
+2. **(Elegido)** La baja de un `Setlist` borra físicamente sus items (`remove()`/`delete()`, no soft-delete) y deja el `Setlist` en sí con baja lógica.
+
+Comparé contra el resto del modelo antes de elegir: `Song` (con `BaseAuditEntity`, usa `softRemove()`) tiene `AudioTrack`/`SongPlayStat` como `@OneToMany` **sin cascade** — sus hijos quedan huérfanos-pero-intactos al borrar la canción. `AudioTracksService`, `RolesService` y `FavoritesService` usan `remove()` (borrado físico) porque sus entidades no tienen valor histórico propio ni extienden `BaseAuditEntity`. Confirmé por grep que **nada en el backend ni en el frontend consulta `SetlistItem` fuera de a través de su `Setlist` padre** — no hay reporte ni estadística que dependa de un item de setlist sobreviviendo a la baja de su setlist (`SongPlayStat`, que sí importa para Estadísticas, cuelga de `Song`, rama del modelo completamente distinta, sin relación con `Setlist`/`SetlistItem`). Agregar `BaseAuditEntity` a una entidad que nunca se consulta por sí sola ni se muestra en ningún lado como "dada de baja" es complejidad y migración sin ningún consumidor real — se eligió el borrado físico.
+
+**Implementación (sin migración, sin cambio de schema):**
+- `Setlist.items`: `cascade: true` → `cascade: ["insert", "update"]`. Esto es lo que arregla la causa raíz: sin este cambio, aunque se borren los items a mano antes, TypeORM seguiría intentando cascadear soft-remove sobre lo que quede en `setlist.items` en memoria. `create()`/`update()` no se vieron afectados porque ambos dependen únicamente de la cascada de `"insert"` (items siempre son instancias nuevas al guardar), nunca de `"remove"`/`"soft-remove"`.
+- `SetlistsService.remove()`: agrega `await this.setlistItemRepo.delete({ setlist: { id } })` antes del `softRemove(setlist)` — mismo idioma que ya usaba `update()` para reemplazar items, no algo nuevo.
+
+**Por qué `team` (M:N con `setlist_team_members`) nunca corrió el mismo riesgo — verificado, no asumido:** `Setlist.team` es un `@ManyToMany(() => User)` **sin ninguna opción de `cascade`** (default `false` en TypeORM cuando no se especifica). Un `ManyToMany` con cascade habilitado cascadearía hacia la entidad relacionada (`User`), no hacia la tabla de join — es decir, si `team` tuviera `cascade: true`, `softRemove(setlist)` intentaría soft-borrar a los `User` del equipo (que sí extienden `BaseAuditEntity`, así que ni siquiera explotaría de la misma forma, pero sería gravísimo: daría de baja usuarios reales solo por haber estado en el equipo de un setlist borrado). Como no hay cascade configurado, TypeORM no intenta ninguna operación sobre `User` ni sobre la tabla de join al hacer `softRemove()` del setlist — simplemente no toca nada de esa relación. Lo confirmé de forma empírica, no solo leyendo el código: creé un setlist de prueba con dos usuarios en el equipo, lo borré con el endpoint ya arreglado, y en la base real: el setlist quedó con `fecha_hora_baja` seteada, sus `setlist_items` quedaron en 0 filas (borrado físico correcto), las 2 filas de `setlist_team_members` **siguieron existiendo** (huérfanas, no se tocaron), y los 2 `User` referenciados siguieron con `fecha_hora_baja` en `null` — completamente intactos.
+
+**Observación menor (no bug), para dejar anotada:** las filas de `setlist_team_members` de un setlist dado de baja quedan huérfanas para siempre (no se limpian, igual que `song_tags` cuando se borra una canción). Es inofensivo hoy porque nada las consulta directamente. Si en el futuro alguien arma un conteo tipo "en cuántos setlists participó este usuario" sumando filas de `setlist_team_members` sin hacer join contra `setlists` y filtrar `fecha_hora_baja IS NULL`, el número va a incluir setlists ya borrados — dejar esto anotado para esa eventual estadística.
+
+**Verificado contra la base real:** creé un setlist de prueba con equipo asignado y un item, confirmé el estado antes de borrar (setlist activo, 1 item, 2 filas de team), llamé `DELETE /setlists/:id` real → **200**, no 500. Confirmé después: `fecha_hora_baja` seteada en el setlist, 0 filas en `setlist_items`, 2 filas huérfanas en `setlist_team_members`, los 2 usuarios sin ningún cambio. Repetí `PATCH /setlists/:id` (reemplazo de items) sobre un segundo setlist de prueba para confirmar que la cascada de `"insert"` sigue funcionando sin regresión — devolvió 200 con el item actualizado. `GET /setlists` no lista ninguno de los dos setlists borrados; `GET /setlists/:id` de uno de ellos devuelve 404. No se tocó "Culto de prueba" (el setlist real preexistente); los dos setlists de prueba de esta verificación quedaron dados de baja lógica, que es exactamente el estado correcto en el que deben quedar (no hizo falta limpieza manual por SQL esta vez).
+
+**Alcance respetado:** no se agregó botón de borrar en la UI (queda para un ticket aparte). No se tocó Canciones, Equipo, Roles y Permisos, Anotaciones, Favoritos, login, ni el resto de la lógica de Setlists ya conectada.
+
+**Sin verificar:** el endpoint de borrado sigue sin tener ninguna UI que lo dispare — este ticket fue exclusivamente el backend.
+
+---
+
 ## 2026-09-24 — Setlists conectado al backend real, tablas de alias eliminadas (frontend)
 
 **Motivo de negocio:** Setlists era el último módulo mockeado. Pablo pidió conectarlo por completo — próximos + historial, detalle con items ordenados, alta/edición, drag & drop, equipo asignado, tonalidad por item — y **eliminar las dos tablas de alias temporales** (`MOCK_USER_ID_TO_EMAIL`, `MOCK_SONG_ID_TO_TITLE`) que se habían ido extendiendo en los tickets de Equipo y Canciones, ya que Setlists era lo único que todavía dependía de ellas.

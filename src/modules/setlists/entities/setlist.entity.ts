@@ -36,7 +36,17 @@ export class Setlist extends BaseAuditEntity {
   @JoinColumn({ name: "leader_id" })
   leader!: Relation<User>;
 
-  @OneToMany(() => SetlistItem, (item) => item.setlist, { cascade: true })
+  /**
+   * Cascade acotado a insert/update a propósito: create()/update() dependen
+   * de la cascada de "insert" para persistir items nuevos al guardar el
+   * setlist, pero NUNCA debe cascadear "remove"/"soft-remove" — SetlistItem
+   * no extiende BaseAuditEntity (no tiene fecha_hora_baja), así que un
+   * softRemove() del setlist con cascade:true completo intenta soft-borrar
+   * cada item y explota. La baja de items se hace a mano en
+   * SetlistsService.remove() con un delete() físico, mismo criterio que ya
+   * usa update() para reemplazar items.
+   */
+  @OneToMany(() => SetlistItem, (item) => item.setlist, { cascade: ["insert", "update"] })
   items!: Relation<SetlistItem>[];
 
   @ManyToMany(() => User)

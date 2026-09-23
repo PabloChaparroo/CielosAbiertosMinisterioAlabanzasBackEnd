@@ -89,8 +89,15 @@ export class SetlistsService {
     return this.setlistRepo.save(setlist);
   }
 
+  /**
+   * SetlistItem no tiene valor histórico propio (no extiende BaseAuditEntity,
+   * no se consulta en ningún lado fuera de a través de su Setlist) — se
+   * borra físico, mismo criterio que AudioTrack/Role/Favorite en el resto
+   * del modelo. El Setlist en sí sigue de baja lógica.
+   */
   async remove(id: string): Promise<void> {
     const setlist = await this.findById(id);
+    await this.setlistItemRepo.delete({ setlist: { id } });
     await this.setlistRepo.softRemove(setlist);
   }
 }
