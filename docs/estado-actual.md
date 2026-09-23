@@ -4,6 +4,27 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-23 — Login real en el frontend (reemplazo del selector de rol mock)
+
+**Motivo de negocio:** el frontend elegía "quién sos" con un `<select>` de rol mockeado en el Sidebar. Pablo pidió reemplazarlo por completo por un login real contra `POST /auth/login` + `GET /auth/me`, sin que conviva ningún "modo demo sin sesión" — si no hay sesión válida, se va a `/login`, sin excepción.
+
+**Alcance:** exclusivamente identidad/autenticación del usuario logueado (JWT en `localStorage`, guard de ruta, `can()` real). El resto de los módulos (canciones, setlists, favoritos, anotaciones, la propia pantalla de Roles y Permisos) siguen consumiendo datos 100% mockeados — no se conectó ninguna entidad de negocio en este ticket.
+
+**Detalle técnico:**
+
+- `src/lib/api-client.ts`: cliente HTTP único. El doc de patrones asume un endpoint de refresh de token que este backend no tiene (solo `/auth/login` y `/auth/me`, `JWT_EXPIRES_IN` fijo en 15 min). El singleton que el doc pide para evitar refreshes paralelos se reinterpretó como un singleton de **logout**: ante un 401, todos los requests en vuelo esperan la misma promesa de "cerrar sesión y redirigir", en vez de disparar cada uno la suya.
+- `src/core/auth/auth-store.ts`: store plano (no React Context) para que el guard de ruta pueda leerlo fuera del árbol de componentes. Expone `login`, `logout` (limpia `localStorage` Y redirige a `/login` en el mismo paso, sin dejar un estado intermedio inconsistente) y `can(action)`, que traduce los nombres de acción que ya usaba la UI mockeada (`manageTeam`, `editSongs`, `createSetlist`, `viewStats`, `manageRoles`) a un permiso real del catálogo (`equipo:write`, `cancion:write`, `setlist:write`, `estadisticas:read`, `rol:write` respectivamente) — mapeo verificado contra los 3 roles originales antes de aplicarlo, mismo resultado que el mock para esos tres casos.
+- `src/core/guards/AuthGate.tsx`: reemplaza al `beforeLoad` que se había planteado originalmente. Con el JWT en `localStorage` (no en cookie), el servidor no puede saber si hay sesión durante el render SSR de TanStack Start — un `beforeLoad` quedaría ciego ahí. En su lugar, este componente gatea el render según el estado real del store (que arranca en `"loading"` tanto en servidor como en la primera pasada del cliente) y solo muestra el layout una vez que el cliente confirmó la sesión contra `/auth/me`; mientras tanto (o si no hay sesión, fuera de `/login`), muestra un spinner en vez del contenido ya armado.
+- `src/hooks/useApp.tsx`: se sacaron `setCurrentUserId`/`setRole` (selector mock, reemplazo total). `currentUser` — que todavía usan `NewSetlistModal`, `SetlistCard/Detail` y `canEditAnnotation` para autoría mockeada — ahora se **deriva matcheando el email real logueado contra el array mock `members`** (confirmado que son las mismas 8 personas que el seed real del backend). `can()` deja de mirar un `role` mock y delega en el store real.
+
+**Deuda conocida, documentada a pedido explícito (no se resuelve en este ticket):** `canEditAnnotation` (en `useApp.tsx`) sigue comparando contra `currentUser.role === "admin" || "lider"` — el rol mock, estático — en vez del permiso real `anotacion:update`/`anotacion:delete` que `AnnotationsService` ya usa en el backend desde el ticket de Roles y Permisos. Como el rol real ahora es editable en runtime (un admin puede sacarle todos los permisos a "Líder" desde la pantalla de Roles y Permisos), estas dos fuentes pueden discrepar: alguien podría ver el candado de "no podés editar" en el mock cuando el backend real lo dejaría, o viceversa. No se corrigió porque las anotaciones siguen siendo un módulo 100% mockeado, fuera del alcance de este ticket — queda para cuando se conecte ese módulo al backend real.
+
+**Verificado con navegador real** (Playwright, no solo curl/`tsc`): sin sesión, `/` termina en `/login`; login real con `martin@cielosabiertos.org` (Admin) muestra su nombre/rol real en el Sidebar, acceso a "Roles y Permisos" sin restricción, y los botones "Agregar miembro"/"Subir canción" visibles; logout limpia la sesión y vuelve a `/login`; login con `joaquin@cielosabiertos.org` (Músico) muestra "Sección restringida" en Roles y Permisos y oculta esos mismos botones — confirmado con capturas de pantalla, no solo por presencia de texto en el HTML.
+
+**Sin verificar:** qué pasa si el token expira en medio de una sesión activa (no hay refresh; con `JWT_EXPIRES_IN=15m` esto va a pasar en uso real durante un ensayo largo) — no se simuló ese escenario. Tampoco se probó el caso de un usuario real sin contraparte en el mock `members` (cae a `members[0]` por diseño, pero no se ejecutó ese caso concreto).
+
+---
+
 ## 2026-09-23 — Gestión de Roles y Permisos (backend)
 
 **Motivo de negocio:** Pablo pidió reemplazar el sistema de roles fijo (3 valores hardcodeados con `@Check`) por uno dinámico: un admin puede crear roles nuevos y decidir qué permisos tiene cada uno desde una pantalla de administración, sin tocar código. Es la primera vez que se toca el mecanismo de autorización desde el scaffold inicial — no es una feature aislada, es un reemplazo del corazón del sistema de permisos.
