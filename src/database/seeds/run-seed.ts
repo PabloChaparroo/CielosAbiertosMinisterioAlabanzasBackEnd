@@ -199,9 +199,19 @@ async function run() {
   for (const [i, [title, artist, key, bpm, duration, tags]] of titles.entries()) {
     const id = songId(i);
     await runner.query(
-      `INSERT INTO "songs" (id, title, artist, key, bpm, duration, cover, chordpro)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [id, title, artist, key, bpm, duration, covers[i % covers.length], bodies[i % bodies.length]],
+      `INSERT INTO "songs" (id, title, artist, key, bpm, compas, duration, cover, chordpro)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        id,
+        title,
+        artist,
+        key,
+        bpm,
+        "4/4",
+        duration,
+        covers[i % covers.length],
+        bodies[i % bodies.length],
+      ],
     );
     for (const tag of tags) {
       const tagId = tagIdByValor.get(tag);

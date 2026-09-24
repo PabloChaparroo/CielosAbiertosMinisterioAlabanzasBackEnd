@@ -30,6 +30,10 @@ export class Song extends BaseAuditEntity {
   @Column({ type: "int" })
   bpm!: number;
 
+  /** Compás musical, ej. "3/4", "4/4" o "6/8" */
+  @Column({ type: "varchar", default: "4/4" })
+  compas!: string;
+
   /** Duración en segundos */
   @Column({ type: "int" })
   duration!: number;

@@ -15,6 +15,9 @@ export class CreateSongDto {
   @Min(1)
   bpm!: number;
 
+  @IsString()
+  compas!: string;
+
   @IsInt()
   @Min(1)
   duration!: number;
