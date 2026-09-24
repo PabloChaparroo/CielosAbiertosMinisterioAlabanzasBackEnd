@@ -4,6 +4,40 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — CI de verificación (GitHub Actions) en frontend y backend + fix de errores de tipos/lint que ya estaban en `main` del frontend
+
+**Motivo de negocio:** frenar un push roto (tipos, lint o build) antes de que llegue a la rama que dispara el deploy. Es CI de **verificación, no de deploy**: Vercel (frontend) y Render (backend) ya despliegan solos en cada push a `main`, y eso no se tocó.
+
+**Investigación previa (comandos confirmados contra los `package.json` reales, no asumidos):**
+- Rama principal: `main` en los dos repos.
+- Frontend: lint = `npm run lint` → `eslint .` (con Prettier como regla `prettier/prettier` en nivel error); build = `npm run build` → `vite build`. No hay script de `tsc`, se corre `npx tsc --noEmit`.
+- Backend: lint = `npm run lint` → `oxlint .`; build = `npm run build` → `swc src -d dist ...`; `npx tsc --noEmit` para tipos.
+- El repo del frontend en GitHub se renombró a `PabloChaparroo/CielosAbiertosMusicFrontEnd`; el remote local todavía apunta al nombre viejo y funciona por redirección.
+
+**Implementación:** `.github/workflows/ci.yml` en cada repo — dispara en `push` y `pull_request` a `main`; `npm ci` (reproducible contra el `package-lock.json`), `tsc --noEmit`, lint, build, en ese orden; el primer paso que falla corta el resto y pone el check en rojo. Node 24 (backend vía `.nvmrc`; el frontend no tiene versión fijada, se usó la misma). `concurrency` cancela corridas viejas de la misma rama/PR. Sin deploy, sin secretos, sin tests nuevos.
+
+**Decisión: Opción A en el backend (sin Postgres en el CI).** Se evaluó la Opción B (servicio `postgres` en el runner + `npm run migration:run`) y se descartó por ahora: correr migraciones contra una base **vacía** detecta errores de SQL u orden, pero no el caso más probable en producción — una migración que rompe **por los datos existentes** (un `NOT NULL` sin default sobre filas viejas, un `CHECK` que viola datos previos). Tampoco habría evitado el incidente ya registrado de migraciones no aplicadas. Queda como mejora futura (≈15 líneas en el YAML) si alguna vez una migración rota llega a producción sin detectarse. Dato no verificable desde el repo: no hay `render.yaml` ni `migrationsRun`, así que no se sabe si Render corre `migration:run` en cada deploy — si lo hace, una migración rota tira el deploy y eso suma a favor de la B.
+
+**Hallazgo: `main` del frontend ya estaba roto antes del CI** (Vercel no lo detecta porque solo corre `vite build`, que no chequea tipos). 11 errores de `tsc` + 7 de lint:
+- Arreglado en el commit `39af9f7` del frontend (solo archivos sin cambios pendientes de Pablo): campo `isUpcoming` duplicado en `UpsertSetlistInput`; `validateSearch` de `/acordes` y `/letras` devolvía `songId`/`songIds` como `string | undefined` obligatorios, lo que con `exactOptionalPropertyTypes` obligaba a todo `<Link>` a esas rutas a pasar `search` (así fallaba el de `InicioPage`) — ahora son claves opcionales; formato Prettier en `SetlistDetail` y `GeneratedPasswordModal`.
+- Arreglado en el working tree de Pablo, **sin commitear a pedido suyo** (lo junta él con su trabajo pendiente): formato Prettier de `useApp.tsx` y `MiniPlayer.tsx:119` (`current.duration` → `current?.duration || 0`, error introducido por esos mismos cambios pendientes, no presente en `main`). `InicioPage` y `AudioTracksModal` ya tenían el formato corregido en esos cambios.
+- Los ~12.000 "errores" de lint que aparecen al correr `eslint` en Windows son CRLF (`core.autocrlf=true`); en el repo los archivos están en LF y en el runner Linux no aparecen.
+
+**Hallazgo documentado — decisión consciente de alcance, no limitación oculta: el CI no frena push directos a `main` ni los commits de Lovable.** El workflow corre y marca rojo, pero Vercel y Render despliegan igual, porque escuchan el push por su cuenta. Los commits que Lovable sincroniza van directo a `main` y también se saltean el control. El CI solo funciona como control visible **si se trabaja con ramas + Pull Requests** (el check rojo aparece en el PR antes de mergear). Recién bloquearía el deploy real si en el futuro se configura **"Auto-Deploy: After CI Checks Pass"** en Render y el equivalente en Vercel (que espere los checks de GitHub antes de promover el deploy). Se dejó fuera de este ticket a propósito: el pedido era verificación, no tocar el deploy.
+
+**Documentación desactualizada señalada, no corregida en este ticket:** `claude/stack-y-patrones-base.md` (frontend) dice que el stack usa oxlint/oxfmt en lugar de ESLint/Prettier; eso vale para el backend, pero el frontend real usa **ESLint + Prettier** (`eslint.config.js` con `eslint-plugin-prettier`). También dice Vite `^7` y el repo tiene Vite 8.
+
+**Verificado en GitHub (corridas reales, no simuladas):**
+- Push de los workflows a `main`: backend **verde** (run `36070722646`); frontend **rojo en lint** (run `36070719812`) por los 4 errores de formato que están arreglados pero sin commitear en el working tree de Pablo — `tsc` ya en verde ahí. `main` del frontend queda en rojo hasta que Pablo commitee esos cambios; es el estado real, no un falso positivo.
+- Prueba del rojo: rama `ci/prueba-error-tipos` en cada repo con `export const pruebaCi: number = "esto no es un número";` → PR #1 en cada repo → **rojo en el paso `Tipos (tsc --noEmit)`**, exit code 2, lint y build `skipped` (frontend run `36072234543`, backend run `36072254874`).
+- Revert del error pusheado al mismo PR → **verde en los 6 pasos** (frontend run `36072362463`, backend run `36072366448`). En la rama del frontend se había sumado el formato Prettier de los 3 archivos pendientes para que la rama pudiera quedar verde; nunca llegó a `main`.
+- Limpieza: PRs #1 cerrados **sin mergear** (estado `CLOSED`, al borrar la rama de origen), ramas `ci/prueba-error-tipos` borradas en remoto y local, worktrees temporales eliminados.
+- **Sin verificar en navegador:** el cambio de `validateSearch` en `/acordes` y `/letras` es equivalente en comportamiento (clave ausente en vez de `undefined`), pero no se abrió una canción desde un setlist para confirmarlo.
+
+**Dónde mirar de ahora en más:** pestaña **Actions** de cada repo, y el check **"CI / tsc + lint + build"** al pie de cada PR.
+
+---
+
 ## 2026-09-24 — Letras, Acordes, compases, favoritos, setlists reutilizables y links relacionados
 
 **Motivo de negocio:** se completó una tanda de mejoras de uso diario para el repertorio: edición controlada de letras/acordes, mejor lectura de secciones y compases, exportaciones PDF más completas, favoritos compactos y filtrables, setlists reutilizables entre reuniones y enlaces externos asociados a cada canción.
