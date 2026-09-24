@@ -34,6 +34,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Fix chico: "Rol en el ministerio" como desplegable en Agregar miembro
+
+**Motivo:** pedido directo de Pablo sobre el modal "Agregar miembro" (Equipo) — el campo "Rol en el ministerio" era texto libre; pidió que fuera un desplegable con los valores que ya existen en el equipo, no texto libre.
+
+**Implementación:** `AddMemberModal.tsx` arma las opciones a partir de `useApp().users` (ya cargado, sin fetch nuevo) — no es un catálogo fijo en código, son los `ministryRole` que ya tienen los integrantes reales. Se filtran los dados de baja (mismo criterio que ya usa el filtro de instrumentos de `EquipoPage`) porque, al probarlo, aparecía `"Voluntario"` en la lista — arrastrado de dos cuentas de prueba (`test.verificacion@…`, `verificacion.alta2@…`) dadas de baja en el ticket de Equipo y nunca borradas físicamente (softRemove, como corresponde). No era un dato inventado ni un bug de cálculo, pero no tenía sentido ofrecerlo como opción para un alta nueva.
+
+**Verificado con navegador real:** el desplegable muestra los 7 roles de ministerio reales de los integrantes activos (`Bajista`, `Baterista`, `Director de Ministerio`, `Guitarrista`, `Líder de alabanza`, `Sonido`, `Vocalista`), sin `"Voluntario"` de las cuentas de baja.
+
+**Deuda anotada, no resuelta:** `EditMemberModal.tsx` (editar un integrante existente) tiene el mismo campo como texto libre — no se tocó porque no fue parte de este pedido puntual.
+
+---
+
 ## 2026-09-24 — "Mi perfil": foto real, edición propia y cambio de contraseña (feature nueva)
 
 **Motivo de negocio:** el ícono de perfil en el Sidebar no hacía nada (era un `<div>` estático). Se pidió una pantalla nueva donde **cualquier** usuario logueado —sin ningún permiso de admin— pueda subir su propia foto real, editar sus propios datos (nombre, ministryRole, instrumentos) y cambiar su propia contraseña. Distinto del ABM de Equipo (admin editando a cualquiera): acá nunca hay un `:id` de por medio, todo opera sobre el usuario autenticado.
