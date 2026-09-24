@@ -10,6 +10,7 @@ import {
 import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
 import { Tag } from "../../tags/entities/tag.entity";
 import { AudioTrack } from "./audio-track.entity";
+import { SongLink } from "./song-link.entity";
 import { SongPlayStat } from "./song-play-stat.entity";
 
 @Entity("songs")
@@ -67,4 +68,7 @@ export class Song extends BaseAuditEntity {
   /** Pistas adicionales (click, guía, solo de instrumento, etc.). No confundir con audioKey (audio original/cover). */
   @OneToMany(() => AudioTrack, (track) => track.song)
   tracks!: Relation<AudioTrack>[];
+
+  @OneToMany(() => SongLink, (link) => link.song)
+  links!: Relation<SongLink>[];
 }

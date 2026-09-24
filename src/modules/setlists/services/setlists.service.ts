@@ -45,6 +45,7 @@ export class SetlistsService {
     const setlist = this.setlistRepo.create({
       title: dto.title,
       date: new Date(dto.date),
+      isUpcoming: dto.isUpcoming ?? true,
       type: dto.type,
       leader,
       team,
@@ -84,6 +85,7 @@ export class SetlistsService {
     Object.assign(setlist, {
       ...(dto.title !== undefined && { title: dto.title }),
       ...(dto.date !== undefined && { date: new Date(dto.date) }),
+      ...(dto.isUpcoming !== undefined && { isUpcoming: dto.isUpcoming }),
       ...(dto.type !== undefined && { type: dto.type }),
     });
     return this.setlistRepo.save(setlist);

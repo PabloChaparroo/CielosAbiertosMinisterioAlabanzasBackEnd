@@ -3,6 +3,7 @@ import { Type } from "class-transformer";
 import {
   ArrayNotEmpty,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsIn,
   IsOptional,
@@ -30,6 +31,10 @@ export class CreateSetlistDto {
 
   @IsDateString()
   date!: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isUpcoming?: boolean;
 
   @IsIn(EVENT_TYPES)
   type!: EventType;

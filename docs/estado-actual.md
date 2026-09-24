@@ -4,6 +4,45 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Letras, Acordes, compases, favoritos, setlists reutilizables y links relacionados
+
+**Motivo de negocio:** se completó una tanda de mejoras de uso diario para el repertorio: edición controlada de letras/acordes, mejor lectura de secciones y compases, exportaciones PDF más completas, favoritos compactos y filtrables, setlists reutilizables entre reuniones y enlaces externos asociados a cada canción.
+
+### Letras y Acordes
+
+- **Modo lectura por defecto en Letras:** la letra se muestra como texto no editable. El botón **Editar** habilita edición, atajos de secciones y guardado/cancelación.
+- **Atajos de secciones:** `INTRO`, `ESTROFA 1`, `ESTROFA 2`, `CORO`, `PRE-CORO`, `PUENTE`, `INTERLUDIO`, `FINAL` y `SOLO`; insertan marcas ChordPro en la posición del cursor.
+- Se reconocen `{coro}` y `[coro]`; se muestran en mayúsculas, más grandes y en dorado/naranja.
+- Acordes tiene edición persistente, atajos de secciones y acordes diatónicos según la tonalidad seleccionada. Por ejemplo, en `D`: `D`, `Em`, `F#m`, `G`, `A`, `Bm`, `C#dim`.
+- El atajo **Tab** inserta separación horizontal. El parser une una línea que solo contiene acordes con la línea de letra siguiente, corrigiendo canciones como “Desde mi interior”.
+- Se ajustaron el espaciado entre acordes/letra, el tamaño inicial de Acordes (`25px`) y la vista de pantalla completa.
+
+### PDFs y compás
+
+- Letras y Acordes muestran `Compás 4/4`, `3/4`, `6/8`, etc., en el encabezado del PDF.
+- Las secciones del PDF de Letras salen en dorado, mayúsculas y con tamaño mayor.
+- Se agregó `Song.compas` en backend/frontend, selector en alta/edición y visualización en listas y encabezados.
+- Migración aplicada: `1759000000000-AddSongTimeSignature`; el seed demo carga `4/4`.
+
+### Favoritos y Setlists
+
+- Favoritos ahora usa tarjetas mucho más compactas y un buscador por título o artista.
+- Se agregó `Setlist.isUpcoming` para conservar listas reutilizables. Las nuevas nacen como próximas y cada tarjeta permite **Poner en próximas** o **Sacar de próximas** sin duplicar la lista.
+- Migración aplicada: `1759100000000-AddSetlistUpcomingStatus`.
+
+### Links relacionados por canción
+
+- Se agregó la entidad uno-a-muchos `SongLink` (`song_links`) con `label`, `url`, `type` opcional y `order`.
+- Nuevos endpoints: `GET/POST /canciones/:songId/links` y `PATCH/DELETE /links/:id`, usando los permisos existentes de `cancion`.
+- En **Escuchar y Subir** se agregó un botón y modal para ver, abrir, agregar y eliminar links de YouTube, Drive, Spotify u otros.
+- Migración aplicada: `1759200000000-AddSongLinks`.
+
+**Incidente corregido:** después de agregar `compas` e `isUpcoming`, `/canciones` y `/setlists` devolvían `500` porque `synchronize` está desactivado y las migraciones no se habían aplicado. Se ejecutó `npm run migration:run` sin borrar datos.
+
+**Verificado:** `tsc --noEmit` y build del backend exitosos; migraciones aplicadas; ESLint del frontend sin errores en las superficies modificadas. No se hizo una verificación visual automatizada completa de todos los breakpoints.
+
+---
+
 ## 2026-09-24 — Letra en foto: subida y visualización reales (gap del pedido original cerrado)
 
 **Motivo de negocio:** el diseño original de Letras pedía "texto plano editable o imagen subida, con mock de upload con preview". El toggle Texto/Imagen ya existía en `LetrasPage`, pero el lado "Imagen" era 100% mock — un `<input type="file">` sin `onChange`, que no hacía nada. Este ticket lo cierra con el mismo patrón de audio: URL firmada, el binario nunca pasa por Nest.

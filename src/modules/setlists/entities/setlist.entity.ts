@@ -28,6 +28,9 @@ export class Setlist extends BaseAuditEntity {
 
   @Column({ type: "timestamptz" })
   date!: Date;
+  
+  @Column({ type: "boolean", default: false })
+  isUpcoming!: boolean;
 
   @Column({ type: "varchar" })
   type!: EventType;
