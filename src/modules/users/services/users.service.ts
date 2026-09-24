@@ -37,6 +37,17 @@ export class UsersService {
       .getOne();
   }
 
+  /** Para verificar la contraseña actual antes de cambiarla — mismo patrón que findByEmailWithPassword, pero por id (ya autenticado). */
+  async findByIdWithPassword(id: string): Promise<User> {
+    const user = await this.userRepo
+      .createQueryBuilder("user")
+      .addSelect("user.passwordHash")
+      .where("user.id = :id", { id })
+      .getOne();
+    if (!user) throw new NotFoundException("Usuario no encontrado");
+    return user;
+  }
+
   async create(dto: CreateUserDto): Promise<User> {
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = this.userRepo.create({
@@ -65,6 +76,30 @@ export class UsersService {
       ...(dto.initials !== undefined && { initials: dto.initials }),
     });
     return this.userRepo.save(user);
+  }
+
+  /**
+   * "Mi perfil" — deliberadamente separado de update() (el que usa el ABM
+   * de admin en Equipo, gateado por equipo:update). Este método no toma
+   * email/roles porque el DTO que lo llama (UpdateMyProfileDto) ni
+   * siquiera los tiene como campos posibles.
+   */
+  async updateOwnProfile(
+    id: string,
+    dto: { name?: string; ministryRole?: string; instruments?: string[]; avatarKey?: string },
+  ): Promise<User> {
+    const user = await this.findById(id);
+    Object.assign(user, {
+      ...(dto.name !== undefined && { name: dto.name }),
+      ...(dto.ministryRole !== undefined && { ministryRole: dto.ministryRole }),
+      ...(dto.instruments !== undefined && { instruments: dto.instruments }),
+      ...(dto.avatarKey !== undefined && { avatarKey: dto.avatarKey }),
+    });
+    return this.userRepo.save(user);
+  }
+
+  async updatePasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.userRepo.update({ id }, { passwordHash });
   }
 
   async remove(id: string): Promise<void> {

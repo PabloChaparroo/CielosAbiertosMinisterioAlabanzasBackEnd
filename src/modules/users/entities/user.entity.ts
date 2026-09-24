@@ -28,6 +28,10 @@ export class User extends BaseAuditEntity {
   @Column({ type: "varchar", length: 4 })
   initials!: string;
 
+  /** Key del objeto en S3/MinIO de la foto de perfil real, mismo criterio que Song.audioKey/lyricsImageKey. null si el usuario no subió ninguna (sigue mostrándose avatarColor/initials). */
+  @Column({ type: "varchar", nullable: true })
+  avatarKey!: string | null;
+
   @ManyToMany(() => Role)
   @JoinTable({
     name: "user_roles",

@@ -1,9 +1,13 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { AuthorizationService } from "../../common/authorization/authorization.service";
 import { UsersService } from "../users/services/users.service";
+import { ChangeMyPasswordDto } from "./dto/change-my-password.dto";
 import { LoginDto } from "./dto/login.dto";
+import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
+
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class AuthService {
@@ -52,7 +56,31 @@ export class AuthService {
       instruments: user.instruments,
       avatarColor: user.avatarColor,
       initials: user.initials,
+      avatarKey: user.avatarKey,
       permissions,
     };
+  }
+
+  /**
+   * "Mi perfil" — sin ningún permiso de admin, solo requiere estar
+   * autenticado. Nunca puede tocar email/roles porque UpdateMyProfileDto
+   * no tiene esos campos. Devuelve el mismo shape que me() para que el
+   * frontend pueda actualizar su estado local sin un GET extra.
+   */
+  async updateMyProfile(userId: string, dto: UpdateMyProfileDto) {
+    await this.usersService.updateOwnProfile(userId, dto);
+    return this.me(userId);
+  }
+
+  /**
+   * Requiere la contraseña actual (no alcanza con estar logueado) — mismo
+   * bcrypt.compare que ya usa login(), no un mecanismo nuevo.
+   */
+  async changeMyPassword(userId: string, dto: ChangeMyPasswordDto): Promise<void> {
+    const user = await this.usersService.findByIdWithPassword(userId);
+    const currentOk = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!currentOk) throw new BadRequestException("La contraseña actual no es correcta");
+    const newHash = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+    await this.usersService.updatePasswordHash(userId, newHash);
   }
 }

@@ -15,11 +15,12 @@ const UPLOAD_URL_TTL_SECONDS = 300;
 const DOWNLOAD_URL_TTL_SECONDS = 3600;
 
 /**
- * Solo se valida acá el `contentType` de "audios" (lo único con un flujo de
- * subida real hoy). "letras" queda sin whitelist a propósito: la subida de
- * foto de letra sigue siendo un placeholder de UI, no hay flujo real que
- * proteger todavía — agregarle una whitelist ahora sería validar algo que
- * nadie usa.
+ * Se valida el `contentType` de "audios" y "avatares" — los dos flujos de
+ * subida reales hoy. "letras" queda sin whitelist a propósito: la subida de
+ * foto de letra tiene su propia validación client-side desde el ticket de
+ * Letras, pero nunca se le agregó la contraparte server-side — deuda ya
+ * existente, no introducida ni resuelta acá (fuera de alcance de este
+ * ticket, que es sobre avatares).
  */
 const ALLOWED_AUDIO_CONTENT_TYPES = [
   "audio/mpeg",
@@ -33,6 +34,8 @@ const ALLOWED_AUDIO_CONTENT_TYPES = [
   "audio/aac",
   "audio/webm",
 ];
+
+const ALLOWED_AVATAR_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -90,13 +93,16 @@ export class StorageService implements OnModuleInit {
    * puramente client-side y cualquiera con las devtools puede saltarlo.
    */
   async getUploadUrl(
-    folder: "audios" | "letras",
+    folder: "audios" | "letras" | "avatares",
     contentType: string,
   ): Promise<{ uploadUrl: string; key: string }> {
     if (folder === "audios" && !ALLOWED_AUDIO_CONTENT_TYPES.includes(contentType)) {
       throw new BadRequestException(
         "Formato de audio no soportado. Subí un archivo mp3, wav, ogg, m4a o aac.",
       );
+    }
+    if (folder === "avatares" && !ALLOWED_AVATAR_CONTENT_TYPES.includes(contentType)) {
+      throw new BadRequestException("Formato de imagen no soportado. Subí un jpg, png o webp.");
     }
     const key = `${folder}/${randomUUID()}`;
     const command = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });

@@ -34,6 +34,37 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — "Mi perfil": foto real, edición propia y cambio de contraseña (feature nueva)
+
+**Motivo de negocio:** el ícono de perfil en el Sidebar no hacía nada (era un `<div>` estático). Se pidió una pantalla nueva donde **cualquier** usuario logueado —sin ningún permiso de admin— pueda subir su propia foto real, editar sus propios datos (nombre, ministryRole, instrumentos) y cambiar su propia contraseña. Distinto del ABM de Equipo (admin editando a cualquiera): acá nunca hay un `:id` de por medio, todo opera sobre el usuario autenticado.
+
+**Investigación previa:** `User` no tenía ningún campo de foto real — se agregó `avatarKey` (nullable, migración `AddUserAvatarKey`) con el mismo criterio que `audioKey`/`lyricsImageKey`. No existía ningún endpoint de "mi perfil": `UsersService.update()` (el que usa el ABM de admin) está gateado por `equipo:update`, así que un Músico sin ese permiso no podía usarlo para editarse a sí mismo — hacían falta endpoints nuevos y separados.
+
+**Backend nuevo, sin ningún permiso especial (solo autenticación):**
+- `PATCH /auth/me` → `{name?, ministryRole?, instruments?, avatarKey?}`. El DTO (`UpdateMyProfileDto`) **ni siquiera tiene** campos `email`/`roles` — no es que se rechacen, directamente no existen como posibles. Nunca toma un `:id`, siempre opera sobre `@CurrentUser().id`, así que estructuralmente no hay forma de editar a otro usuario con este endpoint.
+- `PATCH /auth/me/password` → `{currentPassword, newPassword}`. Verifica `currentPassword` con el mismo `bcrypt.compare` que ya usa `login()` (no se inventó un mecanismo nuevo). Mínimo de `newPassword`: 6 caracteres — se reusó el `@MinLength(6)` que ya regía el alta de usuarios en Equipo, no es una regla nueva.
+- Se agregó `"avatares"` como tercera carpeta válida en `StorageService.getUploadUrl` (antes solo `"audios"`/`"letras"`) con su propia whitelist (`image/jpeg`, `image/png`, `image/webp`) — evita mezclar fotos de perfil con fotos de letra bajo el mismo prefijo de S3.
+
+**Inconsistencia de JWT tras cambiar contraseña — señalada, no resuelta técnicamente, con mitigación barata:** el JWT viejo sigue siendo válido hasta las 8hs sin importar que la contraseña haya cambiado (no hay refresh ni invalidación de tokens — misma limitación ya documentada desde el ticket de login). No se agregó ninguna infraestructura nueva para esto. Mitigación: tras un cambio exitoso, la UI muestra *"Por seguridad, te recomendamos cerrar sesión y volver a entrar — tu sesión actual sigue activa con la contraseña anterior hasta que expire sola"* con un botón "Cerrar sesión ahora" — no forzado automáticamente.
+
+**Scope agregado de paso, no un detalle menor — componente `Avatar` compartido:** ningún componente de la app renderizaba una foto real hasta ahora; los 6 sitios que muestran un avatar (`Sidebar`, `EquipoPage` ×2 —card y detalle—, `Annotations`, `SetlistDetail`, `SetlistCard`) pintaban `avatarColor`+`initials` inline, cada uno por su cuenta. Esto **no fue pedido explícitamente así** — fue una decisión de implementación para no duplicar 6 veces la lógica de "resolver `getDownloadUrl` o caer al círculo de color+iniciales". Se creó `Avatar` en `components/common/ui-bits.tsx` (mismo lugar que `RoleBadge`/`Cover`) y se reemplazaron los 6 sitios.
+- **Cache en memoria por `avatarKey`, sin necesidad de invalidación manual:** cada subida de foto genera un `avatarKey` nuevo (`randomUUID()` en el backend, igual que `audioKey`/`lyricsImageKey`) — nunca se reusa el mismo key sobreescribiendo el archivo. Confirmado explícitamente antes de implementar la cache: como la key cambia con cada subida, una entrada vieja del `Map` simplemente queda sin referenciarse, nunca desactualizada — no hizo falta ningún mecanismo de invalidación.
+
+**Bug real encontrado y arreglado en el camino — stacking context roto:** el modal `MiPerfilModal`, al principio, se armó anidado dentro de `SidebarContent` (dentro del `<aside className="fixed ...">`). Un elemento `position:fixed` crea su propio stacking context — el modal (también `fixed inset-0 z-50`) quedaba atrapado adentro del stacking context del `<aside>`, así que su `z-50` nunca se comparaba contra el contenido de `<main>` (que pinta después, al mismo nivel que el `<aside>`, y lo tapaba). Se solucionó subiendo el estado del modal a `AppLayout.tsx` y renderizándolo como hermano de `<MiniPlayer/>`, fuera de cualquier ancestro `fixed` — mismo nivel del árbol que ya usa `MiniPlayer` para poder ser `fixed` de verdad contra el viewport.
+
+**Detalle técnico:**
+- `types/user.ts`/`auth-store.ts`: `avatarKey: string | null` agregado a `User`/`AuthenticatedUser`.
+- `authStore.refresh()` nuevo: re-pega a `/auth/me` siempre (a diferencia de `ensureRestored()`, que solo lo hace una vez) — se llama después de guardar el perfil para que `Sidebar` refleje el cambio sin relogear. Como `useApp().currentUser` prioriza la lista de Equipo (`users`) sobre el snapshot de `authStore`, también se llama `reloadUsers()` en el mismo momento — los dos refrescos hacen falta para que el cambio se vea en todos lados.
+- Nuevo `src/features/perfil/services/perfil.service.ts` (`updateMyProfile`, `changeMyPassword`) y `src/features/perfil/components/MiPerfilModal.tsx`.
+
+**Verificado con navegador real** (Playwright, con capturas), logueado como Joaquín (Músico, sin ningún permiso de admin): subida de foto real + edición de nombre, persistidos y reflejados en el Sidebar sin relogear. Campo email deshabilitado con nota explicativa, sin ningún campo de rol del sistema — confirmado que no puede tocar ninguno de los dos desde acá. Cambio de contraseña con la actual incorrecta rechazado con mensaje claro (400); con la correcta, funcionó. Cerré sesión y confirmé que la contraseña vieja ya no sirve (401) y la nueva sí. Confirmé la foto real reflejada en `Sidebar` y en la card de Equipo (no solo en el modal) vía `img.complete`/`naturalWidth` reales, no un `<img>` roto. Se revirtió todo el estado de prueba de Joaquín al final (nombre, instrumentos, `avatarKey` a `NULL` real, contraseña al hash original) — el endpoint de perfil propio no tiene forma de "borrar" una foto ya puesta (solo reemplazarla), mismo patrón ya existente para `audioKey`/`lyricsImageKey`, así que la limpieza de `avatarKey` se hizo por SQL directo.
+
+**Alcance respetado:** no se tocó el ABM de Equipo (edición por admin, baja de usuarios), Setlists, Canciones, Roles y Permisos, Anotaciones, Favoritos, ni la lógica de login/AuthGate.
+
+**Sin verificar:** el caso de sesión con JWT viejo tras cambiar contraseña en una segunda pestaña/dispositivo (documentado como deuda, no ejercitado). Concurrencia de dos guardados de perfil simultáneos del mismo usuario.
+
+---
+
 ## 2026-09-24 — Diagnóstico de Estadísticas + guard de loading (frontend)
 
 **Motivo:** verificar si el módulo de Estadísticas (`EstadisticasPage`) seguía funcionando correctamente desde que `Song`/`playStats` pasaron a ser reales, o si había quedado algún bug silencioso de shape/formato heredado del mock.

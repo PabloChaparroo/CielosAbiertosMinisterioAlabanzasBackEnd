@@ -3,8 +3,8 @@ import { IsIn, IsString } from "class-validator";
 import { StorageService } from "./storage.service";
 
 class UploadUrlDto {
-  @IsIn(["audios", "letras"])
-  folder!: "audios" | "letras";
+  @IsIn(["audios", "letras", "avatares"])
+  folder!: "audios" | "letras" | "avatares";
 
   @IsString()
   contentType!: string;
