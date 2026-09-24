@@ -4,6 +4,36 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-24 — Letra en foto: subida y visualización reales (gap del pedido original cerrado)
+
+**Motivo de negocio:** el diseño original de Letras pedía "texto plano editable o imagen subida, con mock de upload con preview". El toggle Texto/Imagen ya existía en `LetrasPage`, pero el lado "Imagen" era 100% mock — un `<input type="file">` sin `onChange`, que no hacía nada. Este ticket lo cierra con el mismo patrón de audio: URL firmada, el binario nunca pasa por Nest.
+
+**Investigación previa:** `CreateSongDto`/`UpdateSongDto` ya aceptaban `lyricsImageKey?: string` — cero cambio de backend, igual que había pasado con `audioKey`. `StorageService.getUploadUrl` ya soporta `folder: "letras"` (solo se usaba `"audios"` hasta ahora). El toggle Texto/Imagen ya resolvía de antemano la pregunta de "¿reemplaza o convive?": conviven, nunca se pensó como exclusión mutua.
+
+**Decisiones tomadas:**
+- **Coexistencia confirmada** (no una decisión nueva, ya estaba en el diseño): el `chordpro` nunca se borra al subir una foto. Único agregado: si la canción ya tiene `lyricsImageKey`, la vista arranca en la pestaña "Imagen" en vez de "Texto" — más útil que forzar siempre la misma pestaña por defecto.
+- **Whitelist de imagen deliberadamente sin HEIC:** `image/jpeg`, `image/png`, `image/webp`. HEIC no se soporta a propósito, no por olvido — el `<img>` de visualización no lo puede decodificar en Chrome/Firefox/Edge de escritorio ni en Android (solo Safari/iOS lo hace nativo), y permitir subir un formato que la mitad del equipo no puede ver rompe el propósito completo de la feature.
+- **Límite de 8MB** (vs. los 20MB de audio) — una foto de una sola hoja de letra comprime normalmente a 2-6MB en JPEG aunque sea de alta resolución; 8MB da margen sin permitir capturas RAW gigantes por error. Mismo criterio que el de audio: puramente client-side, no hace cumplir nada un `PutObjectCommand` firmado así.
+- **Helper de validación separado** (`image-validation.ts`), no generalizado con el de audio (`audio-validation.ts`) — las reglas (tipos, tamaño, mensajes) son realmente distintas entre los dos casos; generalizar hubiera ahorrado poco código a costa de una indirección genérica.
+- **Ubicación de la UI: inline en la vista de detalle de `LetrasPage` que ya existía**, no un modal nuevo (a diferencia de multitracks, donde no existía ninguna UI). Se conectó el `input[type=file]` mockeado al flujo real.
+- **Exportar a PDF una letra en foto: fuera de alcance, con el botón deshabilitado y explicado, no arreglado a medias.** Embeber la imagen en el PDF (`jsPDF.addImage`) requiere convertirla a data URL vía `<canvas>`, y el bucket de MinIO nunca tuvo configurada una política CORS para permitir ese uso (todo el consumo de URLs firmadas hasta ahora fue directo en `<audio>`/`<img>`, que no tienen esa restricción) — intentarlo ahora podría fallar en el momento de exportar con un error de "tainted canvas" no probado. Se prefirió dejarlo explícitamente para un ticket aparte que primero confirme/configure CORS en MinIO, en vez de arriesgar una feature a medias.
+
+**Detalle técnico:**
+- `types/song.ts`: `lyricsImage?: string` → `lyricsImageKey: string | null` — mismo criterio de honestidad que ya se aplicó a `audioKey` (era una key, no una URL, y el opcional escondía el `null` real del backend).
+- Nuevo `src/features/canciones/lib/image-validation.ts` (`validateImageFile`, whitelist, `MAX_IMAGE_BYTES`).
+- `songs.service.ts`: `CreateSongInput`/`UpdateSongInput` ganan `lyricsImageKey?: string`; `mapSong` mapea el campo directo (ya no lo omite condicionalmente).
+- `LetrasPage.tsx`: la vista de detalle se separó en `SongLyricsDetail` (mismo archivo) para poder manejar su propio estado de subida/progreso sin ensuciar el componente de listado. Reusa `StorageClient` tal cual (URL firmada + progreso real por XHR) y `SongsService.updateSong`.
+
+**Hallazgo de paso, no arreglado — pre-existente, no introducido por este ticket:** al verificar, la consola tira un warning de hidratación (`<button> cannot contain a nested <button>`) en el listado de Letras — el card de cada canción es un `<button>` que envuelve a `<FavButton/>`, que también renderiza un `<button>`. Confirmé que esta estructura ya estaba así en el código original, sin tocar; no es parte de este ticket arreglarlo, pero queda anotado por si se decide encarar un ticket de accesibilidad/HTML semántico más adelante (es HTML inválido, aunque hoy no rompe nada visible).
+
+**Verificado con navegador real** (Playwright, con capturas): canción sin `lyricsImageKey` sigue mostrando su texto normal en la pestaña "Texto", y la pestaña "Imagen" muestra el placeholder de "sin foto todavía" en vez de romperse. Archivo no-imagen (`.wav`) rechazado con el mensaje claro, antes de tocar MinIO. Imagen real (PNG de prueba) subida con barra de progreso, persistida como `lyricsImageKey`, y confirmada cargando de verdad desde una URL firmada real (`img.complete === true`, dimensiones reales del archivo, no un `<img>` roto). Tras recargar la página, la vista de detalle abrió directo en la pestaña "Imagen" (por tener `lyricsImageKey`) y la foto siguió ahí. Se revirtió `lyricsImageKey` a `null` al terminar — las 21 canciones reales quedaron exactamente como estaban.
+
+**Alcance respetado:** no se tocó el flujo de audio ni multitracks. No se tocó Setlists, Equipo, Roles y Permisos, Anotaciones, Favoritos, login. Sin OCR.
+
+**Cierre:** con esto se cierra el último gap explícito del pedido original de Letras ("mock de upload con preview" → subida y visualización reales).
+
+---
+
 ## 2026-09-24 — Diagnóstico de Estadísticas + guard de loading (frontend)
 
 **Motivo:** verificar si el módulo de Estadísticas (`EstadisticasPage`) seguía funcionando correctamente desde que `Song`/`playStats` pasaron a ser reales, o si había quedado algún bug silencioso de shape/formato heredado del mock.
