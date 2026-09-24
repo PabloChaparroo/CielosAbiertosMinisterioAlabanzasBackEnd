@@ -33,3 +33,6 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// ERROR A PROPÓSITO para probar el CI — se revierte en el commit siguiente
+export const pruebaCi: number = "esto no es un número";
