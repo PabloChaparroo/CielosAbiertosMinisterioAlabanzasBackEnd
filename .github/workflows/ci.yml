@@ -1,0 +1,43 @@
+# Verificación, no deploy: Render ya despliega solo en cada push a main.
+# Este workflow frena un cambio roto (tipos, lint o build) visible en el PR antes de mergear.
+# No levanta Postgres ni corre migraciones (Opción A) — ver docs/estado-actual.md, entrada del CI.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# un push nuevo a la misma rama/PR cancela la corrida anterior, que ya quedó vieja
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: tsc + lint + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Tipos (tsc --noEmit)
+        run: npx tsc --noEmit
+
+      - name: Lint (oxlint)
+        run: npm run lint
+
+      - name: Build (swc)
+        run: npm run build
