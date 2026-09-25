@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — "Mi perfil": se saca la subida de foto de perfil (frontend)
+
+**Pedido de Pablo:** sacar del formulario de "Mi perfil" el ingreso de foto de perfil — todavía no se va a implementar.
+
+**Cambio:** `MiPerfilModal.tsx` sin el botón "Cambiar foto" ni su lógica (archivo elegido, validación, subida con progreso a `avatares`, cancelación). Queda el círculo con las iniciales y el nombre al lado; "Guardar perfil" solo guarda el nombre.
+
+**Alcance, a propósito:** no se tocó el backend — `User.avatarKey` y `UpdateMyProfileDto.avatarKey` siguen existiendo, y el componente `Avatar` sigue mostrando la foto si un usuario ya tiene una cargada (en la base local ninguno). Cuando se implemente, se reactiva solo el formulario.
+
+**Verificado con navegador real:** "Mi perfil" sin "Cambiar foto" ni input de archivo; "Guardar perfil" (con el mismo nombre, sin cambiar datos) muestra "Perfil actualizado.". `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — "Solo acordes": notas "(…)" en un renglón arriba de los compases (frontend)
 
 **Pedido de Pablo (con foto de cómo lo escribe a mano):** en "Solo acordes" la nota no tiene que ir en la misma línea de compases sino **arriba**, en la columna donde se escribió — ej. `_2doVers` sobre `| G |`.
