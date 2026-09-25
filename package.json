@@ -8,8 +8,9 @@
   },
   "scripts": {
     "dev": "node scripts/dev-up.cjs",
-    "build": "swc src -d dist --config-file .swcrc --copy-files --strip-leading-paths",
-    "start:dev": "concurrently -k \"swc src -d dist --config-file .swcrc --copy-files --strip-leading-paths -w\" \"node --watch dist/main.js\"",
+    "build": "swc src -d dist --config-file .swcrc --copy-files --strip-leading-paths --ignore \"**/*.spec.ts\"",
+    "build:watch": "swc src -d dist --config-file .swcrc --copy-files --strip-leading-paths --ignore \"**/*.spec.ts\" -w",
+    "start:dev": "concurrently -k \"npm run build:watch\" \"node --watch dist/main.js\"",
     "start:prod": "node dist/main.js",
     "migration:generate": "npm run build && typeorm migration:generate -d dist/config/data-source.js",
     "migration:run": "npm run build && typeorm migration:run -d dist/config/data-source.js",
