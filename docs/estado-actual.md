@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Duración de la canción tomada automáticamente del audio (frontend)
+
+**Motivo:** pedido directo de Pablo — en "Subir / Editar canción" la duración se cargaba a mano; que se complete sola mirando el audio.
+
+**Implementación:** `features/canciones/lib/audio-duration.ts` (`readAudioDuration`, `readFileDuration`) lee solo los **metadatos** del audio con un `<audio preload="metadata">` — no descarga el archivo entero, ni pasa nada por el backend. `UploadModal.tsx`:
+- **Al elegir un archivo** (alta o reemplazo): la duración se reemplaza con la del archivo.
+- **Al abrir "Editar" en una canción que ya tiene audio:** se lee la duración real desde la URL firmada (`StorageClient.getDownloadUrl`) y se completa el campo, salvo que el usuario ya lo haya tocado a mano mientras cargaba.
+- Los campos siguen siendo editables; el texto de ayuda indica "Tomada automáticamente del archivo de audio" y vuelve al texto normal si se corrige a mano. Si el navegador no puede leer la duración (formato no soportado, error de red, 15 s de timeout), queda el valor que había, sin error visible.
+- Sin cambios de backend: `duration` sigue siendo un entero en segundos que manda el frontend; recién se persiste al **Guardar**.
+
+**Hallazgo:** las duraciones cargadas a mano no coincidían con el audio real — "Desde mi interior" tiene `300` s (5:00) guardados y su audio dura 6:14. Al abrir "Editar" y guardar se corrige; no se hizo una corrección masiva de las canciones existentes.
+
+**Verificado con navegador real** (Playwright), sin guardar nada: editar "Desde mi interior" → 6 min 14 seg con la ayuda automática; subir canción nueva con un WAV generado de exactamente 83 s → 1 min 23 seg; corregir a mano quita la ayuda automática. La base quedó igual (`duration = 300`). `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Acordes: anotaciones con flecha `↱` y `|:]` sin espacio (frontend)
 
 **Motivo:** pedido directo de Pablo, con captura de referencia de una hoja de acordes que marca al costado de una línea "↱ coro 2 | E |" en letra chica.
