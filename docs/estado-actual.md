@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acordes: anotaciones con flecha `↱` y `|:]` sin espacio (frontend)
+
+**Motivo:** pedido directo de Pablo, con captura de referencia de una hoja de acordes que marca al costado de una línea "↱ coro 2 | E |" en letra chica.
+
+**Implementación:**
+- **Sintaxis:** cualquier texto entre paréntesis en la canción, ej. `[D] (coro 2 | E |)`, se muestra al final de esa línea como `↱ coro 2 | E |`, ~55% del tamaño y en color `sky`. Funciona en "Letra + acordes", "Solo acordes", secciones (`[CORO] (suave)`) y líneas que solo tienen la nota (`(repetir intro)`).
+- `lib/chords.ts`: `parseChordPro` separa las notas de cada línea antes de parsear acordes (así no rompen la unión "línea de solo acordes + línea de letra") y las expone como `notes: string[]` en `ParsedLine` (secciones y líneas).
+- `ChordSheet.tsx`: componente `LineNotes` al final de cada línea/sección. `ChordProEditor.tsx`: los paréntesis se resaltan en azul itálica mientras se edita. `AcordesPage.tsx`: botón **↱ nota** en los atajos, inserta ` ()` con el cursor adentro.
+- PDF de Acordes: las notas salen en azul y más chicas, como `-> texto` — las fuentes estándar de jsPDF no tienen el glifo `↱`.
+- Fix chico aparte (commit propio): la línea de acordes mostraba `| :]` con un espacio; ahora `|:]`.
+
+**Regla a tener en cuenta:** *cualquier* paréntesis pasa a ser nota, también en una línea de letra (ej. una segunda voz `Digno (digno)` se movería al costado como nota). Se verificó que ninguna de las 22 canciones locales usa paréntesis hoy; no se pudo verificar la base de producción.
+
+**Verificado con navegador real** (Playwright, con capturas) sobre una canción temporal creada por la API y dada de baja al terminar: notas con flecha en ambos modos, en secciones y en línea sola; resaltado y botón en el editor; `|:]` sin espacio. `tsc`, lint y build limpios. **Sin verificar:** el PDF (no se abrió el archivo generado). Dos canciones de prueba quedaron dadas de baja lógica (`ZZ Prueba notas (borrar)`), una de un intento fallido del script.
+
+**Hallazgo de paso, no arreglado — pre-existente:** en "Letra + acordes", una línea de solo acordes (`[Bm] [D] [A] :]`) se ve pegada (`BmDA`), porque cada acorde ocupa el ancho de su texto (un espacio). No lo introdujo este ticket.
+
+---
+
 ## 2026-09-24 — CI de verificación (GitHub Actions) en frontend y backend + fix de errores de tipos/lint que ya estaban en `main` del frontend
 
 **Motivo de negocio:** frenar un push roto (tipos, lint o build) antes de que llegue a la rama que dispara el deploy. Es CI de **verificación, no de deploy**: Vercel (frontend) y Render (backend) ya despliegan solos en cada push a `main`, y eso no se tocó.
