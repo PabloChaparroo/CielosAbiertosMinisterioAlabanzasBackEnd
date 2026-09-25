@@ -4,6 +4,34 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Frontend listo para producción en Vercel (frontend)
+
+**Objetivo:** desplegar el frontend (TanStack Start con SSR) en Vercel desde `main`, apuntando al backend de producción `https://cielosabiertosministerioalabanzasbackend.onrender.com`.
+
+**Investigación:**
+- **Variable del backend: `VITE_API_URL`** (la que ya existía), leída solo en `src/lib/api-client.ts`; `storage-client.ts` pasa por el mismo cliente. Valor en Vercel: `https://cielosabiertosministerioalabanzasbackend.onrender.com/api` (con `/api`, sin barra final). Es `VITE_*`: queda fija en el bundle al compilar → tiene que estar antes del build y cambiarla requiere redeploy.
+- **SSR en Vercel sin `vercel.json` ni adapter:** `@lovable.dev/vite-tanstack-config` fuera de Lovable solo pasa `defaultPreset: "cloudflare-module"` a Nitro, y la documentación de Nitro establece que los proveedores auto-detectados (Vercel) tienen prioridad sobre `defaultPreset`. Verificado con un build `VERCEL=1` en una copia limpia: Nitro generó `.vercel/output` (Build Output API v3) con el SSR como función serverless `__server.func` y `/assets` con caché inmutable; la URL de Render quedó en el bundle del navegador.
+- **Nada más apunta a localhost**: sin WebSockets/EventSource ni otras URLs; el único riesgo era el fallback silencioso a `http://localhost:3000/api` si falta la variable.
+- **R2:** el frontend no necesita saber nada de R2 (las URLs firmadas las da el backend), pero el bucket necesita una **política CORS** para el `PUT` desde el navegador.
+- **Dos lockfiles** (`bun.lock` de Lovable y `package-lock.json`): con `bun.lock` presente Vercel instalaría con Bun → Install Command `npm ci`, igual que el CI.
+
+**Cambios:**
+- `vite.config.ts`: si `VERCEL` está definida y falta `VITE_API_URL`, **el build falla** con un mensaje claro (en vez de publicar una app que llama a localhost). No afecta el desarrollo local ni los builds de Lovable.
+- **Mes fijo en Inicio arreglado:** "Canción del mes" y "Más tocadas este mes" usaban `"2026-09"` fijo; ahora `currentMonthKey()` (`src/lib/month.ts`), en UTC igual que el backend al registrar reproducciones.
+
+**Hallazgo, no arreglado (fuera del alcance pedido):** **Estadísticas** tiene el mismo problema — la lista de meses está fija de `2026-01` a `2026-09` con `2026-09` por defecto; desde octubre no se puede elegir el mes actual. Se arregla reusando `currentMonthKey()`.
+
+**Configuración del proyecto en Vercel:** Framework Preset "Other" (o "TanStack Start" si aparece), Build Command `npm run build`, Output Directory vacío (Vercel toma `.vercel/output`), Install Command `npm ci`, Root Directory vacío, Production Branch `main`, variable `VITE_API_URL` (Production y Preview).
+
+**Después del primer deploy (pendiente de Pablo, en este orden):**
+1. **`FRONTEND_URL` en Render** = dominio de producción exacto de Vercel (`https://….vercel.app`, sin barra final). Sin esto el login falla por CORS. Los deploys de *preview* (otras URLs) no van a poder loguearse: el backend acepta un solo origen.
+2. **CORS del bucket de R2** (Cloudflare → R2 → bucket → Settings → CORS Policy): `AllowedOrigins` = dominio de Vercel (+ `http://localhost:8080`), `AllowedMethods` GET/PUT/HEAD, `AllowedHeaders` Content-Type, `ExposeHeaders` ETag, `MaxAgeSeconds` 3600.
+3. **Prueba de punta a punta:** login con el Admin (Network: `POST …onrender.com/api/auth/login` 201, `GET /auth/me` 200); F5 mantiene la sesión; subir una canción con audio (subida firmada a R2 + reproducción); "Entrar como invitado". La primera vez puede tardar 30–60 s (backend gratis despertando).
+
+**Verificado:** build con `VERCEL=1` y sin `VITE_API_URL` → falla con el mensaje; con la variable → `.vercel/output` generado; sin `VERCEL` → build normal (`.output`), como siempre. Inicio en el navegador (backend y frontend locales levantados solo para la prueba y apagados al terminar): "Canción del mes" = Desde mi interior, 8 tarjetas en "Más tocadas este mes". `tsc`, lint y build limpios. **Sin verificar:** el deploy real en Vercel y la conexión contra Render/R2 (los hace Pablo).
+
+---
+
 ## 2026-09-25 — Backend listo para producción: Render + Neon + Cloudflare R2
 
 **Objetivo:** poder desplegar el backend en Render (plan gratis), con Postgres en Neon (AWS us-east-2, Ohio) y storage en Cloudflare R2, **sin cambiar el desarrollo local** (Docker + `npm run dev` siguen igual).
