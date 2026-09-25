@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Letras: solo letra y secciones, sin anotaciones de acordes (frontend)
+
+**Pedido de Pablo:** en Letras no se tienen que ver las anotaciones pensadas para acordes — lo que está entre paréntesis, `:]`, etc. —; solo la letra y las secciones.
+
+**Implementación:** nueva `displayLyricsLines` en `lib/chords.ts`, usada por la vista de Letras y por el PDF de Letras: quita acordes, notas "(…)", `:]`, los `-` sueltos que unen acordes (un guion dentro de una palabra, ej. "Fiel-mente", se conserva), marcas (`%`, `x3`, `Sube Tono`…) y espacios dobles; una línea que solo tenía eso (ej. una línea de solo acordes) no se muestra. `[CORO] (suave)` se muestra como sección "CORO". A propósito **no** se cambió `lyricsLines`/`plainLyrics`, que alimentan el editor de Letras (ver hallazgo).
+
+**⚠️ Hallazgo grave, pre-existente, NO arreglado todavía — editar Letras borra los acordes:** el editor de Letras arranca con `plainLyrics(song.chordpro)` (la letra **sin acordes**) y al Guardar hace `updateSong({ chordpro: draft })`: **cualquier guardado desde Letras reemplaza el chordpro completo por la letra sin acordes** — se pierden acordes, notas y marcas de toda la canción, sin forma de recuperarlos. Verificado leyendo el código (`LetrasPage.tsx`, `handleStartEditing`/`handleSaveLyrics`); en la base local las 22 canciones todavía tienen acordes. Pendiente de decisión de Pablo cómo resolverlo.
+
+**Verificado con navegador real**, solo lectura sobre "Desde mi interior": "Tu gracia me levantó, me basta Tu amor" sin "(coro suave)" ni ":]"; secciones INTRO/CORO/PRE-CORO. `tsc`, lint y build limpios. PDF de Letras sin abrir (usa la misma función).
+
+---
+
 ## 2026-09-25 — Acordes: modo "En vivo" alineado a la izquierda (frontend)
 
 **Pedido de Pablo:** en "En vivo" la canción se mostraba centrada; tiene que estar alineada a la izquierda.
