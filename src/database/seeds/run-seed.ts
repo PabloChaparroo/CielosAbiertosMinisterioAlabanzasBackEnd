@@ -16,7 +16,6 @@ interface DemoUser {
   email: string;
   name: string;
   role: "admin" | "lider" | "musico" | "sudo";
-  ministryRole: string;
   avatarColor: string;
   initials: string;
 }
@@ -27,7 +26,6 @@ const users: DemoUser[] = [
     email: "martin@cielosabiertos.org",
     name: "Martín Álvarez",
     role: "admin",
-    ministryRole: "Director de Ministerio",
     avatarColor: "linear-gradient(135deg,#f5c76a,#e08b3a)",
     initials: "MA",
   },
@@ -36,7 +34,6 @@ const users: DemoUser[] = [
     email: "sofia@cielosabiertos.org",
     name: "Sofía Ledesma",
     role: "lider",
-    ministryRole: "Líder de alabanza",
     avatarColor: "linear-gradient(135deg,#7aa2f7,#8b5cf6)",
     initials: "SL",
   },
@@ -45,7 +42,6 @@ const users: DemoUser[] = [
     email: "joaquin@cielosabiertos.org",
     name: "Joaquín Ruiz",
     role: "musico",
-    ministryRole: "Guitarrista",
     avatarColor: "linear-gradient(135deg,#4ade80,#0ea5e9)",
     initials: "JR",
   },
@@ -54,7 +50,6 @@ const users: DemoUser[] = [
     email: "camila@cielosabiertos.org",
     name: "Camila Ortiz",
     role: "musico",
-    ministryRole: "Vocalista",
     avatarColor: "linear-gradient(135deg,#f472b6,#f59e0b)",
     initials: "CO",
   },
@@ -63,7 +58,6 @@ const users: DemoUser[] = [
     email: "nico@cielosabiertos.org",
     name: "Nicolás Pereyra",
     role: "musico",
-    ministryRole: "Baterista",
     avatarColor: "linear-gradient(135deg,#38bdf8,#6366f1)",
     initials: "NP",
   },
@@ -72,7 +66,6 @@ const users: DemoUser[] = [
     email: "lucia@cielosabiertos.org",
     name: "Lucía Fernández",
     role: "lider",
-    ministryRole: "Líder de alabanza",
     avatarColor: "linear-gradient(135deg,#c084fc,#f472b6)",
     initials: "LF",
   },
@@ -81,7 +74,6 @@ const users: DemoUser[] = [
     email: "diego@cielosabiertos.org",
     name: "Diego Sosa",
     role: "musico",
-    ministryRole: "Bajista",
     avatarColor: "linear-gradient(135deg,#34d399,#22d3ee)",
     initials: "DS",
   },
@@ -90,7 +82,6 @@ const users: DemoUser[] = [
     email: "ana@cielosabiertos.org",
     name: "Ana Ferrari",
     role: "sudo",
-    ministryRole: "Sonido",
     avatarColor: "linear-gradient(135deg,#fbbf24,#fb7185)",
     initials: "AF",
   },
@@ -165,14 +156,13 @@ async function run() {
 
   for (const user of users) {
     await runner.query(
-      `INSERT INTO "users" (id, email, password_hash, name, ministry_role, avatar_color, initials)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      `INSERT INTO "users" (id, email, password_hash, name, avatar_color, initials)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
       [
         user.id,
         user.email,
         passwordHash,
         user.name,
-        user.ministryRole,
         user.avatarColor,
         user.initials,
       ],

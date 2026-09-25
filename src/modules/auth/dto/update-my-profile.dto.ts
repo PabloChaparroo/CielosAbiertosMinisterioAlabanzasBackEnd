@@ -11,10 +11,6 @@ export class UpdateMyProfileDto {
   @IsString()
   name?: string;
 
-  @IsOptional()
-  @IsString()
-  ministryRole?: string;
-
   /** Key devuelta por POST /storage/upload-url tras subir el binario al bucket */
   @IsOptional()
   @IsString()

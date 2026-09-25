@@ -13,9 +13,6 @@ export class CreateUserDto {
   name!: string;
 
   @IsString()
-  ministryRole!: string;
-
-  @IsString()
   avatarColor!: string;
 
   @IsString()

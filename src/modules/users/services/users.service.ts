@@ -54,7 +54,6 @@ export class UsersService {
       email: dto.email,
       passwordHash,
       name: dto.name,
-      ministryRole: dto.ministryRole,
       avatarColor: dto.avatarColor,
       initials: dto.initials,
     });
@@ -69,7 +68,6 @@ export class UsersService {
     Object.assign(user, {
       ...(dto.email !== undefined && { email: dto.email }),
       ...(dto.name !== undefined && { name: dto.name }),
-      ...(dto.ministryRole !== undefined && { ministryRole: dto.ministryRole }),
       ...(dto.avatarColor !== undefined && { avatarColor: dto.avatarColor }),
       ...(dto.initials !== undefined && { initials: dto.initials }),
     });
@@ -84,12 +82,11 @@ export class UsersService {
    */
   async updateOwnProfile(
     id: string,
-    dto: { name?: string; ministryRole?: string; avatarKey?: string },
+    dto: { name?: string; avatarKey?: string },
   ): Promise<User> {
     const user = await this.findById(id);
     Object.assign(user, {
       ...(dto.name !== undefined && { name: dto.name }),
-      ...(dto.ministryRole !== undefined && { ministryRole: dto.ministryRole }),
       ...(dto.avatarKey !== undefined && { avatarKey: dto.avatarKey }),
     });
     return this.userRepo.save(user);

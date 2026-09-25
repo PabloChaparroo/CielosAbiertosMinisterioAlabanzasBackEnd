@@ -52,7 +52,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       roles: user.roles.map((r) => r.name),
-      ministryRole: user.ministryRole,
       avatarColor: user.avatarColor,
       initials: user.initials,
       avatarKey: user.avatarKey,

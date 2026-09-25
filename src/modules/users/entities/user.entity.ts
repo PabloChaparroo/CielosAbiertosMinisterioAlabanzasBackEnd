@@ -17,9 +17,6 @@ export class User extends BaseAuditEntity {
   name!: string;
 
   @Column({ type: "varchar" })
-  ministryRole!: string;
-
-  @Column({ type: "varchar" })
   avatarColor!: string;
 
   @Column({ type: "varchar", length: 4 })
