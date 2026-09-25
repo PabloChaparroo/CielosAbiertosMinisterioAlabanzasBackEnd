@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Equipo: generar contraseña nueva para un integrante (frontend)
+
+**Pedido de Pablo:** si alguien se olvida la contraseña, poder generarle una nueva desde Equipo, **con una confirmación antes de generarla**.
+
+**Investigación previa:** no hizo falta backend — `PATCH /equipo/:id` (permiso `equipo:update`) ya aceptaba `password` en `UpdateUserDto` (valida mínimo 6, la guarda con bcrypt en `UsersService.update`).
+
+**Implementación:**
+- `EditMemberModal`: link "Generar contraseña nueva" (solo con `equipo:update` y si el integrante no está dado de baja) → panel de confirmación "¿Generar una contraseña nueva para X? La actual deja de funcionar." con **Cancelar** / **Confirmar y generar**. Al confirmar se genera en el cliente con el mismo `generatePassword()` del alta (12 caracteres, `crypto.getRandomValues`, nunca tipeada por el admin) y se guarda con el PATCH.
+- La contraseña se muestra **una sola vez** en el mismo `GeneratedPasswordModal` del alta (con botón Copiar), ahora con título configurable: "Contraseña nueva generada".
+
+**Bug encontrado al verificar, arreglado antes de commitear:** el modal de la contraseña solo se renderizaba en la vista de lista de Equipo, pero "Editar" se abre desde la vista de **detalle** del integrante: la contraseña se cambiaba y **no se mostraba en ningún lado** (quedaba perdida). Ahora `EquipoPage` renderiza ese modal en ambas vistas.
+
+**Sin cambiar, a tener en cuenta:** las sesiones ya abiertas de ese integrante (JWT) siguen válidas hasta que expiren (8h); la contraseña nueva aplica al próximo login. Para "se olvidó la contraseña" no importa; si algún día hace falta cortar sesiones (cuenta comprometida), requiere backend.
+
+**Verificado con navegador real** (integrante de prueba creado por la API y dado de baja al terminar): confirmación visible; **Cancelar** no cambia nada (la contraseña vieja sigue entrando); **Confirmar y generar** muestra "Contraseña nueva generada" con una contraseña de 12 caracteres; login con la nueva ✅, con la vieja ❌. `tsc`, lint y build limpios. Quedaron 3 integrantes de prueba dados de baja (`prueba.reset.…` ×2, `prueba.login.…`), uno por el intento fallido que destapó el bug.
+
+---
+
 ## 2026-09-25 — "Mi perfil": se saca la subida de foto de perfil (frontend)
 
 **Pedido de Pablo:** sacar del formulario de "Mi perfil" el ingreso de foto de perfil — todavía no se va a implementar.
