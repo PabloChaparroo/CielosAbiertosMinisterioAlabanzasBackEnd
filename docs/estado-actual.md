@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Rol Sudo eliminado; queda solo Admin (backend)
+
+**Pedido de Pablo:** Sudo y Admin son lo mismo; eliminar Sudo y dejar Admin. (Reemplaza la entrada "Rol Sudo (soporte técnico) con todos los permisos del catálogo", más abajo.)
+
+**Investigación previa:** en la base local Sudo y Admin tenían exactamente los mismos 28 permisos (ninguno con uno que el otro no tuviera); Sudo lo tenía solo Ana Ferrari (`ana@cielosabiertos.org`), sin otro rol; ningún código lo trata de forma especial (el frontend no lo menciona; el backend solo en el seed).
+
+**Implementación:** migración `1759500000000-RemoveSudoRole` — antes de borrar el rol, a quien tenía Sudo se le asigna Admin (si no lo tenía) y Admin recibe cualquier permiso que Sudo tuviera y Admin no (en producción los permisos se editan desde la pantalla y podrían haber divergido); después borra Sudo (en cascada se van sus `role_permissions` y `user_roles`). Si no hay Sudo es no-op; si no hubiera Admin, falla en vez de dejar gente sin acceso. El `down()` recrea Sudo con los permisos de Admin pero **no puede saber a quién estaba asignado**. Seed: Ana arranca como Admin. La migración vieja `AddSudoRole` queda en el historial, como corresponde.
+
+**Verificado** (base local, migración corrida): roles Admin (28), Líder (16), Músico (8); Ana con rol Admin y 28 permisos en `/auth/me`; `GET /roles` sin Sudo. `tsc`, oxlint y build limpios. **Al deployar:** requiere `migration:run` en Render.
+
+---
+
 ## 2026-09-25 — "En vivo" (Acordes) y "Pantalla completa" (Letras) centrados en la pantalla (frontend)
 
 **Pedido de Pablo:** en esos modos la canción tiene que verse justo en el medio de la pantalla. Se complementa con el pedido anterior (texto alineado a la izquierda): lo que se centra es el **bloque**, y adentro el texto sigue alineado a la izquierda — así los acordes quedan sobre su sílaba.
