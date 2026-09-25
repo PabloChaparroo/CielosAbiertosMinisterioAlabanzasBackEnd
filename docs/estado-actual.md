@@ -10,6 +10,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Implementación:** `ChordSheet`, modo "Solo acordes": la línea de compases (`chordChartSegments`) se arma sin las notas, y cada nota se ubica en un renglón chico encima (70% del alto de línea), en la columna (en `ch`, la fuente es monoespaciada) donde estaba dentro del texto de compases; si dos notas se pisarían, la segunda se corre. Una línea que es solo una nota (`(repetir intro)`) se sigue mostrando como línea normal. "Letra + acordes" no cambia: ahí la nota ya va en la fila de acordes, arriba de la letra.
 
+**Ajuste posterior (pedido de Pablo):** las notas se agrandaron de 55% a **70%** del tamaño de la letra en pantalla (constante `NOTE_SCALE` en `ChordSheet`, que también usa el cálculo de posición) y de 65% a **80%** en el PDF (`NOTE_SCALE_PDF`); el renglón de notas de "Solo acordes" pasó a 85% del alto de línea. Verificado en ambos modos y en el PDF, sin superposiciones.
+
 **Verificado con navegador real** (canción temporal, borrada al terminar), con la línea exacta de la captura de Pablo: `↱ coro` arriba de `| F - C | Am | F - C | Am |:]` después de la segunda F; `↱ 2doVers` sobre `| G |:]` en `| C - G | D | Bm | Em - D | G |:]`. `tsc`, lint y build limpios. PDF sin cambios (no dibuja compases `| |`).
 
 ---
