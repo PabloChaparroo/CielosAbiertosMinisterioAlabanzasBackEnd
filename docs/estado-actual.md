@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acordes: notas "(…)" en su posición + atajos `%`, `x3`, `x4`, Sube/Baja Tono (frontend)
+
+**Motivo:** pedido directo de Pablo — las notas entre paréntesis se mostraban siempre al final de la línea (así se implementaron en la entrada "anotaciones con flecha"); tienen que quedar donde se escriben. Además pidió los atajos `[%]`, `[x3]`, `[x4]`, `[Sube Tono]` y `[Baja Tono]`.
+
+**Notas en su posición** (reemplaza el comportamiento "al final de la línea"):
+- `lib/chords.ts`: `ChordPair` gana `note?`; `parseChordPro` parte el texto de cada acorde en tramos de texto y notas (`splitNotes`) en vez de sacarlas de la línea. `ParsedLine` de tipo `line` ya no tiene `notes` (las secciones sí, para `[CORO] (suave)`). La unión "línea de solo acordes + línea de letra" ignora las notas al decidir.
+- `ChordSheet`: en "Letra + acordes" la nota va en la fila de la letra si la línea tiene letra, o en la de acordes si es de solo acordes; en "Solo acordes" el texto de compases se arma por segmentos (`chordChartSegments`) y la nota corta el texto donde se escribió (`| F - ↱ coro suave C | Am |:]`).
+- PDF: se reserva el lugar de la nota con espacios (courier es monoespaciada) y se dibuja encima en azul y más chica, en su posición.
+
+**Atajos nuevos** (botones en el editor, insertan entre corchetes): `[%]` es un compás más (`| D | % |`); `[x3]`/`[x4]` y las indicaciones con espacios (`Sube Tono`, `Baja Tono`) son **marcas** (`isChartMarker`): no abren compás nuevo (`|:] x3`, `| G Sube Tono | A …`) y **no se transponen** — sin esa guarda, `Baja Tono` empieza con "B" y el transpositor lo convertía en `C#aja Tono`. Acordes reales como `C7sus4`/`Gm7b5` se siguen transponiendo (verificado). Son marcas visuales: "Sube Tono" **no** cambia la tonalidad de los acordes siguientes. Una marca sola en su línea (`[Sube Tono]`) se muestra como título de sección.
+
+**Fix de paso — el pendiente anotado dos entradas abajo:** en "Letra + acordes" las líneas de solo acordes salían pegadas (`BmDA`); con las marcas nuevas quedaba ilegible (`ASube TonoB`). Cada acorde ahora tiene 1ch de margen derecho, que solo se nota cuando el acorde es más ancho que la letra de abajo. Mismo criterio en el PDF.
+
+**Verificado con navegador real** (Playwright, canción temporal borrada al terminar, tu línea real de "Desde mi interior"): nota en su posición en ambos modos, en secciones y en líneas de solo acordes; `%`, `x3`, Sube/Baja Tono como se describe; **PDF descargado y revisado** (antes había quedado sin verificar). `tsc`, lint y build limpios.
+
+**Pendientes del PDF, pre-existentes, no tocados:** en líneas de solo acordes el `:]` sale en un renglón aparte debajo, y el guion `-` se imprime en la letra (en pantalla se oculta).
+
+---
+
 ## 2026-09-25 — Acordes: vista previa en vivo al editar (frontend)
 
 **Motivo:** pedido directo de Pablo — al editar, el texto ChordPro crudo no se parece a cómo queda la canción; quiere ver a la derecha, mientras escribe, cómo se va a ver.
