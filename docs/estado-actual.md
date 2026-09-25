@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acordes: vista previa en vivo al editar (frontend)
+
+**Motivo:** pedido directo de Pablo — al editar, el texto ChordPro crudo no se parece a cómo queda la canción; quiere ver a la derecha, mientras escribe, cómo se va a ver.
+
+**Implementación:** `AcordesPage.tsx` — mientras se edita, el editor y una tarjeta **"Vista previa"** quedan lado a lado (`xl:grid-cols-2`; en pantallas más angostas la vista previa va debajo del editor). La vista previa usa **el mismo** `parseChordPro` + `ChordSheet` que la vista normal, aplicados al borrador sin guardar, y respeta la tonalidad/transposición, el tamaño de letra y el modo (Letra + acordes / Solo acordes) elegidos. Es `sticky` con scroll propio para acompañar el editor en canciones largas.
+
+**Verificado con navegador real** (Playwright, 1860px de ancho, canción temporal creada por la API y dada de baja al terminar): la vista previa muestra el contenido existente (incluidas las notas con flecha) y, al escribir una línea nueva en el editor, aparece al instante con sus acordes y su nota. `tsc`, lint y build limpios. Se ve también el hallazgo pre-existente ya anotado (líneas de solo acordes pegadas en "Letra + acordes", ej. `BmDA`) — no es de este cambio.
+
+---
+
 ## 2026-09-25 — Alta de integrante con rol del sistema; "rol en el ministerio" eliminado (backend + frontend)
 
 **Motivo:** pedido directo de Pablo — el desplegable de "Agregar miembro" mostraba el rol en el ministerio (Guitarrista, Vocalista…); tiene que mostrar los **roles creados** en Roles y Permisos, porque "no interesa qué clase de músico es". También pidió poder cambiar o quitar el rol desde Equipo.
