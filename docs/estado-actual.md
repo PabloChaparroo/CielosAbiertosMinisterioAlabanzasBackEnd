@@ -41,6 +41,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Implementación:** `AcordesPage.tsx` — mientras se edita, el editor y una tarjeta **"Vista previa"** quedan lado a lado (`xl:grid-cols-2`; en pantallas más angostas la vista previa va debajo del editor). La vista previa usa **el mismo** `parseChordPro` + `ChordSheet` que la vista normal, aplicados al borrador sin guardar, y respeta la tonalidad/transposición, el tamaño de letra y el modo (Letra + acordes / Solo acordes) elegidos. Es `sticky` con scroll propio para acompañar el editor en canciones largas.
 
+**Ajuste posterior (pedido de Pablo):** los botones **Guardar**/**Cancelar** quedaban debajo del editor, lejos en canciones largas; pasaron a la tarjeta de arriba de la canción, en el lugar del botón Editar (el error de guardado se muestra arriba del editor). Verificado con navegador real: botón visible sin scroll en una canción de 40+ líneas y guardado persistido en la API (canción temporal, borrada al terminar).
+
 **Verificado con navegador real** (Playwright, 1860px de ancho, canción temporal creada por la API y dada de baja al terminar): la vista previa muestra el contenido existente (incluidas las notas con flecha) y, al escribir una línea nueva en el editor, aparece al instante con sus acordes y su nota. `tsc`, lint y build limpios. Se ve también el hallazgo pre-existente ya anotado (líneas de solo acordes pegadas en "Letra + acordes", ej. `BmDA`) — no es de este cambio.
 
 ---
