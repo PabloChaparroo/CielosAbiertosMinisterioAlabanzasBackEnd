@@ -4,6 +4,30 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Alta de integrante con rol del sistema; "rol en el ministerio" eliminado (backend + frontend)
+
+**Motivo:** pedido directo de Pablo — el desplegable de "Agregar miembro" mostraba el rol en el ministerio (Guitarrista, Vocalista…); tiene que mostrar los **roles creados** en Roles y Permisos, porque "no interesa qué clase de músico es". También pidió poder cambiar o quitar el rol desde Equipo.
+
+**Decisiones confirmadas por Pablo:** eliminar `ministryRole` del todo (mismo criterio que `instruments`), y que el alta asigne **un solo rol** con un desplegable (si hace falta más de uno, se agrega desde Editar).
+
+**Hallazgo al investigar:** cambiar o quitar roles desde Equipo **ya existía** — "Editar integrante" tiene la sección "Roles del sistema" con botones marcables (usa `POST/DELETE /equipo/:userId/roles/:roleId`). No se tocó; se verificó que funciona.
+
+**Backend:**
+- Migración `1759400000000-DropUserMinistryRole`: `DROP COLUMN ministry_role`. El `down()` recrea la columna con `''` — **los valores que había se pierden**.
+- `User`, `CreateUserDto`/`UpdateUserDto`, `UpdateMyProfileDto`, `UsersService` y `/auth/me` sin el campo; seed demo actualizado.
+- **A diferencia de `instruments`, esta migración es obligatoria antes de usar el código nuevo:** `ministry_role` era `NOT NULL` **sin default**, así que con el código nuevo y la columna todavía presente, **crear un integrante falla** (el INSERT no manda el campo). Si Render no corre `migration:run` en el deploy, hay que correrla a mano enseguida.
+
+**Frontend:**
+- `AddMemberModal`: desplegable con los roles de `GET /roles` (ordenados, opción "Sin rol", preselecciona "Músico" si existe). El integrante se crea y **después** se asigna el rol con el endpoint existente — a propósito no se agregó `roleId` al alta del backend: asignar roles se gobierna con `rol:write`, no con `equipo:write`, y meterlo en el alta habría sido una puerta trasera a ese permiso. Sin `rol:write`, el desplegable no se muestra. Si el alta sale bien pero la asignación falla, se muestra igual la contraseña generada (es la única vez que se ve) con un aviso para asignar el rol desde Editar.
+- Se quitó "Rol en el ministerio" de Editar integrante y Mi perfil. Donde se mostraba: tarjetas de Equipo y Sidebar lo pierden (ya tenían al lado el badge del rol del sistema); detalle del integrante y equipo del setlist muestran los roles del sistema (`roleNames`, "Sin rol" si no tiene).
+- Filtros de Equipo: ahora por **rol del sistema** (+ "Sin rol" solo si hay integrantes activos sin roles). Reemplaza al filtro por rol en el ministerio de la entrada siguiente.
+
+**⚠️ Orden de deploy:** mismo problema que con `instruments` (`forbidNonWhitelisted`) — pushear los dos repos juntos y correr la migración.
+
+**Verificado con navegador real** (Playwright) contra la API local: filtros `Todos | Admin | Líder | Músico | Sudo | Sin rol`; desplegable del alta con `Sin rol | Admin | Líder | Músico | Sudo` y "Músico" preseleccionado; **alta real** → API devuelve `["Músico"]`; en Editar, cambiar a Líder → `["Líder"]`; quitarlo → `[]`; sin errores de API. Integrante de prueba (`prueba.rol.…@cielosabiertos.org`) dado de baja al final. Migración corrida en la base local. `tsc`, lint y build limpios en los dos repos. **Sin verificar en navegador:** Mi perfil (solo se quitó el input) y el aviso de "no se pudo asignar el rol" (requiere forzar un fallo del endpoint).
+
+---
+
 ## 2026-09-25 — "Instrumentos" eliminado como atributo del integrante (backend + frontend)
 
 **Motivo:** pedido directo de Pablo — "Instrumento" no es relevante; el rol en el ministerio (`ministryRole`: Guitarrista, Bajista, Vocalista…) ya cubre esa información.
