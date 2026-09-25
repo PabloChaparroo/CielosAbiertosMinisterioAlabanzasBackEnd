@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acordes: modo "En vivo" alineado a la izquierda (frontend)
+
+**Pedido de Pablo:** en "En vivo" la canción se mostraba centrada; tiene que estar alineada a la izquierda.
+
+**Hallazgo al investigar — el centrado además rompía la alineación:** el contenedor de "En vivo" tenía `text-center` y `ChordSheet` recibía `centered` (`justify-center` en cada línea). Con `text-center` heredado, dentro de cada columna acorde/letra el acorde se centraba en vez de quedar a la izquierda, así que **quedaba desplazado de su sílaba**, y el cálculo de posición de las notas (`placeNotes`, que asume acordes alineados a la izquierda) fallaba: en la captura de Pablo `↱ coro suave` quedaba encima de la `C`.
+
+**Cambio:** sin `text-center` en el contenedor de "En vivo" (con más margen lateral en pantallas grandes); en `ChordSheet` el prop `centered` pasó a `dark` y solo pone el texto en blanco — ya no centra nada.
+
+**Verificado con navegador real**, solo lectura sobre "Desde mi interior": "En vivo" alineado a la izquierda, acordes sobre su sílaba, nota sin superponerse. `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Fix: secciones sin acordes en la primera línea (CORO, PRE-CORO…) se mostraban como acordes (frontend)
 
 **Reporte de Pablo:** en "Solo acordes", INTRO se veía como título (`INTRO:`) pero CORO y PRE-CORO salían como `| CORO |`.
