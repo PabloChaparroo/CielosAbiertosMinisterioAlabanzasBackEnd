@@ -4,6 +4,29 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acceso de invitados sin cuenta (backend + frontend)
+
+**Pedido de Pablo:** un rol "Invitados" que pueda ingresar sin usuario ni contraseña y solo vea canciones, letras, acordes e inicio — sin favoritos, sin setlists, sin crear nada (no tiene usuario).
+
+**Diseño:**
+- **Sesión sin usuario:** botón "Entrar como invitado" en el login → `POST /auth/invitado` (público) devuelve un token con `{ sub: "invitado", guest: true }`. No se crea nada en `users`.
+- **Qué ve lo define el rol "Invitado"** (migración `1759600000000-AddGuestRole`, arranca con `cancion:read`), configurable desde Roles y Permisos — pero el backend **solo aplica sus permisos de lectura** (`:read`): aunque se le tilde "Eliminar" o "Crear", un invitado nunca escribe. Los permisos se leen en cada pedido (como para cualquier usuario, ver entrada de revisión de permisos).
+- **Endpoints "solo con sesión"** (sin `@Permissions`): un invitado solo puede usar los marcados con el nuevo `@AllowGuests()` — `GET /auth/me` y `GET /storage/download-url` (para escuchar audio). Bloqueados: favoritos, mi perfil, cambiar contraseña y **`POST /storage/upload-url`**.
+- **Apagar el acceso:** borrar el rol "Invitado" → el botón responde "El acceso de invitados no está habilitado" y las sesiones de invitado abiertas se cortan. El rol **no se puede renombrar** (se busca por nombre) **ni asignar a integrantes** (400), y no aparece en "Agregar miembro" / "Editar integrante". Su tarjeta en Roles y Permisos lo explica.
+- Código: `common/authorization/guest.ts` (backend) y `core/auth/guest.ts` (frontend).
+
+**Frontend:** Sidebar/rutas con `canOpenModule` (Favoritos requiere cuenta real, aunque el rol tenga `cancion:read`); sin corazones de favoritos (`FavButton` no se muestra); footer del Sidebar "Invitado" sin perfil y "Salir (iniciar sesión)"; panel de anotaciones en Acordes solo con `anotacion:read`. **`useApp` ahora solo carga lo que el usuario puede ver** (integrantes con `equipo:read`, setlists con `setlist:read`, favoritos solo con cuenta) — de paso, un Músico sin "Ver equipo" ya no genera un 403 al entrar.
+
+**Bug pre-existente arreglado de paso — Inicio se quedaba cargando para siempre** si no había setlists visibles (esperaba `setlists.length > 0`): ahora espera a que terminen de cargar, y cada bloque (próximo setlist, favoritos, "Ver setlists", "Ver estadísticas", canción del mes) se muestra solo si corresponde.
+
+**Hallazgo — `POST /storage/upload-url` no tiene permiso propio:** cualquier usuario logueado (ej. un Músico) puede pedir URLs firmadas de subida al bucket, aunque no pueda asociar el archivo a nada (eso sí pide `cancion:write`, etc.). Se cerró para invitados; para usuarios queda como está — anotado por si se quiere exigir, por ejemplo, `cancion:write` o `equipo:update` según la carpeta.
+
+**Otros a tener en cuenta:** el ▶ de un invitado suma reproducciones a las estadísticas (`POST /canciones/:id/reproducir` pide `cancion:read`), igual que cualquier usuario. El acceso es público: cualquiera con la URL de la app puede entrar como invitado y ver el repertorio.
+
+**Verificado:** API como invitado — puede: `/canciones`, links, `download-url`; no puede (403): setlists, equipo, anotaciones, favoritos, `upload-url`, `PATCH /auth/me`, borrar canción; con el rol tildado con `cancion:delete`, `setlist:read` y `setlist:write` → ve setlists pero no crea ni borra (`/auth/me` devuelve solo los `:read`); asignar/renombrar Invitado → 400; login normal intacto. Navegador real como invitado: entra desde el login, Inicio carga, Sidebar = Inicio | Escuchar y Subir | Letras | Acordes, sin corazones, `/favoritos` `/setlists` `/equipo` `/roles-permisos` → "Sección restringida", Acordes y Letras sin "Editar" ni anotaciones, Escuchar sin "Subir canción", reproducir funciona, perfil deshabilitado, **cero errores de API en toda la sesión**. Regresión: Joaquín (Músico) ve Inicio con próximo setlist y favoritos sin errores; Admin ve la aclaración del rol Invitado y el alta ofrece "Sin rol | Admin | Líder | Músico". Rol Invitado restaurado a `cancion:read`. `tsc`, lint y build limpios en ambos repos. **Al deployar:** `migration:run` en Render y pushear los dos repos juntos.
+
+---
+
 ## 2026-09-25 — Favoritos: tarjetas más chicas y abrir en Letra o Acordes (frontend)
 
 **Pedido de Pablo:** achicar las tarjetas de Favoritos y agregar arriba un selector Letra / Acordes, para que al tocar un favorito lo lleve a la letra o a los acordes de esa canción.
