@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { IsIn, IsString } from "class-validator";
+import { AllowGuests } from "../decorators/allow-guests.decorator";
 import { StorageService } from "./storage.service";
 
 class UploadUrlDto {
@@ -32,7 +33,9 @@ export class StorageController {
     return this.storageService.getUploadUrl(dto.folder, dto.contentType);
   }
 
+  // un invitado puede escuchar las canciones (bajar el audio); subir (upload-url) no
   @Get("download-url")
+  @AllowGuests()
   async getDownloadUrl(@Query() query: DownloadUrlQuery) {
     return { url: await this.storageService.getDownloadUrl(query.key) };
   }

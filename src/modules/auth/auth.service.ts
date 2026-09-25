@@ -1,7 +1,13 @@
-import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { AuthorizationService } from "../../common/authorization/authorization.service";
+import { GUEST_ROLE_NAME, GUEST_SUBJECT } from "../../common/authorization/guest";
 import { UsersService } from "../users/services/users.service";
 import { ChangeMyPasswordDto } from "./dto/change-my-password.dto";
 import { LoginDto } from "./dto/login.dto";
@@ -44,6 +50,34 @@ export class AuthService {
     };
   }
 
+  /**
+   * Sesión de invitado: sin usuario ni contraseña, no crea nada en la base. El token solo dice
+   * `guest: true`; los permisos se leen en cada pedido del rol "Invitado" (solo lectura).
+   * Ver common/authorization/guest.ts.
+   */
+  async loginAsGuest() {
+    if (!(await this.authorizationService.getGuestPermissions())) {
+      throw new ForbiddenException("El acceso de invitados no está habilitado");
+    }
+    const accessToken = await this.jwtService.signAsync({ sub: GUEST_SUBJECT, guest: true });
+    return { accessToken };
+  }
+
+  /** Mismo shape que me(), para una sesión de invitado */
+  async meGuest() {
+    return {
+      id: GUEST_SUBJECT,
+      email: "",
+      name: "Invitado",
+      roles: [GUEST_ROLE_NAME],
+      avatarColor: "linear-gradient(135deg,#64748b,#94a3b8)",
+      initials: "IN",
+      avatarKey: null,
+      permissions: (await this.authorizationService.getGuestPermissions()) ?? [],
+      isGuest: true,
+    };
+  }
+
   async me(userId: string) {
     const user = await this.usersService.findById(userId);
     const permissions = await this.authorizationService.getPermissionsForUser(user.id);
@@ -56,6 +90,7 @@ export class AuthService {
       initials: user.initials,
       avatarKey: user.avatarKey,
       permissions,
+      isGuest: false,
     };
   }
 

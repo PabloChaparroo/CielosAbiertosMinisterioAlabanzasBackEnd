@@ -4,13 +4,16 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { AppConfig } from "../../../config/configuration";
 import { AuthorizationService } from "../../../common/authorization/authorization.service";
+import { GUEST_SUBJECT } from "../../../common/authorization/guest";
 import { UsersService } from "../../users/services/users.service";
 import { AuthenticatedUser } from "../types/authenticated-user";
 
 interface JwtPayload {
   sub: string;
-  email: string;
-  permissions: AuthenticatedUser["permissions"];
+  email?: string;
+  permissions?: AuthenticatedUser["permissions"];
+  /** Sesión de invitado (POST /auth/invitado) — ver common/authorization/guest.ts */
+  guest?: boolean;
 }
 
 @Injectable()
@@ -33,13 +36,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * hasta que esa persona volviera a iniciar sesión. Ver docs/estado-actual.md.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+    if (payload.guest) {
+      // Invitado: sin usuario en la base; permisos = rol "Invitado", solo lectura. Si el rol se
+      // borró, el acceso de invitados quedó deshabilitado y las sesiones abiertas se cortan.
+      const permissions = await this.authorizationService.getGuestPermissions();
+      if (!permissions) throw new UnauthorizedException("El acceso de invitados no está habilitado");
+      return { id: GUEST_SUBJECT, email: "", permissions, isGuest: true };
+    }
     if (!(await this.usersService.isActive(payload.sub))) {
       throw new UnauthorizedException("La cuenta ya no está activa");
     }
     return {
       id: payload.sub,
-      email: payload.email,
+      email: payload.email ?? "",
       permissions: await this.authorizationService.getPermissionsForUser(payload.sub),
+      isGuest: false,
     };
   }
 }

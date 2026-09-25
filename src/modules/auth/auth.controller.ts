@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, Patch, Post } from "@nestjs/common";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Public } from "../../common/decorators/public.decorator";
+import { AllowGuests } from "../../common/decorators/allow-guests.decorator";
 import { AuthService } from "./auth.service";
 import { ChangeMyPasswordDto } from "./dto/change-my-password.dto";
 import { LoginDto } from "./dto/login.dto";
@@ -17,9 +18,17 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  /** Entrar como invitado, sin usuario ni contraseña (ver common/authorization/guest.ts) */
+  @Public()
+  @Post("invitado")
+  loginAsGuest() {
+    return this.authService.loginAsGuest();
+  }
+
   @Get("me")
+  @AllowGuests()
   me(@CurrentUser() user: AuthenticatedUser) {
-    return this.authService.me(user.id);
+    return user.isGuest ? this.authService.meGuest() : this.authService.me(user.id);
   }
 
   /**

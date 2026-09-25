@@ -1,6 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { GUEST_ROLE_NAME } from "../../../common/authorization/guest";
 import { PermissionName } from "../../../common/authorization/permission.catalog";
 import { RolePermission } from "../../../common/authorization/role-permission.entity";
 import { User } from "../../users/entities/user.entity";
@@ -48,6 +54,10 @@ export class RolesService {
 
   async rename(id: string, dto: RenameRoleDto): Promise<Role> {
     const role = await this.findById(id);
+    // el acceso de invitados busca este rol por nombre (guest.ts)
+    if (role.name === GUEST_ROLE_NAME) {
+      throw new BadRequestException("El rol Invitado no se puede renombrar");
+    }
     const existing = await this.roleRepo.findOne({ where: { name: dto.name } });
     if (existing && existing.id !== id) throw new ConflictException("Ya existe un rol con ese nombre");
     role.name = dto.name;
@@ -85,6 +95,9 @@ export class RolesService {
 
   async assignToUser(userId: string, roleId: string): Promise<Role[]> {
     const [user, role] = await Promise.all([this.findUserWithRoles(userId), this.findById(roleId)]);
+    if (role.name === GUEST_ROLE_NAME) {
+      throw new BadRequestException("El rol Invitado es para el acceso sin cuenta: no se asigna a integrantes");
+    }
     if (!user.roles.some((r) => r.id === roleId)) {
       user.roles = [...user.roles, role];
       await this.userRepo.save(user);
