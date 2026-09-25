@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Acordes: tamaño de letra automático según la pantalla (frontend)
+
+**Pedido de Pablo:** la hoja de acordes arrancaba siempre en 25px; en el celular no entraba y quedaba cortada.
+
+**Implementación:** hook `features/musica/acordes/hooks/useFitFontSize.ts` — cuando cambia la canción, el modo, el tono, la vista (editar / En vivo) o el ancho disponible (girar el celular), arranca en 25px y baja de a 1px midiendo el render real (`[data-chord-sheet]`) hasta que la línea más ancha entra; mínimo 12px (si ni así entra, la tarjeta scrollea horizontal como antes). Iterativo a propósito: una sola medición proporcional no era exacta porque hay partes que no escalan con la letra (márgenes de las notas, títulos). Corre en layout effects, antes de pintar. Se aplica a la vista normal, a la vista previa del editor y a "En vivo".
+- **Tamaño manual:** con +/− queda el elegido (se deja de ajustar) hasta cambiar de canción.
+- **PDF:** ya no depende de la pantalla — usa 25px (lo de siempre) salvo que se haya elegido un tamaño a mano; si no, desde el celular el PDF salía con letra diminuta.
+- **Fuentes web:** la primera medición se hacía con la fuente de reemplazo (más angosta) y el ajuste quedaba corto en la primera visita; se reajusta cuando terminan de cargar las fuentes (`document.fonts`).
+
+**Bug de paso, arreglado:** en el celular la tarjeta de arriba (tono, tamaño) quedaba cortada a la derecha: la columna de la página no tenía `min-w-0`, así que una hoja más ancha que la pantalla la estiraba.
+
+**Verificado con navegador real**, solo lectura sobre "Desde mi interior": celular 390px → 12px, la línea más ancha entra y la página sin scroll horizontal, tarjeta de arriba completa; tablet 820px y computadora → 25px; girar el celular (390→844 de ancho) → 12px→25px; repetido en visita "en frío" (fuentes sin caché). `tsc`, lint y build limpios. **Sin verificar:** en un celular físico (solo emulado por tamaño de ventana), ni el PDF descargado desde un ancho chico.
+
+---
+
 ## 2026-09-25 — Letras: solo letra y secciones, sin anotaciones de acordes (frontend)
 
 **Pedido de Pablo:** en Letras no se tienen que ver las anotaciones pensadas para acordes — lo que está entre paréntesis, `:]`, etc. —; solo la letra y las secciones.
