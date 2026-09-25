@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — "Solo acordes": notas "(…)" en un renglón arriba de los compases (frontend)
+
+**Pedido de Pablo (con foto de cómo lo escribe a mano):** en "Solo acordes" la nota no tiene que ir en la misma línea de compases sino **arriba**, en la columna donde se escribió — ej. `_2doVers` sobre `| G |`.
+
+**Implementación:** `ChordSheet`, modo "Solo acordes": la línea de compases (`chordChartSegments`) se arma sin las notas, y cada nota se ubica en un renglón chico encima (70% del alto de línea), en la columna (en `ch`, la fuente es monoespaciada) donde estaba dentro del texto de compases; si dos notas se pisarían, la segunda se corre. Una línea que es solo una nota (`(repetir intro)`) se sigue mostrando como línea normal. "Letra + acordes" no cambia: ahí la nota ya va en la fila de acordes, arriba de la letra.
+
+**Verificado con navegador real** (canción temporal, borrada al terminar), con la línea exacta de la captura de Pablo: `↱ coro` arriba de `| F - C | Am | F - C | Am |:]` después de la segunda F; `↱ 2doVers` sobre `| G |:]` en `| C - G | D | Bm | Em - D | G |:]`. `tsc`, lint y build limpios. PDF sin cambios (no dibuja compases `| |`).
+
+---
+
 ## 2026-09-25 — Rol Sudo eliminado; queda solo Admin (backend)
 
 **Pedido de Pablo:** Sudo y Admin son lo mismo; eliminar Sudo y dejar Admin. (Reemplaza la entrada "Rol Sudo (soporte técnico) con todos los permisos del catálogo", más abajo.)
