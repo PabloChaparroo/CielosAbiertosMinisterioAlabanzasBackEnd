@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Fix: secciones sin acordes en la primera línea (CORO, PRE-CORO…) se mostraban como acordes (frontend)
+
+**Reporte de Pablo:** en "Solo acordes", INTRO se veía como título (`INTRO:`) pero CORO y PRE-CORO salían como `| CORO |`.
+
+**Causa — bug pre-existente, no introducido por los cambios de hoy:** `parseChordPro` une una "línea de solo acordes" (solo corchetes) con la línea de letra siguiente, para poner el acorde arriba de la letra. `[CORO]` también es "solo corchetes", así que cuando la línea siguiente era letra sin acordes ("Dios eterno…") se unían y `CORO` quedaba tratado como **acorde** de esa letra. INTRO no fallaba porque su línea siguiente empieza con `[F]`. En "Letra + acordes" el síntoma era más sutil: CORO/PRE-CORO se veían en el estilo de acorde (más chico), no de título.
+
+**Fix:** `lib/chords.ts` — una línea que es título de sección (`isSectionLine`: un solo corchete cuyo contenido no es un acorde ni `%`) nunca cuenta como línea de solo acordes. Un acorde solo (`[D]`, `[%]`) sobre una línea de letra se sigue uniendo como antes (verificado).
+
+**Verificado con navegador real**, solo lectura sobre "Desde mi interior": CORO y PRE-CORO como títulos de sección en ambos modos (`INTRO:`, `CORO:`, `PRE-CORO:` en "Solo acordes"). `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Acordes: notas "(…)" en su posición + atajos `%`, `x3`, `x4`, Sube/Baja Tono (frontend)
 
 **Motivo:** pedido directo de Pablo — las notas entre paréntesis se mostraban siempre al final de la línea (así se implementaron en la entrada "anotaciones con flecha"); tienen que quedar donde se escriben. Además pidió los atajos `[%]`, `[x3]`, `[x4]`, `[Sube Tono]` y `[Baja Tono]`.
