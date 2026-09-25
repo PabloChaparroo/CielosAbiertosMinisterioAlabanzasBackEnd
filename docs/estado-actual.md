@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — "Solo acordes": compases repetidos se abrevian con signo de repetición (frontend)
+
+**Pedido de Pablo:** si en una misma línea se repiten los mismos acordes (ej. estrofa 1: `| F | C - G | F | C - G |`), mostrarlos una sola vez con `|:]` (2 veces), `|x3]` (3), `|x4]` (4).
+
+**Implementación:** `compressRepeats` en `ChordSheet.tsx`, antes de armar la línea de compases: agrupa los acordes en compases (los unidos por `-` van en el mismo) y busca el período más corto que, repetido, forma la línea completa; si se repite 2 veces escribe `|:]`, si N ≥ 3 `|xN]`. **A propósito no se abrevia** una línea que ya tiene `:]`, marcas (`x3`, `Sube Tono`, …) o notas `(…)`: ahí se respeta lo que escribió el usuario. Solo afecta "Solo acordes"; "Letra + acordes" y el PDF no cambian (la letra de cada repetición es distinta).
+
+**Verificado con navegador real** (canción temporal, borrada al terminar): la estrofa exacta de la captura → `| F | C - G |:]`; 3 veces → `| F | C - G |x3]`; `[D] [A]` ×4 → `| D | A |x4]`; sin repetición y con `:]` escrito → sin cambios; con nota → sin abreviar (`↱ suave` arriba de `| F | C | F | C |`). `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Acceso de invitados sin cuenta (backend + frontend)
 
 **Pedido de Pablo:** un rol "Invitados" que pueda ingresar sin usuario ni contraseña y solo vea canciones, letras, acordes e inicio — sin favoritos, sin setlists, sin crear nada (no tiene usuario).
