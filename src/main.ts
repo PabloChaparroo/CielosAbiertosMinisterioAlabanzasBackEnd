@@ -18,18 +18,22 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix("api");
 
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle("Cielos Abiertos Alabanzas API")
-    .setDescription("API del ministerio de alabanza: canciones, letras, acordes, setlists y equipo")
-    .setVersion("0.1")
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup("api/docs", app, document);
+  // La documentación de la API (/api/docs) lista todos los endpoints: solo fuera de producción
+  const isProduction = configService.get("nodeEnv", { infer: true }) === "production";
+  if (!isProduction) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle("Cielos Abiertos Alabanzas API")
+      .setDescription("API del ministerio de alabanza: canciones, letras, acordes, setlists y equipo")
+      .setVersion("0.1")
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup("api/docs", app, document);
+  }
 
   const port = configService.get("port", { infer: true });
   await app.listen(port);
-  console.log(`[api] escuchando en http://localhost:${port}/api (docs en /api/docs)`);
+  console.log(`[api] escuchando en el puerto ${port} (/api${isProduction ? "" : ", docs en /api/docs"})`);
 }
 
 bootstrap();

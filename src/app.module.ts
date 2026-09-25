@@ -38,6 +38,8 @@ import { UsersModule } from "./modules/users/users.module";
           username: db.user,
           password: db.password,
           database: db.database,
+          // Neon (producción) exige SSL; el Postgres de Docker local no lo usa (DB_SSL=false)
+          ssl: db.ssl,
           namingStrategy: new SnakeNamingStrategy(),
           autoLoadEntities: true,
           synchronize: false,

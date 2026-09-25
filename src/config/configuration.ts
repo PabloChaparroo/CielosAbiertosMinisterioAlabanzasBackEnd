@@ -8,6 +8,7 @@ export interface AppConfig {
     user: string;
     password: string;
     database: string;
+    ssl: boolean;
   };
   jwt: {
     secret: string;
@@ -38,6 +39,7 @@ export default (): AppConfig => ({
     user: process.env.DB_USER ?? "postgres",
     password: process.env.DB_PASSWORD ?? "postgres",
     database: process.env.DB_NAME ?? "postgres",
+    ssl: process.env.DB_SSL === "true",
   },
   jwt: {
     secret: process.env.JWT_SECRET ?? "change-me-in-production",

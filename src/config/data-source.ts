@@ -9,6 +9,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER ?? "postgres",
   password: process.env.DB_PASSWORD ?? "postgres",
   database: process.env.DB_NAME ?? "postgres",
+  // mismo criterio que app.module: SSL solo si DB_SSL=true (Neon en producción)
+  ssl: process.env.DB_SSL === "true",
   namingStrategy: new SnakeNamingStrategy(),
   entities: [__dirname + "/../**/*.entity{.ts,.js}"],
   migrations: [__dirname + "/../database/migrations/*{.ts,.js}"],
