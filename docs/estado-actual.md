@@ -4,6 +4,39 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Backend listo para producción: Render + Neon + Cloudflare R2
+
+**Objetivo:** poder desplegar el backend en Render (plan gratis), con Postgres en Neon (AWS us-east-2, Ohio) y storage en Cloudflare R2, **sin cambiar el desarrollo local** (Docker + `npm run dev` siguen igual).
+
+**Decisiones de Pablo:** plan gratis de Render → migraciones en el Build Command (no hay Pre-Deploy en el plan gratis); primer Admin con un script que corre él desde su compu; producción arranca con la base vacía (las 22 canciones locales no se migran por ahora); `/api/docs` apagado en producción. Ya tomadas antes: región Ohio, deploy desde `main`, R2 sin tocar código de storage, `FRONTEND_URL` configurable.
+
+**Investigación — lo que rompía el primer deploy:**
+1. **Sin SSL hacia Postgres**: Neon lo exige y ni `app.module.ts` ni `data-source.ts` (migraciones) lo configuraban → nueva variable `DB_SSL` (default `false`: el Postgres de Docker no tiene SSL; `true` en Render).
+2. **SWC está en devDependencies**: con `NODE_ENV=production` un `npm ci` común no las instala y el build falla (verificado sobre una copia limpia del repo) → el Build Command usa `npm ci --include=dev`.
+3. **Base vacía sin ningún usuario**: las migraciones crean roles y temas pero no integrantes → nadie podría iniciar sesión → script `npm run admin:create`. **`seed:run` NUNCA se corre contra producción** (crea usuarios de demo con una contraseña conocida).
+
+**Lo que ya estaba bien:** `GET /api/health` (público, hace ping a la base con Terminus) sirve como health check de Render; `PORT` se lee del entorno (lo pone Render); CORS ya se lee de `FRONTEND_URL`; no hay Dockerfile, y `docker-compose.yml`/`scripts/dev-up.cjs` solo se usan con `npm run dev`; Redis (`QUEUE_REDIS_*`) está declarado pero no se usa en ningún lado; el código de storage funciona igual con R2 (al arrancar intenta verificar/crear el bucket y, si el token de R2 no tiene permiso para eso, solo deja un aviso en el log, no frena el arranque).
+
+**Cambios:** `DB_SSL` (validación, `configuration.ts`, `app.module.ts`, `data-source.ts`); Swagger solo si `NODE_ENV !== "production"`; `src/database/seeds/create-admin.ts` + script `admin:create` (muestra la base destino antes de actuar, no hace nada si ya hay un Admin activo, exige contraseña de ≥10 caracteres, nunca la imprime); `.env.example` con `DB_SSL=false` y un bloque de referencia de las variables de producción (solo nombres).
+
+**Configuración del Web Service en Render:**
+- Runtime **Node**, región **Ohio (US East)**, rama **main**, Root Directory vacío.
+- **Build Command:** `npm ci --include=dev && npm run build && npm run migration:run` — si una migración falla, falla el build y no se publica la versión nueva.
+- **Start Command:** `npm run start:prod`
+- **Health Check Path:** `/api/health`
+- Node: lo toma de `.nvmrc` (24.15.0) / `engines`.
+- **Variables:** `NODE_ENV=production`, `DB_HOST` (host de Neon **sin `-pooler`**: conexión directa, la que Neon recomienda para migraciones), `DB_PORT=5432`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL=true`, `JWT_SECRET` (al azar, largo), `S3_ENDPOINT` (`https://<ACCOUNT_ID>.r2.cloudflarestorage.com`, sin el bucket), `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_FORCE_PATH_STYLE=true`, `FRONTEND_URL` (provisorio hasta tener la URL de Vercel). No se cargan `PORT` ni `QUEUE_REDIS_*`.
+
+**Primer Admin en Neon (una sola vez, desde la compu de Pablo, después del primer deploy):** en una terminal con `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` de Neon y `DB_SSL=true`, más `ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD` → `npm run admin:create`. Las variables de la terminal tienen prioridad sobre el `.env` local.
+
+**Pendiente para el ticket del frontend:** el navegador sube los audios **directo a R2** con URLs firmadas → el bucket de R2 necesita una **política CORS** que permita `PUT` y `GET` desde el dominio de Vercel (se configura en el panel de Cloudflare cuando exista ese dominio); y actualizar `FRONTEND_URL` en Render con esa URL.
+
+**Seguridad:** en la conversación de este ticket se pegó la cadena de conexión de Neon con la contraseña → se recomendó resetearla en Neon antes de cargarla en Render. No se usó ni se guardó en ningún archivo.
+
+**Verificado (local, simulando producción):** el desarrollo local sigue igual (`/api/health` 200, login, `/api/docs` visible en desarrollo). Sobre una **base vacía temporal**: build + `migration:run` → las **12 migraciones corrieron en orden desde cero** (primera vez que se prueban todas juntas sobre una base nueva, como va a pasar en Neon); `admin:create` crea el Admin, la segunda vez no hace nada, rechaza contraseñas cortas; servidor con `NODE_ENV=production` → health 200, `/api/docs` 404, login del Admin nuevo con 28 permisos, 0 canciones, 8 temas, roles Admin/Invitado/Líder/Músico, invitado OK; log termina en "Nest application successfully started". `DB_SSL=true` contra el Postgres local (sin SSL) → "does not support SSL connections" en la app y en las migraciones (prueba de que el flag llega a las dos conexiones). Base temporal borrada. `tsc`, oxlint y build limpios. **Sin verificar:** la conexión real a Neon y a R2 (depende de las credenciales, que carga Pablo en Render).
+
+---
+
 ## 2026-09-25 — "Solo acordes": compases repetidos se abrevian con signo de repetición (frontend)
 
 **Pedido de Pablo:** si en una misma línea se repiten los mismos acordes (ej. estrofa 1: `| F | C - G | F | C - G |`), mostrarlos una sola vez con `|:]` (2 veces), `|x3]` (3), `|x4]` (4).
