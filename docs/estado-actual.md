@@ -4,6 +4,30 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Revisión de permisos: el backend usaba permisos viejos del token; Sidebar y rutas según "Ver" (backend + frontend)
+
+**Reporte de Pablo:** logueado con un usuario Músico veía Equipo (con la lista de integrantes), Estadísticas y Roles y Permisos; le sacó a Músico "Ver" de Equipo y Estadísticas y lo seguía viendo. Pidió revisar toda la parte de permisos y que un módulo con todos los checks apagados no aparezca.
+
+**Causa principal — bug del backend:** `JwtStrategy.validate` devolvía los permisos que venían **dentro del token**, calculados al iniciar sesión (duración 8h). Sacarle un permiso a un rol no tenía efecto para quien ya tenía la sesión abierta hasta que volviera a loguearse; tampoco dar de baja a alguien. Es exactamente el caso de Pablo: Músico arrancó (migración `AddRolesAndPermissions`) con `equipo:read` y `estadisticas:read`, él se los sacó desde la pantalla, y su token seguía teniéndolos.
+
+**Segunda causa — frontend:** el Sidebar mostraba todos los módulos a todos, sin mirar permisos, y no había protección por ruta más allá de "tener sesión" (solo Roles y Permisos tenía su propio "Sección restringida").
+
+**Arreglos:**
+- **Backend** (`jwt.strategy.ts`): en cada pedido se verifica que el usuario siga activo (si está dado de baja → 401, sesión cortada) y se leen sus permisos **de la base** (`AuthorizationService.getPermissionsForUser`). Costo: 2 consultas livianas por pedido — aceptable para este volumen. El token sigue firmando la identidad; sus `permissions` ya no se usan para autorizar.
+- **Frontend:** `core/auth/module-access.ts` = único mapa "módulo → permiso Ver" (`/escuchar`, `/letras`, `/acordes`, `/favoritos` → `cancion:read`; `/setlists` → `setlist:read`; `/equipo` → `equipo:read`; `/estadisticas` → `estadisticas:read`; `/roles-permisos` → `rol:read`; Inicio para todos). Lo usan el **Sidebar** (solo muestra módulos con su "Ver"; un grupo sin módulos, ej. "Gestión", no aparece) y **AuthGate** (entrar por URL a un módulo sin permiso muestra "Sección restringida"). Criterio: **"Ver" controla la visibilidad** — con todos los checks apagados no hay "Ver", así que el módulo no aparece; un rol con "Crear" pero sin "Ver" tampoco lo ve (el listado de la pantalla necesita `read`).
+- AuthGate vuelve a pedir `/auth/me` al volver a la pestaña (`focus`): si un admin cambia los permisos de tu rol, el menú se actualiza sin re-loguear.
+- **Roles y Permisos** alineado con el mismo criterio: se ve con `rol:read` (antes pedía `rol:write`), "Nuevo rol" solo con `rol:write`, y sin `rol:update` las tarjetas se ven en solo lectura (checkboxes deshabilitados, sin "Guardar").
+
+**Revisión del backend (sin problemas encontrados):** `JwtAuthGuard` y `PermissionsGuard` están registrados globalmente (`APP_GUARD`); todos los endpoints de canciones, pistas, links, setlists, anotaciones, equipo, roles/permisos y asignación de roles tienen su `@Permissions`. Sin permiso propio, a propósito o por diseño: `/auth/*` (login público, me/perfil/contraseña propios), `/favoritos` (del propio usuario), `/tags` y `/storage` (solo sesión).
+
+**Pendientes encontrados, NO resueltos (decisión de Pablo):**
+- **Nombres de integrantes sin `equipo:read`:** los setlists (líder y equipo), las anotaciones (autor) y el modal de nuevo setlist sacan los nombres de la lista de `/equipo`, que requiere `equipo:read`. Un Músico sin ese permiso no ve esos nombres (ya pasaba antes con Joaquín). Opciones: un endpoint liviano de "nombres del equipo" para cualquier usuario con sesión, o incluir los nombres en las respuestas de setlists/anotaciones.
+- **Estadísticas** no tiene endpoint propio: se calculan en el cliente con `playStats` que vienen en `/canciones`. `estadisticas:read` solo controla la pantalla; los datos crudos los recibe cualquiera con `cancion:read`.
+
+**Verificado:** API con el **mismo token** de Joaquín (Músico): `/equipo` 403 → agregarle `equipo:read` a Músico → 200 al instante → sacarlo → 403 al instante; integrante dado de baja con sesión abierta → 401. Navegador real: Admin ve los 9 módulos; Líder (`sofia@…`) 8, sin Roles y Permisos (no tiene `rol:read`); Músico (`joaquin@…`) 6, sin el grupo "Gestión", y `/equipo`, `/estadisticas`, `/roles-permisos` por URL → "Sección restringida"; con la sesión de Joaquín abierta, al darle `equipo:read` a Músico y volver a la pestaña apareció "Equipo y Roles". Los permisos de Músico se restauraron exactamente a los originales en todas las pruebas. `tsc`, lint y build limpios en ambos repos. Quedó 1 integrante de prueba dado de baja (`prueba.baja.…`).
+
+---
+
 ## 2026-09-25 — Login: mostrar/ocultar contraseña (frontend)
 
 **Pedido de Pablo:** un "ojito" en el campo de contraseña del login para ver lo que se escribió.
