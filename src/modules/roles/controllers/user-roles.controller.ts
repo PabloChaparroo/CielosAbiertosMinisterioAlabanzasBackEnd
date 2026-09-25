@@ -6,7 +6,7 @@ import { RolesService } from "../services/roles.service";
 /**
  * Asignar/quitar un rol a un usuario se gobierna con permisos de "rol" (no
  * "equipo"): es administración de accesos, una capacidad más sensible que
- * editar el perfil de un integrante (instrumentos, ministryRole, etc.).
+ * editar el perfil de un integrante (nombre, ministryRole, etc.).
  */
 @Controller("equipo/:userId/roles")
 export class UserRolesController {

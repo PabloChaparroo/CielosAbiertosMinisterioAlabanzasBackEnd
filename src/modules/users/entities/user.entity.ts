@@ -19,9 +19,6 @@ export class User extends BaseAuditEntity {
   @Column({ type: "varchar" })
   ministryRole!: string;
 
-  @Column({ type: "text", array: true, default: () => "'{}'" })
-  instruments!: string[];
-
   @Column({ type: "varchar" })
   avatarColor!: string;
 

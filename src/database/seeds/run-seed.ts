@@ -17,7 +17,6 @@ interface DemoUser {
   name: string;
   role: "admin" | "lider" | "musico" | "sudo";
   ministryRole: string;
-  instruments: string[];
   avatarColor: string;
   initials: string;
 }
@@ -29,7 +28,6 @@ const users: DemoUser[] = [
     name: "Martín Álvarez",
     role: "admin",
     ministryRole: "Director de Ministerio",
-    instruments: ["Teclado", "Voz"],
     avatarColor: "linear-gradient(135deg,#f5c76a,#e08b3a)",
     initials: "MA",
   },
@@ -39,7 +37,6 @@ const users: DemoUser[] = [
     name: "Sofía Ledesma",
     role: "lider",
     ministryRole: "Líder de alabanza",
-    instruments: ["Voz", "Guitarra"],
     avatarColor: "linear-gradient(135deg,#7aa2f7,#8b5cf6)",
     initials: "SL",
   },
@@ -49,7 +46,6 @@ const users: DemoUser[] = [
     name: "Joaquín Ruiz",
     role: "musico",
     ministryRole: "Guitarrista",
-    instruments: ["Guitarra eléctrica", "Guitarra acústica"],
     avatarColor: "linear-gradient(135deg,#4ade80,#0ea5e9)",
     initials: "JR",
   },
@@ -59,7 +55,6 @@ const users: DemoUser[] = [
     name: "Camila Ortiz",
     role: "musico",
     ministryRole: "Vocalista",
-    instruments: ["Voz"],
     avatarColor: "linear-gradient(135deg,#f472b6,#f59e0b)",
     initials: "CO",
   },
@@ -69,7 +64,6 @@ const users: DemoUser[] = [
     name: "Nicolás Pereyra",
     role: "musico",
     ministryRole: "Baterista",
-    instruments: ["Batería", "Cajón"],
     avatarColor: "linear-gradient(135deg,#38bdf8,#6366f1)",
     initials: "NP",
   },
@@ -79,7 +73,6 @@ const users: DemoUser[] = [
     name: "Lucía Fernández",
     role: "lider",
     ministryRole: "Líder de alabanza",
-    instruments: ["Voz", "Teclado"],
     avatarColor: "linear-gradient(135deg,#c084fc,#f472b6)",
     initials: "LF",
   },
@@ -89,7 +82,6 @@ const users: DemoUser[] = [
     name: "Diego Sosa",
     role: "musico",
     ministryRole: "Bajista",
-    instruments: ["Bajo"],
     avatarColor: "linear-gradient(135deg,#34d399,#22d3ee)",
     initials: "DS",
   },
@@ -99,7 +91,6 @@ const users: DemoUser[] = [
     name: "Ana Ferrari",
     role: "sudo",
     ministryRole: "Sonido",
-    instruments: ["Consola", "Sonido"],
     avatarColor: "linear-gradient(135deg,#fbbf24,#fb7185)",
     initials: "AF",
   },
@@ -174,15 +165,14 @@ async function run() {
 
   for (const user of users) {
     await runner.query(
-      `INSERT INTO "users" (id, email, password_hash, name, ministry_role, instruments, avatar_color, initials)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      `INSERT INTO "users" (id, email, password_hash, name, ministry_role, avatar_color, initials)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         user.id,
         user.email,
         passwordHash,
         user.name,
         user.ministryRole,
-        user.instruments,
         user.avatarColor,
         user.initials,
       ],

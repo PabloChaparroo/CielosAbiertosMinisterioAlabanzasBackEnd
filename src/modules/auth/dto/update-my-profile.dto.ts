@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 /**
  * Deliberadamente NO tiene email ni roles: "mi perfil" nunca puede tocar
@@ -14,12 +14,6 @@ export class UpdateMyProfileDto {
   @IsOptional()
   @IsString()
   ministryRole?: string;
-
-  @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsString({ each: true })
-  instruments?: string[];
 
   /** Key devuelta por POST /storage/upload-url tras subir el binario al bucket */
   @IsOptional()
