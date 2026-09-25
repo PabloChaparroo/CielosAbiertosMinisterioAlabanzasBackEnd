@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Favoritos: tarjetas más chicas y abrir en Letra o Acordes (frontend)
+
+**Pedido de Pablo:** achicar las tarjetas de Favoritos y agregar arriba un selector Letra / Acordes, para que al tocar un favorito lo lleve a la letra o a los acordes de esa canción.
+
+**Cambio** (`FavoritosPage.tsx`): grilla con más columnas (3 → 9 según el ancho; ~130px por tarjeta en 1300px, antes ~220px) y botón ▶ más chico. Selector "Abrir en: Letra | Acordes" al lado del buscador; tocar la tarjeta (o Enter con el teclado) navega a `/letras?songId=…` o `/acordes?songId=…`. El corazón y el ▶ no navegan (el ▶ sigue reproduciendo). La elección se recuerda en este navegador (`localStorage`, con try/catch; si no está disponible arranca en Acordes).
+
+**Verificado con navegador real** (Martín, que ya tenía "Desde mi interior" en favoritos — sin cambios de datos): Acordes → `/acordes?songId=…` con la canción abierta; Letra → `/letras?songId=…` mostrando la letra; al volver, el selector recordó "Letra"; ▶ reproduce sin salir de Favoritos. `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Revisión de permisos: el backend usaba permisos viejos del token; Sidebar y rutas según "Ver" (backend + frontend)
 
 **Reporte de Pablo:** logueado con un usuario Músico veía Equipo (con la lista de integrantes), Estadísticas y Roles y Permisos; le sacó a Músico "Ver" de Equipo y Estadísticas y lo seguía viendo. Pidió revisar toda la parte de permisos y que un módulo con todos los checks apagados no aparezca.
