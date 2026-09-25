@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Login: mostrar/ocultar contraseña (frontend)
+
+**Pedido de Pablo:** un "ojito" en el campo de contraseña del login para ver lo que se escribió.
+
+**Cambio:** `LoginPage.tsx` — botón con ícono `Eye`/`EyeOff` dentro del campo que alterna `type="password"`/`"text"`; es `type="button"` (no envía el formulario) y tiene `aria-label` ("Mostrar/Ocultar contraseña") y `aria-pressed`. Solo en el login; los campos de "Cambiar contraseña" de Mi perfil no se tocaron.
+
+**Verificado con navegador real:** arranca oculta; el ojito la muestra sin enviar el formulario; tocarlo de nuevo la oculta; el login funciona con la contraseña visible. `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Equipo: generar contraseña nueva para un integrante (frontend)
 
 **Pedido de Pablo:** si alguien se olvida la contraseña, poder generarle una nueva desde Equipo, **con una confirmación antes de generarla**.
