@@ -4,6 +4,35 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Tests unitarios con Vitest en el backend + tests en el CI
+
+**Pedido de Pablo:** empezar a testear la lógica aislada y crítica del backend (no end-to-end todavía): permisos efectivos (incluido "propia vs. de todos" de anotaciones), lógica de cálculo sin base de datos y DTOs con reglas de negocio no triviales; sumar los tests al CI. Flujo nuevo: `main` protegida por status checks → se trabaja en `develop` y se entra a `main` por PR.
+
+**Investigación:** Vitest ya estaba instalado y `npm run test` apuntaba a `vitest.unit.config.ts`, que **no existía** (el comando fallaba) y no había ningún test. Se confirmó con una prueba descartable que Vitest compila los decoradores de Nest/class-validator/class-transformer sin configuración extra. En el backend casi no hay cálculo de estadísticas: las agregaciones las hace el frontend; lo único es el conteo de reproducciones por mes.
+
+**Criterio:** tests unitarios **con las dependencias simuladas a mano**, sin levantar Nest ni la base, co-ubicados junto al archivo que testean (`*.spec.ts`), como pide el doc de arquitectura. No se tocó lógica de negocio.
+
+**Qué se testea (69 tests, 11 archivos):**
+- **`PermissionsGuard`** (control de acceso de toda la API): sin permiso requerido pasa; `@Public` pasa sin usuario; varios permisos = alcanza uno (OR); sin ninguno 403 con el permiso faltante; invitado en endpoint "solo con sesión" 403 y con `@AllowGuests` pasa; invitado lee pero no escribe.
+- **Anotaciones "propia vs. de todos"** (`AnnotationsService` + metadata del controlador): el autor edita/borra la suya sin ser moderador; otro sin `anotacion:update` → 403; moderador edita ajenas; **borrar ajenas exige `anotacion:delete`** (con solo `update` no alcanza); el autor al crear es siempre el de la sesión; 404; y cada endpoint pide "de todos **o** propia" (fija la regla).
+- **`AuthorizationService`**: invitado solo con permisos de lectura aunque el rol tenga más; rol Invitado borrado → acceso deshabilitado; `hasAny` (OR); catálogo de 28 permisos sin repetidos.
+- **`JwtStrategy.validate`**: los permisos salen **de la base, no del token** (el bug de la revisión de permisos, fijado); usuario dado de baja → 401; invitado con/sin rol.
+- **`RolesService`**: el rol Invitado no se asigna ni se renombra; los demás sí.
+- **`SongsService.registerPlay`**: suma en el mes existente, crea con 1 en mes nuevo, **mes en UTC** (30/9 23:30 en Argentina cuenta para octubre, mismo criterio que Inicio), 404 sin tocar estadísticas.
+- **`StorageService.getUploadUrl`**: tipos de audio/imagen permitidos, key con la carpeta, URL firmada (con el SDK real: firmar es un cálculo local), keys únicas.
+- **DTOs** (validados como la API real: `plainToInstance` + `whitelist`/`forbidNonWhitelisted`, helper `src/common/testing/validate-dto.ts`): permisos de un rol (solo del catálogo, sin repetidos, vacío permitido); setlist (sin canciones, canciones anidadas inválidas, tipo de evento, ids de equipo, campos desconocidos); paginación (texto→número, defaults, tope 100, página 0).
+- **`validateEnv`**: `DB_SSL` `false` por defecto y `"true"`→`true`; defaults; no arranca sin `JWT_SECRET`/`FRONTEND_URL` ni con un `NODE_ENV` inventado.
+
+**Chequeo de que los tests protegen de verdad:** se metieron a propósito 3 bugs reales (invitado sin filtro de solo lectura; borrar anotaciones ajenas con `update`; permisos leídos del token) → cada uno hizo fallar sus tests; el código se restauró.
+
+**Infraestructura:** `vitest.unit.config.ts` (`src/**/*.spec.ts`, entorno node); el build excluye los `*.spec.ts` (`--ignore`) → 0 tests en `dist`; el watch de desarrollo pasó a un script `build:watch` propio (con el patrón entre comillas, portable a Mac/Linux) que usa `start:dev` — `npm run dev` funciona igual (verificado).
+
+**CI:** paso `Tests (vitest)` entre lint y build; y el CI ahora corre también en cada **push a `develop`** (además de push a `main` y PRs a `main`). El nombre del job (`tsc + lint + build`) **no se cambió a propósito**: la protección de `main` exige ese check por nombre.
+
+**Fuera de alcance (fase futura):** tests end-to-end contra una base real (`test:e2e` sigue apuntando a un `vitest.e2e.config.ts` que no existe); tests del frontend (donde viven las estadísticas y el parser de acordes).
+
+---
+
 ## 2026-09-25 — Frontend listo para producción en Vercel (frontend)
 
 **Objetivo:** desplegar el frontend (TanStack Start con SSR) en Vercel desde `main`, apuntando al backend de producción `https://cielosabiertosministerioalabanzasbackend.onrender.com`.
