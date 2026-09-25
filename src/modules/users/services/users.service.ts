@@ -22,6 +22,11 @@ export class UsersService {
     });
   }
 
+  /** true si existe y no está dado de baja (las bajas lógicas quedan excluidas por defecto) */
+  isActive(id: string): Promise<boolean> {
+    return this.userRepo.exists({ where: { id } });
+  }
+
   async findById(id: string): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id }, relations: { roles: true } });
     if (!user) throw new NotFoundException("Integrante no encontrado");
