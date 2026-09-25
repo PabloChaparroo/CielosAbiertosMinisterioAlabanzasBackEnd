@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — "En vivo" (Acordes) y "Pantalla completa" (Letras) centrados en la pantalla (frontend)
+
+**Pedido de Pablo:** en esos modos la canción tiene que verse justo en el medio de la pantalla. Se complementa con el pedido anterior (texto alineado a la izquierda): lo que se centra es el **bloque**, y adentro el texto sigue alineado a la izquierda — así los acordes quedan sobre su sílaba.
+
+**Implementación:** en ambos modos el contenido va en un bloque `w-fit max-w-full` con `m-auto` dentro de un contenedor `flex min-h-full flex-col`: centrado horizontal siempre, y vertical cuando la canción es más corta que la pantalla (si es más larga, arranca arriba y se scrollea). En "En vivo" el `ref` del ajuste automático de tamaño (`useFitFontSize`) va en el contenedor de ancho completo y no en el bloque centrado: el bloque cambia de ancho según su contenido, y medirlo haría rebotar el ajuste.
+
+**Verificado con navegador real**, solo lectura sobre "Desde mi interior": "En vivo" en computadora con el mismo margen a ambos lados (443px/443px, 25px); achicando a celular 23px/23px, reajustado a 14px y la línea más ancha entra; Letras en pantalla completa 574px/574px. `tsc`, lint y build limpios.
+
+---
+
 ## 2026-09-25 — Acordes: tamaño de letra automático según la pantalla (frontend)
 
 **Pedido de Pablo:** la hoja de acordes arrancaba siempre en 25px; en el celular no entraba y quedaba cortada.
