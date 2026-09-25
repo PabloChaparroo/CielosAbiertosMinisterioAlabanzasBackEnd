@@ -15,7 +15,7 @@ interface DemoUser {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "lider" | "musico" | "sudo";
+  role: "admin" | "lider" | "musico";
   avatarColor: string;
   initials: string;
 }
@@ -81,7 +81,7 @@ const users: DemoUser[] = [
     id: "11111111-0000-4000-8000-000000000008",
     email: "ana@cielosabiertos.org",
     name: "Ana Ferrari",
-    role: "sudo",
+    role: "admin",
     avatarColor: "linear-gradient(135deg,#fbbf24,#fb7185)",
     initials: "AF",
   },
@@ -148,7 +148,7 @@ async function run() {
   const roleIdByName = new Map(roleRows.map((r) => [r.name, r.id]));
   const roleIdForDemoRole = (role: DemoUser["role"]): string => {
     const name =
-      role === "admin" ? "Admin" : role === "lider" ? "Líder" : role === "sudo" ? "Sudo" : "Músico";
+      role === "admin" ? "Admin" : role === "lider" ? "Líder" : "Músico";
     const id = roleIdByName.get(name);
     if (!id) throw new Error(`[seed] No se encontró el rol '${name}' — ¿corriste las migraciones?`);
     return id;
