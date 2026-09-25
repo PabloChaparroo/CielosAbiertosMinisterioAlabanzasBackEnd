@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — "Instrumentos" eliminado como atributo del integrante (backend + frontend)
+
+**Motivo:** pedido directo de Pablo — "Instrumento" no es relevante; el rol en el ministerio (`ministryRole`: Guitarrista, Bajista, Vocalista…) ya cubre esa información.
+
+**Backend:**
+- Migración `1759300000000-DropUserInstruments`: `ALTER TABLE users DROP COLUMN instruments`. El `down()` recrea la columna vacía — **los valores que había se pierden**, no son recuperables con el revert.
+- `User` sin la columna; `CreateUserDto`/`UpdateUserDto` y `UpdateMyProfileDto` sin el campo; `UsersService.create/update/updateOwnProfile` y `/auth/me` ya no lo leen ni lo devuelven. Seed demo actualizado.
+
+**Frontend:**
+- Sin campo "Instrumento" en Agregar miembro, Editar integrante y Mi perfil; tipos (`User`, `AuthUser`, DTOs de Equipo/Perfil) sin `instruments`.
+- **Decisión de implementación, no pedida explícitamente:** los filtros de la pantalla Equipo eran por instrumento; al desaparecer el dato, pasaron a filtrar por **rol en el ministerio** (mismo criterio: solo integrantes activos, ordenados alfabéticamente) en vez de eliminarse. Las tarjetas y el detalle ya no muestran la línea/chips de instrumentos.
+
+**⚠️ Orden de deploy — pushear los dos repos juntos:** el backend usa `ValidationPipe` con `forbidNonWhitelisted: true`. Mientras un lado esté deployado y el otro no: backend nuevo + frontend viejo → "Agregar miembro", "Editar" y "Mi perfil" dan 400 (el front viejo manda `instruments`); frontend nuevo + backend viejo → "Agregar miembro" da 400 (el back viejo exige `instruments`). La ventana dura lo que tarde el deploy más lento; el resto de la app no se ve afectado. Además, si Render no corre `migration:run` en el deploy, hay que correrla a mano — aunque sin correrla el código nuevo igual funciona (la columna vieja tiene default y el código ya no la usa).
+
+**Verificado:** migración corrida en la base local (la columna ya no existe); `/api/equipo` y `/api/auth/me` responden 200 sin `instruments`. Con navegador real (Playwright): filtros por rol en Equipo ("Guitarrista" → Joaquín Ruiz y Pablo Chaparro), modal de alta sin el campo, **alta real** de un integrante de prueba (se mostró la contraseña generada) sin errores de API, luego dado de baja (`prueba.sin.instrumento.…@cielosabiertos.org`, rol Vocalista para no ensuciar el desplegable de roles). `tsc`, lint y build limpios en los dos repos. **Sin verificar en navegador:** los modales Editar integrante y Mi perfil (el cambio ahí es solo quitar el input y el campo del payload).
+
+---
+
 ## 2026-09-25 — Duración de la canción tomada automáticamente del audio (frontend)
 
 **Motivo:** pedido directo de Pablo — en "Subir / Editar canción" la duración se cargaba a mano; que se complete sola mirando el audio.
