@@ -4,6 +4,33 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Tests unitarios con Vitest en el frontend + tests en el CI (frontend)
+
+**Pedido de Pablo:** testear la lógica aislada y crítica del frontend — transposición de acordes, cálculos de Estadísticas y mapeo de datos de los servicios —, sin tests de componentes React ni end-to-end, y sin repetir lo que ya cubren los tests del backend (permisos). Trabajo en `develop`; `main` solo por PR.
+
+**Qué se testea (49 tests, 5 archivos `*.spec.ts`, co-ubicados):**
+- **`lib/chords.ts`**: `transposeChord` (subir/bajar, bemoles en tonalidades con bemoles, entrada con `#` o `b`, calidad del acorde intacta, acordes con bajo `G/B`, vuelta de la octava, ida y vuelta, valores inválidos sin tocar); `transposeKey`, `semitonesBetween`; `diatonicChords` (D → D Em F#m G A Bm C#dim; F → F Gm Am Bb C Dm Edim); `parseChordPro` transpone acordes pero **no** las marcas ("Baja Tono" empieza con B, "x3", "%"), no trata "[CORO]" como acorde y no se cae con corchetes mal cerrados o texto vacío.
+- **Estadísticas**: más tocadas por mes (orden, tope 8, meses sin datos = 0), comparativa anual (suma por año, orden por el último año, canción solo con 2025 aparece con 2026 = 0), distribución por tema (una canción con varios temas suma a cada uno), evolución mensual y top 10 histórico.
+- **Mapeo**: `mapSong` (tags `{id, valor}` → nombres, `playStats` → `playsByMonth`, sin stats → `{}`, `audioKey`, `addedAt`, compás por defecto 4/4), `mapSetlist` (ítems ordenados por posición sin mutar el original, nota solo si tiene texto, líder/equipo, defaults), `mapAnnotation` (autor → `authorId`, `songId` del parámetro).
+
+**Cambio de código (sin cambio de comportamiento):** los cálculos de Estadísticas vivían dentro de `useMemo` en `EstadisticasPage`; se extrajeron **tal cual** a funciones puras en `features/estadisticas/lib/stats.ts` y la página las llama. `mapSong`/`mapSetlist`/`mapAnnotation` y sus tipos crudos pasaron a `export`.
+
+**Verificación en el navegador:** con reproducciones de prueba cargadas en la base local se sacó una "foto" del DOM (Playwright) de Estadísticas (mes, agosto, año), Canciones, lista y detalle de Setlists y Anotaciones **antes y después** del cambio → idénticas (única diferencia: el atributo `data-tsd-source` de desarrollo, que lleva números de línea del fuente). Los números de la verificación anterior de Estadísticas no estaban en este changelog, así que los datos de los tests son los mismos que se cargaron para esta verificación. Las reproducciones de prueba se borraron después (la tabla estaba vacía).
+
+**Chequeo de que los tests protegen de verdad:** bug metido a propósito en `lib/chords.ts` (un semitono de más) → fallan los tests de transposición; también en la distribución por tema (solo el primer tema) y en `mapSetlist` (sin ordenar) → fallan los suyos. Todo restaurado, 49 en verde.
+
+**Infraestructura:** `vitest.config.ts` propio (alias `@`, `src/**/*.spec.ts`, entorno node) — no carga `vite.config.ts` porque trae los plugins de Lovable/TanStack/Nitro y el guard de `VITE_API_URL`. Script `npm test`. tsc, lint (0 errores) y build pasan; los specs **no** llegan a `.output` (Vite solo empaqueta lo que se importa; verificado).
+
+**CI (frontend):** paso `Tests (vitest)` entre lint y build, y el CI ahora corre también en cada **push a `develop`**. El nombre del job (`tsc + lint + build`) no se cambió, por la protección de `main`.
+
+**Encontrado de paso (no se tocó, pendiente):**
+- **"Comparativa 2025 vs 2026" no dibuja barras** aunque haya datos de los dos años — igual antes y después del cambio. Causa probable: los `<Bar>` de Recharts van dentro de un Fragment en el condicional, y Recharts no los reconoce ahí.
+- En Estadísticas, los meses (`MONTHS`), los años (`2025`, `2026`) y el mes inicial (`2026-09`) están fijos en el código; en 2027 hay que tocarlos.
+- `bun.lock` no se actualizó (bun no está instalado acá); el CI y Vercel usan `package-lock.json`.
+- El contenedor Postgres local de Docker apareció **recreado con las variables de Neon** (usuario `neondb_owner`, puerto 5432, que choca con un Postgres nativo de Windows) — probablemente por correr `docker compose`/`npm run dev` en una terminal donde habían quedado exportadas las variables de `admin:create`. Se recreó desde una terminal limpia (puerto 5435, usuario `cielos`, datos intactos). Recomendación: usar una terminal nueva después de correr comandos contra producción.
+
+---
+
 ## 2026-09-25 — Tests unitarios con Vitest en el backend + tests en el CI
 
 **Pedido de Pablo:** empezar a testear la lógica aislada y crítica del backend (no end-to-end todavía): permisos efectivos (incluido "propia vs. de todos" de anotaciones), lógica de cálculo sin base de datos y DTOs con reglas de negocio no triviales; sumar los tests al CI. Flujo nuevo: `main` protegida por status checks → se trabaja en `develop` y se entra a `main` por PR.
