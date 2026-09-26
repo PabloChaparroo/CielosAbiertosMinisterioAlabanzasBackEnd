@@ -14,6 +14,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Verificado en el navegador:** "A quién iré" en la base local (verso de 4 líneas) → "| D | Bm | G | D - A |:]"; intro y coro sin cambios.
 
+**Ampliación (pedido de Pablo):** dos líneas seguidas de 2 compases cada una van en un mismo renglón: "| Em | % |" + "| G | A |" → "| Em | % | G | A |" (`joinShortChartLines`, se aplica después de juntar repeticiones). Solo líneas "simples" y que no sean una repetición; se juntan de a dos (cuatro líneas cortas → dos renglones); una de 2 compases junto a una de 3 no se junta. 5 tests más (60 en total). No verificado en el navegador con datos reales: en la base local el coro de "A quién iré" tiene notas "(letra...)", que a propósito no se juntan.
+
 **A tener en cuenta:** la comparación es exacta. En la versión de 6 líneas del verso, la última ("…eterni[D]dad? sino [A]Tú, Jesús.") no tiene el "-" entre D y A, así que da "| G | D | A |" (tres compases) y no se considera igual; hay que escribir "sino - [A]Tú" para que salga x3.
 
 ---
