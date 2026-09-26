@@ -16,6 +16,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Ampliación (pedido de Pablo):** dos líneas seguidas de 2 compases cada una van en un mismo renglón: "| Em | % |" + "| G | A |" → "| Em | % | G | A |" (`joinShortChartLines`, se aplica después de juntar repeticiones). Solo líneas "simples" y que no sean una repetición; se juntan de a dos (cuatro líneas cortas → dos renglones); una de 2 compases junto a una de 3 no se junta. 5 tests más (60 en total). No verificado en el navegador con datos reales: en la base local el coro de "A quién iré" tiene notas "(letra...)", que a propósito no se juntan.
 
+**Segunda ampliación:** también las líneas de **1 compás** (lo que está entre "|" es un compás, aunque sea "Bm - A"): "| Bm - A |" + "| G - A/C# |" → "| Bm - A | G - A/C# |". Regla final: líneas cortas (1 o 2 compases) seguidas se suman en un renglón mientras no pase de 4 compases. 62 tests.
+
 **A tener en cuenta:** la comparación es exacta. En la versión de 6 líneas del verso, la última ("…eterni[D]dad? sino [A]Tú, Jesús.") no tiene el "-" entre D y A, así que da "| G | D | A |" (tres compases) y no se considera igual; hay que escribir "sino - [A]Tú" para que salga x3.
 
 ---
