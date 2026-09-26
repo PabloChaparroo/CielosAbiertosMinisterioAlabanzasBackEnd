@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Fix: atajos de acordes en tonos menores (frontend)
+
+**Reporte de Pablo:** "Desde mi interior" está en Dm y la barra "Acordes en Dm" mostraba los de D mayor (D Em Gbm G A Bm Dbdim).
+
+**Causa:** `diatonicChords` le sacaba la "m" al tono y siempre armaba la escala mayor (con bemoles, porque Dm usa bemoles → "Gbm", "Dbdim").
+
+**Arreglo (`lib/chords.ts`):** en tono menor usa la escala menor natural: Dm → Dm Edim F Gm Am Bb C; Em → Em F#dim G Am Bm C D; Bm → Bm C#dim D Em F#m G A. Mayores sin cambios. 2 tests nuevos (64 en total).
+
+**A revisar (datos, no código):** los acordes cargados en "Desde mi interior" (D, A, Em, Bm, A/C#) son de **D mayor**; si la canción es en D, conviene corregir el tono en su ficha (ahora con Dm los atajos van a mostrar los de Dm, y "A/C#" se ve "A/Db").
+
+---
+
 ## 2026-09-26 — Letra + acordes: líneas sin letra como compases (frontend)
 
 **Pedido de Pablo:** en "Letra + acordes", un acorde que está solo en una línea (ej. la intro "[A]") se muestra como "| A |"; si está en la letra, queda como está.
