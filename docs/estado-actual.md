@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Columna "Secuencia" y filtro con/sin secuencia en Escuchar (backend + frontend)
+
+**Pedido de Pablo:** ver rápido qué canciones tienen secuencia (multitracks = pistas relacionadas / `AudioTrack`): columna "Secuencia" con un check amarillo si tiene y "-" blanco si no, y filtros por con / sin secuencia.
+
+**Backend:** `GET /canciones` y `GET /canciones/:id` devuelven `trackCount` (cantidad de pistas, con `loadRelationCountAndMap`: cuenta sin traer las pistas). `findById` pasó a query builder para poder contarlas; los tests del servicio simulan esa cadena. 80 tests.
+
+**Frontend:**
+- `Song.trackCount` (`mapSong`: backend viejo sin el campo → 0).
+- Escuchar: columna **Secuencia** (check `text-primary` / "-") y filtro "Con y sin secuencia · Con secuencia · Sin secuencia".
+- Al agregar o borrar una pista desde el modal de pistas, la columna se actualiza sin recargar.
+- Tabla: el encabezado quedaba desalineado con las filas (cada fila calculaba su propio ancho para las columnas `auto`) → anchos fijos; la columna **Temas** se muestra desde 2xl (1536px) para que las acciones siempre entren. Verificado a 1700, 1300, 1100 y 900px sin scroll horizontal.
+
+**Verificado en el navegador:** 2 checks (Desde mi interior, Prueba Multitrack) y 21 "-"; "Con secuencia" → esas 2; "Sin secuencia" → 21; todas → 23. 70 tests en el frontend.
+
+---
+
 ## 2026-09-26 — Tipo de canción: Alabanza / Adoración (backend + frontend)
 
 **Pedido de Pablo:** una clase más en canciones, `TipoCancion`: "Alabanza" (rápidas) y "Adoración" (lentas), **obligatoria** en cada canción y para filtrar. Decisión de Pablo: las canciones existentes quedan todas como **Alabanza** y se corrigen a mano.
