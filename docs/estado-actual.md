@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Solo acordes: repeticiones entre líneas seguidas (frontend)
+
+**Pedido de Pablo:** en "Solo acordes", si varias líneas seguidas repiten los mismos compases (ej. el verso de "A quién iré": "| D | Bm |" / "| G | D - A |" tres veces), mostrarlas una sola vez con el signo de repetición: "| D | Bm | G | D - A |x3]". "Letra + acordes" no cambia.
+
+**Cambio:** `mergeRepeatedChartLines` en `lib/chords.ts`: dentro de un tramo de líneas de acordes "simples" seguidas (una sección, una línea vacía o una línea con ":]", marcas o notas "(…)" cortan el tramo), toma desde cada línea el tramo más largo cuyos compases sean un mismo grupo repetido y lo junta en una línea; esa línea la comprime la lógica que ya existía ("|:]" para 2, "|xN]" para más). Siempre en líneas enteras: si la última vuelta es distinta, se junta lo que se repite y el resto queda como está. De paso, `chartBars` e `isSimpleChartLine` se movieron de `ChordSheet` a `lib/chords.ts` (mismo criterio, ahora compartido y testeado).
+
+**Tests:** 6 nuevos (55 en total): el verso completo de "A quién iré" → una línea con 3 vueltas; dos líneas iguales; última vuelta distinta; líneas distintas; sección/línea vacía cortan; ":]", marcas y notas se respetan.
+
+**Verificado en el navegador:** "A quién iré" en la base local (verso de 4 líneas) → "| D | Bm | G | D - A |:]"; intro y coro sin cambios.
+
+**A tener en cuenta:** la comparación es exacta. En la versión de 6 líneas del verso, la última ("…eterni[D]dad? sino [A]Tú, Jesús.") no tiene el "-" entre D y A, así que da "| G | D | A |" (tres compases) y no se considera igual; hay que escribir "sino - [A]Tú" para que salga x3.
+
+---
+
 ## 2026-09-25 — Reproductor a pantalla completa en celular (frontend)
 
 **Pedido de Pablo:** en celular, tocar el tema en el reproductor de abajo abre una vista a pantalla completa estilo Spotify (portada y nombre grandes) con canción siguiente y "atrás": un toque vuelve al principio del tema y dos toques seguidos van a la canción anterior.
