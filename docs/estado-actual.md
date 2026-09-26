@@ -4,6 +4,23 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-25 — Reproductor a pantalla completa en celular (frontend)
+
+**Pedido de Pablo:** en celular, tocar el tema en el reproductor de abajo abre una vista a pantalla completa estilo Spotify (portada y nombre grandes) con canción siguiente y "atrás": un toque vuelve al principio del tema y dos toques seguidos van a la canción anterior.
+
+**Cambio (`MiniPlayer.tsx`, solo frontend):**
+- En celular (<640px) tocar la portada o el nombre abre la vista: portada grande, título, artista, favorito, barra de progreso con tiempos, atrás / play-pausa / siguiente y botón para cerrar. En compu tocar el nombre sigue como antes (reanuda).
+- La vista va en un portal a `body`: el `backdrop-blur` de la barra hace que un `fixed` de adentro quede encerrado en ella.
+- **Siguiente/anterior:** no existe una cola de reproducción, así que recorren el repertorio en el orden de la lista (el de Escuchar), salteando canciones sin audio; circular (después de la última vuelve a la primera).
+- **Atrás:** un toque → `currentTime = 0`; otro toque dentro de 1,5 s → canción anterior.
+- De paso: con el audio principal sonando, el subtítulo repetía el nombre del tema ("A quién iré · Marcos Witt"); ahora muestra solo el artista (barra y vista completa).
+
+**Verificado con navegador real (400×860, táctil):** en la base local solo 1 canción tiene audio, así que la prueba simuló en el navegador (sin tocar la base) que todas tenían audio y sirvió un audio mudo de 60 s. Resultado: abre a pantalla completa ocupando toda la pantalla; un toque en atrás a los 5,6 s → vuelve a 0,3 s en el mismo tema; siguiente → "Desde mi interior"; doble toque atrás → vuelve a "A quién iré"; cerrar funciona; en 1300px no se abre. `tsc` y lint limpios.
+
+**Sin verificar:** en un celular real con audio real de R2 (reproducción en segundo plano / pantalla bloqueada no se tocó).
+
+---
+
 ## 2026-09-25 — Tests unitarios con Vitest en el frontend + tests en el CI (frontend)
 
 **Pedido de Pablo:** testear la lógica aislada y crítica del frontend — transposición de acordes, cálculos de Estadísticas y mapeo de datos de los servicios —, sin tests de componentes React ni end-to-end, y sin repetir lo que ya cubren los tests del backend (permisos). Trabajo en `develop`; `main` solo por PR.
