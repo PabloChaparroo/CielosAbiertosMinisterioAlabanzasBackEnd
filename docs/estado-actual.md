@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Letras: al entrar sin canción, las últimas subidas para elegir (frontend)
+
+**Pedido de Pablo:** al entrar a Letras, en vez de "Seleccioná una canción / La letra aparecerá acá", mostrar ahí mismo las últimas canciones subidas para elegir una.
+
+**Cambio (`LetrasPage.tsx`):** el estado vacío pasa a ser una lista de las 8 primeras canciones disponibles (mismo orden que "Últimas subidas" de Inicio, el que devuelve la API; respeta el filtro `songIds` de un setlist), con portada, título y artista; tocar una abre su letra (no la reproduce, igual que tocar el título en el buscador). Sin canciones → "Todavía no hay canciones".
+
+**Acordes no cambia:** nunca mostró ese mensaje — si no se eligió ninguna, abre directamente la primera canción.
+
+**Verificado:** navegador headless a 390px como invitado: Letras muestra "Últimas canciones subidas" con 8 canciones, sin desborde (390px); tocar "Al Estar Aquí" abre su letra. tsc, lint, 94 tests.
+
+---
+
 ## 2026-09-26 — Fix: Inicio se desbordaba en celular (frontend)
 
 **Reporte de Pablo (probado en el celular):** en Inicio la página quedaba más ancha que la pantalla y corrida hacia un costado (hero cortado, tarjetas saliéndose).
