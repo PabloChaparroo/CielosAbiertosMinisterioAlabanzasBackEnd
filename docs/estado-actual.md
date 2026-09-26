@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Portada desde YouTube (sin subir imágenes), tipo en columna y fix de borrar links (backend + frontend)
+
+**Pedido de Pablo:** (1) en Escuchar, el tipo (Alabanza / Adoración) en su propia columna, no como etiqueta al lado del artista; (2) **cambio de planes con la portada**: usar la miniatura del video de YouTube de la canción y **no permitir subir portadas**, para ahorrar tiempo de carga y almacenamiento.
+
+**Portada:**
+- La portada de una canción es la miniatura de su **primer link relacionado de YouTube** (en el orden de los links; los links que no son de YouTube no cuentan). Imagen oficial de `i.ytimg.com`: no se descarga, no se guarda nada.
+- Backend: `GET /canciones` y `GET /canciones/:id` incluyen los `links` (ordenados). Frontend: `mapSong` calcula `youtubeVideoId` con el mismo `parseYoutubeVideoId` del reproductor embebido (un link de YouTube roto no cuenta).
+- `Cover` (compartido por todos los listados): miniatura de YouTube → portada subida antes (compatibilidad, ya no se puede subir) → gradiente. En listados usa `mqdefault` (16:9, sin franjas, recortada al cuadrado); en la vista grande del reproductor `maxresdefault`, con `mqdefault` de respaldo si el video no la tiene; carga diferida (`loading="lazy"`).
+- Al agregar o borrar un link, la portada de la canción se actualiza sin recargar.
+- `UploadModal`: se sacó el campo "Portada". **Queda sin tocar en el backend** la columna `cover_key` y la carpeta `portadas` de storage (no molestan; se pueden quitar con una migración si se confirma que no vuelven).
+
+**Tipo en columna:** columna "Tipo" en la tabla de Escuchar (desde md), entre Título/Temas y Secuencia; la etiqueta al lado del artista se sacó.
+
+**Bug encontrado al verificar (existía desde que están los links), arreglado:** borrar un link relacionado lo borraba en la base pero la pantalla mostraba "Failed to execute 'json' on 'Response'…" y el link seguía en la lista: `DELETE /links/:id` responde 200 **sin cuerpo** y `apiRequest` intentaba leerlo como JSON. Ahora una respuesta sin cuerpo no es un error.
+
+**Verificado en el navegador:** encabezado "# · Título · Tipo · Secuencia · Tono/Compás/BPM · Duración"; "Desde mi interior" con la miniatura de su video (cargada, 320px); a "Océanos" se le agregó un link de YouTube → apareció la portada; al borrarlo (sin error) → volvió el gradiente (dato de prueba borrado); el formulario ya no tiene "Portada". 93 tests en el frontend, 85 en el backend.
+
+---
+
 ## 2026-09-26 — Cancionero real: `npm run songs:import` + 28 temas nuevos (backend + frontend)
 
 **Pedido de Pablo:** cargar el cancionero real de la iglesia (texto extraído de "Adoraciones", `adoraciones-texto-extraido.txt`) con un script que corre **una sola vez y a mano** (como `admin:create`, no `seed:run`), dando de baja las canciones de prueba. Letra y acordes tal cual el documento; nada se busca ni se completa por fuera.
