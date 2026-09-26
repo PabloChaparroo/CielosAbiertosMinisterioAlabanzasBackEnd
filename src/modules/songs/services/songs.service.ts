@@ -37,9 +37,12 @@ export class SongsService {
       .leftJoinAndSelect("song.tags", "tags")
       .leftJoinAndSelect("song.tipo", "tipo")
       .leftJoinAndSelect("song.playStats", "playStats")
+      // links: el frontend toma la portada del primer link de YouTube
+      .leftJoinAndSelect("song.links", "links")
       // "tiene secuencia": cantidad de pistas, sin traer las pistas
       .loadRelationCountAndMap("song.trackCount", "song.tracks")
-      .orderBy("song.fechaHoraAlta", "DESC");
+      .orderBy("song.fechaHoraAlta", "DESC")
+      .addOrderBy("links.order", "ASC");
 
     if (query.search) {
       qb.andWhere("(song.title ILIKE :search OR song.artist ILIKE :search)", {
@@ -61,6 +64,7 @@ export class SongsService {
       .leftJoinAndSelect("song.tags", "tags")
       .leftJoinAndSelect("song.tipo", "tipo")
       .leftJoinAndSelect("song.playStats", "playStats")
+      .leftJoinAndSelect("song.links", "links")
       .loadRelationCountAndMap("song.trackCount", "song.tracks")
       .where("song.id = :id", { id })
       .getOne();
