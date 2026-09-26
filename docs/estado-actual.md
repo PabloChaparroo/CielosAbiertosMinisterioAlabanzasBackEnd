@@ -4,6 +4,39 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Cancionero real: `npm run songs:import` + 28 temas nuevos (backend + frontend)
+
+**Pedido de Pablo:** cargar el cancionero real de la iglesia (texto extraído de "Adoraciones", `adoraciones-texto-extraido.txt`) con un script que corre **una sola vez y a mano** (como `admin:create`, no `seed:run`), dando de baja las canciones de prueba. Letra y acordes tal cual el documento; nada se busca ni se completa por fuera.
+
+**Lo que se encontró en el documento (y se charló antes de escribir código):**
+- Son **61** canciones (no 54). Solo 9 tienen letra completa con acordes (A quién iré … Creo en ti); las demás son mayormente progresiones por sección ("PLANTILLA") con alguna línea de letra, o sin letra — quedan así, para completar desde la app.
+- Buena parte del texto la agregó una **IA** al armar el documento (descripciones, "Busca la letra…", "Rellena la letra aquí…", artistas "usualmente X", temas "sugeridos"). **Los temas y varios artistas son sugerencias de esa IA**, no datos del equipo.
+
+**Decisiones de Pablo:** tipo Adoración salvo 4 Alabanzas (Dios Imparable, Dios es más grande, Exaltado estás, Salmos 108); artista faltante → "Sin especificar"; **sacar todo el texto de la IA dirigido al lector**; **agregar los 28 temas tal cual**, sin fusionar (los ordena él). Por propuesta aceptada: duración 4:00 (el documento no la trae); tonalidad con varias opciones → la de inicio (Al Estar Aquí F#, Hasta que tu gloria Em, Cristo Jesús F, Dios háblame A, Inagotable Amor C#, Tumbas a Jardines B); "usualmente X" → X; dos artistas posibles → "A / B"; Cuan Grande es Dios sin compás → 4/4; Por un momento… BPM "65-70" → 68.
+
+**Temas agregados al catálogo (28, migración `AddCancioneroTags`):** Fe, Rendición, Identidad, Exaltación, Búsqueda, Alabanza, Guerra Espiritual, Avivamiento, Servicio, Victoria, Milagros, Esperanza, Confianza, Testimonio, Fidelidad, Espíritu Santo, Protección, Salvación, Poder, Redención, Majestad, Oración, Reino de Dios, Hambre espiritual, Restauración, Resurrección, Humildad, Consagración. **Razón:** son los que usa el documento; Pablo pidió cargarlos todos sin fusionar para revisarlos él (se había propuesto consolidar a 5, porque muchos son sinónimos y los sugirió la IA). Ojo: el **tema** "Alabanza" convive con el **tipo** "Alabanza". La migración reemplaza el CHECK `CHK_tags_valor` e inserta los 28 (`down` los quita). `GET /tags` ahora también para invitados.
+
+**Frontend:** el catálogo de temas se trae del backend (`GET /tags`) en vez de estar fijo en el frontend: los próximos cambios del catálogo no tocan el frontend. `Tag` pasa a `string`.
+
+**Script `npm run songs:import`** (`seeds/import-cancionero.ts` + datos en `seeds/data/cancionero.ts`):
+- Muestra la base destino; todo en una transacción (si algo falla, no guarda nada); verifica que existan los temas y tipos (si no, pide correr las migraciones).
+- Da de **baja** (soft delete, como la app) las 21 de prueba por **título + artista exactos**: las 20 del seed demo + "Prueba Multitrack — Test". Soft delete porque 4 estaban en setlists de prueba (`setlist_items` no deja borrar) y así no se toca Setlists.
+- Inserta las canciones; **idempotente**: una canción activa con mismo título y artista no se toca; si está **vacía** (sin letra) se completa (caso "A quién iré" local); si ya hay una con el mismo título y otro artista, **no la toca ni la duplica** y avisa "REVISAR A MANO" (caso "Desde mi interior — Hilsson" local, que tiene audio, portada, pista y link reales).
+- Bug encontrado al probar, arreglado: "Santo espíritu" (Averly Morillo) y "Santo Espíritu" (Christine D'Clario) tienen el mismo título → la segunda se tomaba como "ya cargada". Ahora las canciones del propio documento no cuentan como cargadas a mano.
+- Tests de los datos: 61 canciones sin repetir, todos los temas en el catálogo, exactamente 4 Alabanzas, sin frases de la IA, datos obligatorios completos. 85 tests en el backend.
+
+**Texto de la IA sacado** (si la frase venía antes de acordes, los acordes quedan): "(Rellena la letra aquí…):", "(Progresión completa):", "(Sigue con/la misma progresión/la progresión anotada/…):", "(Continúa con…):", "(Acomoda el resto de la letra…):", "(Busca la letra completa…)", "(En tu documento esta canción tiene…)", "(Nota: En el documento también tienes…)" (Hay una unción), "(Nota: Tienes también el detalle de la Subida…)" (¿Quién podrá?). **Tres que llevaban información musical y se perdió** (revisar contra el original): Tumbas a Jardines "verso 4 E - F# | G#m |"; Tus cuerdas de amor "el verso se repite 4 veces"; Trae aquí el cielo: "[Bm] [%]" es la salida del primer coro de vuelta al verso (quedaron los acordes, sin la aclaración). Se dejaron las notas de interpretación que no le hablan al lector: "(Termina con la progresión del Verso)", "Final = Verso", "(Se repite, luego sube la intensidad)", "(Aquí luego se repite el Coro y el Interludio)", "(Interludio corto antes de subir)", "(Esta progresión circular se repite…)", "(Y va al coro)". También se sacaron números de página, "PLANTILLA"/"LETRA CON ACORDES" y los renglones en blanco de la extracción del PDF.
+
+**Para revisar a mano en la app:** las 3 marcadas "REVISAR" en el documento (Apasionado, Al estar ante ti, Al Estar Aquí); artistas "Sin especificar" (Al estar ante ti, Espíritu santo, En memoria de ti, Salmos 108, Si tú presencia…, Hay una unción, Hasta que tu gloria, Mi refugio, Yo navegaré, Yo me rindo a Él); duraciones (todas 4:00); "Desde mi interior" local no se tocó (el documento dice tono Am, la cargada está en D).
+
+**Bug encontrado al verificar, arreglado (frontend `lib/chords.ts`):** las canciones en **Eb, Ab o Bb** mostraban los acordes con sostenidos (D#, G#, A#) aun sin transponer: `transposeKey` siempre devolvía el nombre con sostenido ("Eb" → "D#") y la hoja decide sostenidos/bemoles por ese nombre. Ahora conserva los nombres de `KEYS` (Eb, Ab, Bb; Ebm, Bbm). Afectaba a El nombre, Lo harás otra vez y Poderoso Dios. Test nuevo; 92 tests en el frontend.
+
+**Verificado en local:** migración + import → 21 bajas, 59 nuevas + "Santo Espíritu" tras el arreglo, "A quién iré" completada → **61 activas**; segunda corrida: 0 nuevas (no duplica). En el navegador: Escuchar lista 61; el filtro de temas trae los nuevos (filtro "Guerra Espiritual" → Dios es más grande); Apasionado en Letra + acordes bien alineada; transponer +1 (F → F#) funciona; El nombre en Solo acordes con Eb/Ab; Cuando levanto mis manos con sus acordes arriba y la letra aparte.
+
+**Producción:** lo corre Pablo, en una terminal nueva con las variables de Neon (ver el mensaje del ticket), después de que el deploy aplique la migración.
+
+---
+
 ## 2026-09-26 — Videos de YouTube embebidos desde el reproductor (frontend)
 
 **Pedido de Pablo:** ticket de "pista relacionada de tipo YouTube" (reproducir un video embebido dentro de la app con el iframe oficial, sin extraer ni alojar audio). Al cargar un link de YouTube en "Links relacionados" vio que no aparecía en el reproductor.
