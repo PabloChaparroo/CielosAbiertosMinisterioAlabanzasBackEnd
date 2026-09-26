@@ -4,6 +4,35 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Portada de canción (cover art) — backend + frontend
+
+**Pedido de Pablo:** subir una portada (imagen) por canción y mostrarla en lugar del placeholder genérico en todos los listados. Decisiones ya tomadas: campo `coverKey`, tope 5MB, jpg/png/webp sin HEIC, subida por URL firmada, campo dentro del `UploadModal` existente.
+
+**Investigación:** el backend **no tenía** nada de portada real: `Song.cover` es un `varchar NOT NULL` con un **gradiente CSS** que el frontend genera al dar de alta — es el placeholder, y se mantiene como fallback. Foto de letra confirmada sin cambios: 8MB, jpg/png/webp (`image-validation.ts`).
+
+**Backend:**
+- Migración `AddSongCoverKey` (`cover_key varchar NULL`); `Song.coverKey`; `coverKey` opcional en el DTO (`null` la quita); `update()` la asigna.
+- Storage: carpeta nueva **`portadas`** con whitelist **server-side** jpg/png/webp (no se repitió la deuda de `letras`, que sigue sin whitelist en el backend).
+- Tests: `portadas` acepta jpg/png/webp y rechaza HEIC y audio; `update` guarda, quita (null) y no toca la portada si no viene. 73 tests.
+
+**Frontend:**
+- **Decisión: `validateImageFile` parametrizado** (`validateImageFile(file, maxBytes = MAX_IMAGE_BYTES)` + `MAX_COVER_BYTES = 5MB`), no un archivo duplicado. Razón: la regla (qué es una imagen válida) es la misma y solo cambia un número; duplicarla haría que el día que se sume un formato haya que acordarse de tocar dos lugares. Distinto de audio vs. imagen, donde las reglas sí son distintas. La llamada de Letras no cambió (usa el default de 8MB); el mensaje de tamaño sale del tope ("…límite de 5MB").
+- **`Cover` compartido** (ya existía, solo pintaba el gradiente): ahora resuelve la URL firmada de `coverKey` con cache por key (mismo criterio que `Avatar`) y cae al gradiente si no hay portada o la imagen no carga. Así se actualizan sin tocarlos: MiniPlayer (barra y pantalla completa), Inicio (canción del mes y lista), Escuchar, Letras, y Setlists (detalle y alta — sin tocar archivos de Setlists).
+- Lugares que dibujaban el gradiente a mano y pasan a `Cover`: Estadísticas (top 10), Inicio (más tocadas), Acordes (buscador) y **Favoritos** (una línea, aprobado por Pablo: que la portada aparezca igual en todos lados; no toca lógica de Favoritos).
+- `UploadModal`: campo "Portada" con vista previa local, cambiar y quitar; se sube por URL firmada al guardar (igual que el audio) y el error se muestra en el campo.
+- Tests: `mapSong` con `coverKey` (incluido backend viejo sin el campo → null); `validateImageFile` con los dos topes y formatos. 68 tests.
+
+**Verificado en el navegador real (MinIO local):** `.txt` → "Formato no soportado — subí una imagen jpg, png o webp."; PNG de 6MB → "La imagen supera el límite de 5MB."; portada real subida (PATCH 200, `coverKey: portadas/…`) y vista en Escuchar, MiniPlayer, pantalla completa, Inicio, Letras, Acordes, Favoritos y Estadísticas; las canciones sin portada siguen con el gradiente; "Quitar portada" → `coverKey: null` y vuelve el gradiente. Las dos canciones de prueba quedaron sin portada (como estaban); los 2 archivos de prueba quedaron en MinIO local sin referencia.
+
+**Encontrado de paso (no tocado):**
+- `SongsService.update()` **no guarda `compas`**: editar el compás de una canción se ignora en silencio.
+- El comentario de `image-validation.ts` dice que es "espejo del whitelist real" de `letras`, pero el backend no valida `letras` (deuda ya documentada en `storage.service.ts`).
+- Límite de tamaño solo del lado del cliente (igual que audio/letra): la URL firmada con PUT no restringe tamaño.
+
+**Deploy:** requiere correr la migración (en Render va en el Build Command).
+
+---
+
 ## 2026-09-26 — Fix: atajos de acordes en tonos menores (frontend)
 
 **Reporte de Pablo:** "Desde mi interior" está en Dm y la barra "Acordes en Dm" mostraba los de D mayor (D Em Gbm G A Bm Dbdim).
