@@ -7,8 +7,18 @@ import { Song } from "../entities/song.entity";
 import { TipoCancion } from "../entities/tipo-cancion.entity";
 import { SongsService } from "./songs.service";
 
+/** findById usa un query builder (para contar las pistas): se simula la cadena hasta getOne() */
+function qbReturning(result: unknown) {
+  return vi.fn(() => {
+    const qb: Record<string, unknown> = {};
+    for (const m of ["leftJoinAndSelect", "loadRelationCountAndMap", "where"]) qb[m] = () => qb;
+    qb.getOne = vi.fn().mockResolvedValue(result);
+    return qb;
+  });
+}
+
 function setup({ songExists = true, statThisMonth = null as SongPlayStat | null } = {}) {
-  const songRepo = { findOne: vi.fn().mockResolvedValue(songExists ? { id: "s1" } : null) };
+  const songRepo = { createQueryBuilder: qbReturning(songExists ? { id: "s1" } : null) };
   const playStatRepo = {
     findOne: vi.fn().mockResolvedValue(statThisMonth),
     save: vi.fn().mockImplementation(async (s: SongPlayStat) => s),
@@ -62,7 +72,7 @@ describe("SongsService.update — portada (coverKey)", () => {
   function setupUpdate(coverKey: string | null) {
     const song = { id: "s1", title: "Océanos", coverKey } as Song;
     const songRepo = {
-      findOne: vi.fn().mockResolvedValue(song),
+      createQueryBuilder: qbReturning(song),
       save: vi.fn().mockImplementation(async (s: Song) => s),
     };
     const service = new SongsService(
@@ -102,7 +112,7 @@ describe("SongsService — tipo de canción (Alabanza / Adoración)", () => {
   function setupTipo() {
     const song = { id: "s1", tipoId: ALABANZA, tipo: { id: ALABANZA, nombre: "Alabanza" } } as Song;
     const songRepo = {
-      findOne: vi.fn().mockResolvedValue(song),
+      createQueryBuilder: qbReturning(song),
       save: vi.fn().mockImplementation(async (s: Song) => s),
     };
     const tipoRepo = {

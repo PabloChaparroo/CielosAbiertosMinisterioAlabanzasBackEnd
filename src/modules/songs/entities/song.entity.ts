@@ -84,6 +84,9 @@ export class Song extends BaseAuditEntity {
   @OneToMany(() => AudioTrack, (track) => track.song)
   tracks!: Relation<AudioTrack>[];
 
+  /** Cantidad de pistas (secuencia / multitracks); no es columna, la calculan findAll/findById */
+  trackCount?: number;
+
   @OneToMany(() => SongLink, (link) => link.song)
   links!: Relation<SongLink>[];
 }

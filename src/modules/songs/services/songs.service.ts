@@ -37,6 +37,8 @@ export class SongsService {
       .leftJoinAndSelect("song.tags", "tags")
       .leftJoinAndSelect("song.tipo", "tipo")
       .leftJoinAndSelect("song.playStats", "playStats")
+      // "tiene secuencia": cantidad de pistas, sin traer las pistas
+      .loadRelationCountAndMap("song.trackCount", "song.tracks")
       .orderBy("song.fechaHoraAlta", "DESC");
 
     if (query.search) {
@@ -54,10 +56,14 @@ export class SongsService {
   }
 
   async findById(id: string): Promise<Song> {
-    const song = await this.songRepo.findOne({
-      where: { id },
-      relations: { tags: true, playStats: true },
-    });
+    const song = await this.songRepo
+      .createQueryBuilder("song")
+      .leftJoinAndSelect("song.tags", "tags")
+      .leftJoinAndSelect("song.tipo", "tipo")
+      .leftJoinAndSelect("song.playStats", "playStats")
+      .loadRelationCountAndMap("song.trackCount", "song.tracks")
+      .where("song.id = :id", { id })
+      .getOne();
     if (!song) throw new NotFoundException("Canción no encontrada");
     return song;
   }
