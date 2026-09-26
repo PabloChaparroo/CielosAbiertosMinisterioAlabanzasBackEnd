@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Fix: la canción se cortaba al cambiar de módulo (frontend)
+
+**Reporte de Pablo:** reproducir una canción y pasar a otro módulo → se cortaba y volvía a empezar.
+
+**Causa:** el `MiniPlayer` estaba dentro de `AppLayout`, y cada pantalla monta su propio `AppLayout`: navegar desmontaba el reproductor (y el `<audio>` / el iframe de YouTube) y lo volvía a crear desde cero.
+
+**Arreglo:** el `MiniPlayer` se monta una sola vez en `AuthGate` (dentro de `AppProvider`, al lado de las rutas) y se sacó de `AppLayout`. El estado de qué suena ya vivía en `AppProvider`, así que no hubo que tocar nada más. Los modos "En vivo" de Letras/Acordes (z-50) siguen por encima de la barra (z-40).
+
+**Encontrado al verificar, arreglado:** el **video flotante de YouTube tapaba el panel "Pistas relacionadas"** (no se podía elegir una pista mientras sonaba un video). El flotante pasó a z-35: arriba del contenido y del encabezado (z-30), debajo de la barra y su panel (z-40); en pantalla completa sigue arriba (z-55).
+
+**Verificado en el navegador:** YouTube ("Santo Espíritu") sonando mientras se pasa por Letras, Acordes, Inicio y Setlists → sigue sonando sin reiniciarse (3,8 s → 12,2 s); audio subido ("Desde mi interior", elegido desde el panel de pistas con el video flotante visible) por Favoritos, Inicio y Letras → sigue sonando (2,9 s → 9,3 s). 93 tests.
+
+---
+
 ## 2026-09-26 — Solo acordes: sección a la izquierda, compases a la derecha (frontend)
 
 **Pedido de Pablo:** ver "Solo acordes" como su hoja de ensayo: "Intro:   | Em | G | D | A |", con cada sección a la izquierda y sus compases a la derecha (antes el título de la sección iba arriba, con renglones en blanco en el medio).
