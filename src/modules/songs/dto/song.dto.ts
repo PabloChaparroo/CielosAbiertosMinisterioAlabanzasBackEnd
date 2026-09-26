@@ -36,6 +36,11 @@ export class CreateSongDto {
   @IsString()
   lyricsImageKey?: string;
 
+  /** Key de la portada subida por URL firmada (carpeta "portadas"); null la quita */
+  @IsOptional()
+  @IsString()
+  coverKey?: string | null;
+
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })

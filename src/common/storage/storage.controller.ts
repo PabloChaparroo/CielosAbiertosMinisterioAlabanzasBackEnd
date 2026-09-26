@@ -4,8 +4,8 @@ import { AllowGuests } from "../decorators/allow-guests.decorator";
 import { StorageService } from "./storage.service";
 
 class UploadUrlDto {
-  @IsIn(["audios", "letras", "avatares"])
-  folder!: "audios" | "letras" | "avatares";
+  @IsIn(["audios", "letras", "avatares", "portadas"])
+  folder!: "audios" | "letras" | "avatares" | "portadas";
 
   @IsString()
   contentType!: string;

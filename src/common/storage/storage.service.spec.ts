@@ -40,6 +40,20 @@ describe("StorageService.getUploadUrl", () => {
     );
   });
 
+  it("portadas: acepta jpg/png/webp y rechaza HEIC y archivos que no son imagen", async () => {
+    for (const type of ["image/jpeg", "image/png", "image/webp"]) {
+      await expect(service.getUploadUrl("portadas", type)).resolves.toMatchObject({
+        key: expect.stringMatching(/^portadas\//),
+      });
+    }
+    await expect(service.getUploadUrl("portadas", "image/heic")).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(service.getUploadUrl("portadas", "audio/mpeg")).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
   it("cada subida recibe una key distinta (no pisa archivos existentes)", async () => {
     const a = await service.getUploadUrl("letras", "image/jpeg");
     const b = await service.getUploadUrl("letras", "image/jpeg");

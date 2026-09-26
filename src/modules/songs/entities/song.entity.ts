@@ -54,6 +54,10 @@ export class Song extends BaseAuditEntity {
   @Column({ type: "varchar", nullable: true })
   lyricsImageKey!: string | null;
 
+  /** Portada real (key de la imagen en el bucket, carpeta "portadas"). null = se usa `cover` */
+  @Column({ type: "varchar", nullable: true })
+  coverKey!: string | null;
+
   @ManyToMany(() => Tag)
   @JoinTable({
     name: "song_tags",

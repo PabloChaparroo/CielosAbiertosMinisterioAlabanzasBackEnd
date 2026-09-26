@@ -37,6 +37,9 @@ const ALLOWED_AUDIO_CONTENT_TYPES = [
 
 const ALLOWED_AVATAR_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+/** Portadas de canciones: mismos formatos que avatares (sin HEIC: no se ve en Chrome/Android) */
+const ALLOWED_COVER_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly logger = new Logger(StorageService.name);
@@ -93,7 +96,7 @@ export class StorageService implements OnModuleInit {
    * puramente client-side y cualquiera con las devtools puede saltarlo.
    */
   async getUploadUrl(
-    folder: "audios" | "letras" | "avatares",
+    folder: "audios" | "letras" | "avatares" | "portadas",
     contentType: string,
   ): Promise<{ uploadUrl: string; key: string }> {
     if (folder === "audios" && !ALLOWED_AUDIO_CONTENT_TYPES.includes(contentType)) {
@@ -103,6 +106,9 @@ export class StorageService implements OnModuleInit {
     }
     if (folder === "avatares" && !ALLOWED_AVATAR_CONTENT_TYPES.includes(contentType)) {
       throw new BadRequestException("Formato de imagen no soportado. Subí un jpg, png o webp.");
+    }
+    if (folder === "portadas" && !ALLOWED_COVER_CONTENT_TYPES.includes(contentType)) {
+      throw new BadRequestException("Formato de portada no soportado. Subí un jpg, png o webp.");
     }
     const key = `${folder}/${randomUUID()}`;
     const command = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });

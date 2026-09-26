@@ -55,3 +55,40 @@ describe("SongsService.registerPlay — reproducciones por mes", () => {
     expect(playStatRepo.save).not.toHaveBeenCalled();
   });
 });
+
+describe("SongsService.update — portada (coverKey)", () => {
+  function setupUpdate(coverKey: string | null) {
+    const song = { id: "s1", title: "Océanos", coverKey } as Song;
+    const songRepo = {
+      findOne: vi.fn().mockResolvedValue(song),
+      save: vi.fn().mockImplementation(async (s: Song) => s),
+    };
+    const service = new SongsService(
+      songRepo as unknown as Repository<Song>,
+      {} as Repository<SongPlayStat>,
+      {} as TagsService,
+    );
+    return { service };
+  }
+
+  it("guarda la key de la portada subida", async () => {
+    const { service } = setupUpdate(null);
+    await expect(service.update("s1", { coverKey: "portadas/abc" })).resolves.toMatchObject({
+      coverKey: "portadas/abc",
+    });
+  });
+
+  it("null quita la portada (vuelve al gradiente)", async () => {
+    const { service } = setupUpdate("portadas/abc");
+    await expect(service.update("s1", { coverKey: null })).resolves.toMatchObject({
+      coverKey: null,
+    });
+  });
+
+  it("si no viene coverKey, la portada no se toca", async () => {
+    const { service } = setupUpdate("portadas/abc");
+    await expect(service.update("s1", { title: "Otro" })).resolves.toMatchObject({
+      coverKey: "portadas/abc",
+    });
+  });
+});

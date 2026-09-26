@@ -86,6 +86,7 @@ export class SongsService {
       ...(dto.audioKey !== undefined && { audioKey: dto.audioKey }),
       ...(dto.chordpro !== undefined && { chordpro: dto.chordpro }),
       ...(dto.lyricsImageKey !== undefined && { lyricsImageKey: dto.lyricsImageKey }),
+      ...(dto.coverKey !== undefined && { coverKey: dto.coverKey }),
     });
     return this.songRepo.save(song);
   }
