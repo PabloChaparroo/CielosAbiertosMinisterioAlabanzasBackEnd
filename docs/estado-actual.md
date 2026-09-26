@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Reproductor a pantalla completa: animación, diseño ancho y selector de audios (frontend)
+
+**Pedido de Pablo:** que la pantalla completa del reproductor suba con una animación, sea más ancha, muestre las características del tema y tenga un desplegable para alternar entre sus audios.
+
+**Cambio (`MiniPlayer.tsx`):**
+- Animación: sube desde abajo al abrir (`tw-animate-css`, 300ms) y baja al cerrar (250ms; se desmonta recién al terminar). Aplica a la flecha y a Escape.
+- En compu (≥768px) dos columnas: portada grande a la izquierda; título, datos y controles a la derecha. En celular sigue en una columna.
+- Características: tarjetas con Tono, Compás, BPM y Duración, y los temas (tags).
+- Desplegable "Audio": el original y las pistas relacionadas (las mismas que ya mostraba el panel de la barra); elegir una cambia el audio que suena. Solo aparece si el tema tiene más de un audio.
+
+**Verificado en el navegador** (1400×900 y 400×860, "Desde mi interior"): a los 80ms el panel está a mitad de camino y termina en y=0; al cerrar sigue montado bajando y a los 500ms se desmonta; el desplegable lista "Original — Desde mi interior" y la pista "a", y alterna entre ambos. `tsc` y lint limpios.
+
+---
+
 ## 2026-09-26 — Portada de canción (cover art) — backend + frontend
 
 **Pedido de Pablo:** subir una portada (imagen) por canción y mostrarla en lugar del placeholder genérico en todos los listados. Decisiones ya tomadas: campo `coverKey`, tope 5MB, jpg/png/webp sin HEIC, subida por URL firmada, campo dentro del `UploadModal` existente.
