@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Videos de YouTube embebidos desde el reproductor (frontend)
+
+**Pedido de Pablo:** ticket de "pista relacionada de tipo YouTube" (reproducir un video embebido dentro de la app con el iframe oficial, sin extraer ni alojar audio). Al cargar un link de YouTube en "Links relacionados" vio que no aparecía en el reproductor.
+
+**Decisión de modelo (aprobada por Pablo): usar los `SongLink` existentes, no extender `AudioTrack`.** Se había planteado agregar un discriminador `source: "upload" | "youtube"` a `AudioTrack` (recomendado frente a una entidad separada: la lista, el orden, el nombre, el CRUD y los permisos son los mismos). Pero Pablo ya carga los videos como links: con el discriminador habría que cargar el mismo video dos veces (como link y como pista) y sumar migración y columnas. En cambio, **todo link cuya URL sea un video de YouTube se ofrece como pista reproducible**: cero cambios de backend, cero migración, y los links ya cargados funcionan sin volver a cargarlos. Permisos: los mismos de los links (agregar exige `cancion:write`).
+
+**Cambio (solo frontend):**
+- `lib/youtube.ts`: `parseYoutubeVideoId` normaliza `youtube.com/watch?v=` (con `&t=`, `&list=`, `m.`/`music.`), `youtu.be/…?si=`, `embed/`, `shorts/`, `live/` y el ID solo; valida 11 caracteres **`A-Za-z0-9-_`** (el ticket decía "alfanuméricos", pero muchos IDs reales tienen `-` o `_`); `null` para links rotos o de otros dominios (incluido `evil.com/youtube.com/…`). 21 tests.
+- `YoutubeEmbed`: modal con el iframe oficial `https://www.youtube.com/embed/ID?enablejsapi=1`, sus propios controles; al abrir pausa el reproductor de la app; si el reproductor vuelve a sonar (Espacio), le pide al video `pauseVideo` por la API oficial del iframe (postMessage). Escape o click afuera lo cierra (y el video se corta).
+- MiniPlayer: carga los links de la canción; los de YouTube aparecen en "Pistas relacionadas" y en el desplegable "Audio" de la pantalla completa con el ícono de YouTube; elegirlos abre el embed.
+- Links relacionados: ícono de YouTube en los links de video; un link que parece de YouTube pero no lleva a un video → "No reconocemos ese link de YouTube — pegá el link del video (youtube.com/watch?v=… o youtu.be/…)." y no se guarda.
+
+**Verificado en el navegador:** "Desde mi interior" con el link que cargó Pablo → aparece en el panel con el ícono; al tocarlo se abre embebido en la app (la página sigue en /escuchar), el iframe carga el video real y el video suena; el audio principal se pausó al abrirlo; Espacio con el video abierto → el audio principal suena y el video queda pausado (verificado en el `<video>` del iframe); Escape cierra. Link roto → mensaje y 0 pedidos POST. Músico (sin `cancion:write`): ve los links pero no el formulario para agregar. 91 tests en el frontend.
+
+**Sin tocar:** `Song.audioKey`, `AudioTrack`, backend. La idea de extender `AudioTrack` con un discriminador queda descartada mientras los videos se carguen como links.
+
+---
+
 ## 2026-09-26 — Columna "Secuencia" y filtro con/sin secuencia en Escuchar (backend + frontend)
 
 **Pedido de Pablo:** ver rápido qué canciones tienen secuencia (multitracks = pistas relacionadas / `AudioTrack`): columna "Secuencia" con un check amarillo si tiene y "-" blanco si no, y filtros por con / sin secuencia.
