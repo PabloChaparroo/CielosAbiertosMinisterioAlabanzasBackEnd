@@ -4,6 +4,28 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — YouTube como reproductor principal (frontend)
+
+**Pedido de Pablo:** usar el reproductor de YouTube como reproductor principal. Regla: una canción puede no tener ni audio ni YouTube; **si tiene los dos, suena YouTube**; si no, el audio subido.
+
+**Condición de YouTube que define el diseño:** sus reglas no permiten usar el reproductor **oculto** para escuchar solo el audio (tiene que verse, ~200px mínimo). Por eso:
+- en la barra, mientras suena, aparece un **video flotante** (abajo a la derecha, 356×200; en celular casi a lo ancho, arriba de la barra), con botones para abrir la pantalla completa y para pausar (pausado se oculta);
+- en la pantalla completa el video ocupa el lugar de la portada.
+Es **siempre el mismo iframe** (`YoutubeStage`, en un portal, que se mueve siguiendo el lugar de la portada, también durante la animación): abrir o cerrar la pantalla completa no reinicia el video.
+
+**Cambio (`MiniPlayer.tsx` + `YoutubeStage.tsx` + `lib/youtube-api.ts`):**
+- Reproductor oficial por la **IFrame Player API** (`youtube.com/iframe_api`, se carga al montar el reproductor). Nunca se descarga ni procesa audio.
+- Los controles de la app manejan video o audio con la misma interfaz: play/pausa, barra de progreso (duración real del video), ±5 s, volver al inicio, volumen, teclado (Espacio, flechas, 0/Home), atrás (un toque al inicio / dos a la anterior) y siguiente. Pausar o reproducir desde los controles propios del video actualiza el botón de la app.
+- **Siguiente / anterior** recorren las canciones con audio **o** YouTube (antes solo con audio).
+- "Pistas relacionadas" y el desplegable "Audio" suman "Video de YouTube" (activo por defecto si la canción tiene video): se puede pasar al audio subido o a una pista y volver; al cambiar de canción vuelve a YouTube. Otros links de YouTube de la canción siguen abriéndose en el modal embebido.
+- Bugs encontrados al probar y arreglados antes de commitear: elegir el audio subido cuando ya era el actual lo pausaba (`play()` alterna); al pasar a la siguiente canción el video nuevo quedaba en pausa (YouTube emite "pausado" al cambiar de video y se tomaba como pausa del usuario → se ignora hasta que el nuevo empieza a sonar).
+
+**Verificado en el navegador** (1400×900 y 400×860): "Desde mi interior" (audio + YouTube) → suena YouTube y el audio subido no; flotante visible 356×200 mientras suena y oculto en pausa; progreso al 50% → el video salta a 3:07; pantalla completa → el mismo video sigue (no se reinicia) en el lugar de la portada; desplegable → audio subido suena y el video se desmonta; volver a YouTube; siguiente → "Santo Espíritu" (link de YouTube cargado por Pablo) arranca solo; Espacio pausa. En celular: flotante arriba de la barra y el video suena. Link de prueba temporal en "Océanos" borrado.
+
+**Limitaciones (de YouTube, no evitables):** en el celular, con pantalla bloqueada o la app en segundo plano, YouTube corta el sonido (el audio subido no); si el video tiene publicidad, aparece; el flotante tapa parte de la pantalla mientras suena. **Sin verificar:** iPhone/Safari real (política de autoplay más estricta: si el primer play no arrancara, se toca play de nuevo).
+
+---
+
 ## 2026-09-26 — Portada desde YouTube (sin subir imágenes), tipo en columna y fix de borrar links (backend + frontend)
 
 **Pedido de Pablo:** (1) en Escuchar, el tipo (Alabanza / Adoración) en su propia columna, no como etiqueta al lado del artista; (2) **cambio de planes con la portada**: usar la miniatura del video de YouTube de la canción y **no permitir subir portadas**, para ahorrar tiempo de carga y almacenamiento.
