@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Fix: editor de acordes desalineado al final (frontend)
+
+**Reporte de Pablo:** en el editor de acordes, abajo de todo "se buguea, no me deja borrar la última línea" ("[VERSO]" se veía en un lugar distinto de donde estaba).
+
+**Causa:** el editor es un `textarea` transparente encima de una capa (`<pre>`) que dibuja los colores. Al final del scroll las dos capas no coincidían: (1) un salto de línea al final del texto el `<pre>` no lo dibuja y el `textarea` sí → la capa de colores era más corta; (2) el `textarea` (elemento en línea) medía 7px menos que su contenedor → la capa de colores podía scrollear distinto. Lo que se veía no era donde estaba el cursor.
+
+**Arreglo (`ChordProEditor.tsx`):** espacio al final del `<pre>` cuando el texto termina en salto de línea; `textarea` como `block`; `scrollbar-gutter: stable` en las dos capas para que la barra de scroll no cambie el ancho de una sola (con barras de Windows visibles, cortaría las líneas largas en otro lugar).
+
+**Verificado en el navegador** (40 líneas largas + "[VERSO]" al final, sin guardar nada): antes, abajo de todo, scroll 4632 vs 4596 y alto 5050 vs 5021; después ancho, alto, alto visible y scroll idénticos en las dos capas.
+
+---
+
 ## 2026-09-25 — Solo acordes: repeticiones entre líneas seguidas (frontend)
 
 **Pedido de Pablo:** en "Solo acordes", si varias líneas seguidas repiten los mismos compases (ej. el verso de "A quién iré": "| D | Bm |" / "| G | D - A |" tres veces), mostrarlas una sola vez con el signo de repetición: "| D | Bm | G | D - A |x3]". "Letra + acordes" no cambia.
