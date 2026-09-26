@@ -4,6 +4,33 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Tipo de canción: Alabanza / Adoración (backend + frontend)
+
+**Pedido de Pablo:** una clase más en canciones, `TipoCancion`: "Alabanza" (rápidas) y "Adoración" (lentas), **obligatoria** en cada canción y para filtrar. Decisión de Pablo: las canciones existentes quedan todas como **Alabanza** y se corrigen a mano.
+
+**Backend:**
+- Entidad `TipoCancion` (tabla `tipos_cancion`: `id`, `nombre` único). Tabla y no lista fija en el código porque "por ahora" son dos: sumar un tipo es cargar una fila. Sin ABM desde la app (se cargan por migración, como los temas).
+- Migración `AddTipoCancion`: crea la tabla con Alabanza y Adoración, agrega `songs.tipo_id`, pone todas las canciones existentes en Alabanza y recién ahí la deja `NOT NULL` con clave foránea.
+- `Song.tipo` (relación, se devuelve siempre) + `tipoId`; el DTO de alta exige `tipoId` (UUID); en edición es opcional. Un tipo inexistente → 400 (en vez de un error de la base).
+- `GET /tipos-cancion` (lectura, invitados incluidos) para el formulario y el filtro.
+- `update()` ahora recarga la canción al final (como `create()`) para devolver el tipo con su nombre.
+- Seed demo: canciones como Alabanza.
+- Tests: DTO (sin tipo → rechazada; id inválido → rechazado; en edición opcional) y servicio (cambiar tipo, tipo inexistente → 400 sin guardar, sin `tipoId` no se toca). 80 tests.
+
+**Frontend:**
+- `Song.tipoId` / `Song.tipo` (nombre); `mapSong` tolera un backend sin el campo.
+- Formulario de canción: selector "Tipo" obligatorio (en el alta arranca sin elegir; Guardar se habilita recién con tipo).
+- Escuchar: filtro "Todos los tipos · Adoración · Alabanza" (la lista viene del backend, aparece aunque ninguna canción tenga ese tipo) y etiqueta del tipo al lado del artista.
+- Reproductor a pantalla completa: el tipo junto a los temas.
+- El filtrado es en el cliente (como el de temas: la lista ya viene entera); no se agregó `?tipo=` al backend.
+- Para no confundir el **tipo** "Adoración" con el **tema** "Adoración", el tipo usa botones grandes y una etiqueta en mayúsculas distinta de los chips de temas.
+
+**Verificado en el navegador:** alta sin tipo → Guardar deshabilitado, con tipo → habilitado; editar "Mi Refugio" a Adoración (PATCH 200 con `tipo.nombre`), filtro Adoración → solo Mi Refugio, Alabanza → 22; después se volvió a dejar en Alabanza (base local: 23 activas en Alabanza). 69 tests en el frontend.
+
+**Deploy:** correr la migración (en Render va en el Build Command) **antes o junto** con el frontend: el formulario nuevo exige un tipo y el backend viejo lo rechazaría como campo desconocido.
+
+---
+
 ## 2026-09-26 — Mi perfil: vuelve la subida de foto de perfil, hasta 5MB (frontend)
 
 **Pedido de Pablo:** poder subir foto de perfil desde "Mi perfil", con un máximo de 5MB (se había sacado del formulario el 2026-09-25 hasta implementarla).
