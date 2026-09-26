@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Subir a producción solo algunas canciones: `export-canciones` + `publicar-canciones` (backend)
+
+**Pedido de Pablo:** subir a Neon solo 4 canciones ya corregidas en local (Santo Espíritu — Esperanza de vida; Al Estar Aquí — Marcos Witt ft. Taya; Este es mi deseo — Claudio Freidzon; Santo espíritu — Averly Morillo), sin tocar las otras 57 que sigue corrigiendo.
+
+**Por qué no `songs:import`:** lee `seeds/data/cancionero.ts`, que quedó desactualizado respecto de la base local (ahí "Santo Espíritu" es de Christine D'Clario y "Este es mi deseo" de Hillsong; no tiene links de YouTube) y además da de baja las canciones de prueba. La fuente de verdad pasa a ser la base local.
+
+**Dos scripts, se corren con `node` directo después de `npm run build`** (no con `npm run x -- args`: en Windows npm pasa los argumentos por cmd, que rompe las comillas y convierte el `|` en una tubería):
+- `export-canciones.js --solo "Título|Artista" …` — **solo lee** la base local y escribe `seeds/data/publicar-canciones.json` (datos, tipo, temas por nombre, links). Cada `--solo` tiene que coincidir con exactamente una canción activa por título + artista (sin distinguir mayúsculas); si no, no escribe nada. Sin `--solo` no hace nada. Se niega con `DB_SSL=true`.
+- `publicar-canciones.js --solo … [--confirmar]` — sin `--confirmar` es **simulación** (lee la base destino, dice qué haría, rollback). Con `--confirmar` solo **inserta** `songs`, `song_tags`, `song_links` en una transacción; nunca modifica ni da de baja. Ya existe (título + artista) → no se toca; mismo título y otro artista → se sube y avisa. Los `--solo` tienen que coincidir exactamente con el archivo (ni uno de más ni de menos). Duración, portada (gradiente) y tono tal cual local; sin audio/pistas/portada subida (estas 4 no tienen).
+
+**Verificado en local:** export de las 4 (61 activas en local); negativos: artista viejo "Christine D'Clario…" → 0 coincidencias, sin `--solo` → error, `DB_SSL=true` → error, `--solo` faltante en publicar → error. Publicar contra la base local → las 4 "ya existe", 0 altas. Base temporal recién migrada con "Santo Espíritu — Christine D'Clario" precargada: simulación no escribe (sigue 1 canción); `--confirmar` → 4 altas con aviso para #1 y #4 (se distinguen por artista); segunda corrida → 0 altas; datos + temas + links de las 4 idénticos a local (md5). Huella md5 de `songs`, `song_tags` y `song_links` locales igual antes y después. tsc, oxlint, 88 tests. **Sin verificar:** el estado real de Neon (lo muestra la simulación que corre Pablo).
+
+---
+
 ## 2026-09-26 — Eliminar canción definitivamente (solo Admin) + fix de setlists (backend + frontend)
 
 **Pedido de Pablo:** un botón para **eliminar** una canción (no darla de baja), para ahorrar espacio, borrando todo lo relacionado (letra, acordes, pistas, links…); solo el Admin, con un modal de confirmación donde hay que escribir el título.
