@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Mi perfil: vuelve la subida de foto de perfil, hasta 5MB (frontend)
+
+**Pedido de Pablo:** poder subir foto de perfil desde "Mi perfil", con un máximo de 5MB (se había sacado del formulario el 2026-09-25 hasta implementarla).
+
+**Cambio:** se recuperó la subida que ya existía (revert del commit que la había sacado: URL firmada a la carpeta `avatares`, barra de progreso, `PATCH /auth/me` con `avatarKey`; el backend ya la aceptaba y valida jpg/png/webp del lado del servidor). Ajustes: tope **5MB** (`MAX_AVATAR_BYTES`, con el mismo `validateImageFile` parametrizado de la portada) en vez de los 8MB de la letra; el selector solo ofrece jpg/png/webp; vista previa de la foto elegida antes de guardar; texto de ayuda "jpg, png o webp — hasta 5MB".
+
+**Verificado en el navegador:** `.txt` → "Formato no soportado — subí una imagen jpg, png o webp."; PNG de 6MB → "La imagen supera el límite de 5MB."; imagen válida → vista previa, PATCH 200 con `avatarKey: avatares/…` y la foto se ve en el modal y en el Sidebar. Después se volvió a dejar a Martín sin foto en la base local.
+
+---
+
 ## 2026-09-26 — Reproductor a pantalla completa: animación, diseño ancho y selector de audios (frontend)
 
 **Pedido de Pablo:** que la pantalla completa del reproductor suba con una animación, sea más ancha, muestre las características del tema y tenga un desplegable para alternar entre sus audios.
