@@ -47,6 +47,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Verificado con navegador real (400×860, táctil):** en la base local solo 1 canción tiene audio, así que la prueba simuló en el navegador (sin tocar la base) que todas tenían audio y sirvió un audio mudo de 60 s. Resultado: abre a pantalla completa ocupando toda la pantalla; un toque en atrás a los 5,6 s → vuelve a 0,3 s en el mismo tema; siguiente → "Desde mi interior"; doble toque atrás → vuelve a "A quién iré"; cerrar funciona; en 1300px no se abre. `tsc` y lint limpios.
 
+**Ampliación (2026-09-26, pedido de Pablo):** la pantalla completa también se abre en compu al tocar la portada o el nombre del tema (antes, en compu, tocar el nombre reanudaba). Contenido centrado con ancho acotado y portada de hasta 420px (o 55% del alto); **Escape** la cierra. Verificado en 1400×900: abre ocupando toda la pantalla, "siguiente" funciona, Escape cierra; celular sin cambios.
+
 **Sin verificar:** en un celular real con audio real de R2 (reproducción en segundo plano / pantalla bloqueada no se tocó).
 
 ---
