@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Eliminar canción definitivamente (solo Admin) + fix de setlists (backend + frontend)
+
+**Pedido de Pablo:** un botón para **eliminar** una canción (no darla de baja), para ahorrar espacio, borrando todo lo relacionado (letra, acordes, pistas, links…); solo el Admin, con un modal de confirmación donde hay que escribir el título.
+
+**Permiso:** recurso nuevo **`cancion-definitiva`** (32 permisos en el catálogo); migración `AddCancionDefinitivaPermission` se lo da **solo a Admin**. No se usó `cancion:delete` porque también lo tiene el Líder (lo usa para borrar pistas y links), y no se compara por nombre de rol (criterio ya establecido). Solo cuenta la acción "delete" (como en `estadisticas`). Se puede dar a otro rol desde Roles y permisos ("Canciones: eliminar definitivamente").
+
+**Backend:** `DELETE /canciones/:id/definitivo` (`SongPurgeService`), en una transacción: junta las keys de archivos (audio, foto de letra, portada subida, audios de las pistas), **saca la canción de los setlists** (`setlist_items` no deja borrarla), borra la canción — temas, reproducciones, anotaciones, favoritos, pistas y links se van por `ON DELETE CASCADE` — y, ya confirmado, **borra los archivos del bucket** (`StorageService.deleteObjects`; si falla se registra, la canción ya está borrada). Funciona también con canciones dadas de baja. Devuelve `{ deletedFiles, removedFromSetlists }`. `DELETE /canciones/:id` (dar de baja) sigue igual. Tests: orden (setlists antes que la canción), keys sin repetir, 404 sin tocar nada, la ruta exige `cancion-definitiva:delete`. 88 tests.
+
+**Frontend:** en el modal de editar canción, botón "Eliminar canción" (solo con el permiso) → `DeleteSongModal`: lista lo que se borra (incluye de qué setlists se saca, con nombre), y el botón "Eliminar definitivamente" se habilita recién con el título exacto escrito. Al terminar, `removeSong` la saca de la lista, de los setlists y de favoritos, y corta el reproductor si estaba sonando.
+
+**Bug encontrado al verificar, arreglado:** **los setlists no cargaban** si alguno tenía una canción dada de baja: la API devuelve ese ítem con `song: null` y `mapSetlist` hacía `item.song.id`, así que fallaba la carga de todos. Pasaba desde el import del cancionero (dio de baja las 21 de prueba, algunas en setlists de prueba). Ahora esos ítems se omiten. Test nuevo; 94 tests en el frontend.
+
+**Verificado:** API → Líder 403; Admin 200 y 0 filas en la base, archivos 404 en MinIO; repetir → 404. Pantalla (con una canción de prueba con audio real en MinIO, pista, link, favorito y en "Culto de prueba"): el Líder no ve el botón; el modal dice "se saca de 1 setlist: Culto de prueba"; sin título o con título incompleto el botón no se habilita; con el exacto → 200 `{ deletedFiles: 2, removedFromSetlists: 1 }`, la canción desaparece de la lista y de la base (setlist, favorito, links: 0). No quedaron canciones de prueba.
+
+**Deploy:** requiere correr la migración (Render la corre en el build).
+
+---
+
 ## 2026-09-26 — Fix: la canción se cortaba al cambiar de módulo (frontend)
 
 **Reporte de Pablo:** reproducir una canción y pasar a otro módulo → se cortaba y volvía a empezar.
