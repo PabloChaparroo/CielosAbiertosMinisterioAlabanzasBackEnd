@@ -4,6 +4,37 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Videos de YouTube en una ventanita flotante chica y arrastrable (frontend)
+
+**Pedido de Pablo:** que las pistas relacionadas de YouTube se vean en un mini-reproductor flotante, chico y arrastrable por toda la pantalla (sin salirse), con botón para agrandar y para cerrar, nunca a tamaño completo tapando la letra/acordes; un solo audio a la vez.
+
+**Lo que ya estaba hecho (tickets "Videos de YouTube embebidos" y "YouTube como reproductor principal") y no se tocó:** los links de YouTube de la canción ya son pistas reproducibles; `parseYoutubeVideoId` (watch?v=, youtu.be, embed, shorts, live; 21 tests); iframe oficial; link de YouTube inválido rechazado con mensaje; portada = miniatura del primer link de YouTube; agregar links exige `cancion:write`; el video principal ya pausaba al audio de la app y viceversa.
+
+**Decisión de modelo — se mantiene `SongLink`, no se extiende `AudioTrack` (sin cambios de backend ni migración):** ya se había decidido y aprobado así. Mirando el código de nuevo: los videos ya se cargan como links y el reproductor ya los ofrece como pistas; un discriminador `upload | youtube` en `AudioTrack` obligaría a cargar el mismo video dos veces (como link, que da la portada, y como pista), más una migración y un `audioKey` que para YouTube quedaría vacío. Entre las dos opciones del ticket, si algún día hiciera falta, el discriminador en `AudioTrack` sigue siendo mejor que una entidad separada (misma lista, orden, CRUD y permisos). Permisos: los de `SongLink` — agregar `cancion:write` (igual criterio que `AudioTrack`).
+
+**Decisión de arrastre — implementación propia con Pointer Events, sin biblioteca:** Pointer Events cubren mouse, touch y lápiz con un solo código (react-draggable y similares manejan mouse y touch por separado, y suman una dependencia para ~40 líneas); `setPointerCapture` hace que el arrastre siga aunque el dedo pase sobre el iframe del video (que si no se "come" los eventos); `touch-action: none` solo en la zona de arrastre para que el celular no haga scroll mientras se arrastra. El límite de pantalla es una función pura (`clampToViewport`, 4 tests): margen de 8px, también al agrandar y al girar/cambiar el tamaño de la pantalla.
+
+**Persistencia de la posición — en memoria, no en el navegador ni en el backend:** se mantiene al navegar entre pantallas (el reproductor ya no se desmonta) y la comparten las ventanitas (un video extra se abre donde quedó la última); al recargar vuelve a la esquina de abajo a la derecha — igual que el video, que al recargar también se corta. Guardarla en `localStorage` podía dejarla en un lugar raro al abrir en otro tamaño de pantalla.
+
+**Cambio:**
+- `hooks/useFloatingWindow.ts` + `components/common/FloatingVideoFrame.tsx`: ventanita con barra (grip + título para arrastrar; botones abrir reproductor / agrandar-achicar / cerrar). **Chica = 260×200** (YouTube exige que el reproductor embebido mida al menos 200×200px; el video queda con franjas); grande = 16:9 hasta 640px de ancho. Antes, en celular el video ocupaba casi todo el ancho.
+- `YoutubeStage` (video principal): usa la ventanita; en la pantalla completa del reproductor la misma ventanita se "clava" sobre la portada, sin barra — misma estructura, así el iframe no se recrea y el video no se reinicia. Cerrar = pausar y ocultar (como antes).
+- `YoutubeEmbed` (otros videos de YouTube de la canción): **dejó de ser un modal grande** con fondo oscuro que tapaba todo; ahora es la misma ventanita flotante. Se agregó `playsinline=1` (en iPhone, sin eso el video se abre a pantalla completa nativa).
+- **Un solo audio a la vez — lo que faltaba:** si sonaba una pista subida (`AudioTracksModal`) y arrancaba el reproductor principal (Espacio) o un video extra, la pista seguía sonando. `lib/exclusive-audio.ts`: la pista y el video extra avisan por un evento de `window` al empezar a sonar y el otro se pausa; la pista además se pausa cuando arranca el principal. `Song.audioKey` y la subida de pistas no se tocaron.
+- Portada con la miniatura de YouTube: ya estaba hecho (ticket de portada), no hacía falta otro.
+
+**Verificado en el navegador (Chromium, 1400×900 y 390×844 con eventos touch reales):**
+- Links (Admin): URL `youtube.com/watch?v=abc` → "No reconocemos ese link de YouTube…" y **0 POST**; `youtu.be/…?si=…` → se guarda.
+- Reproducir "Desde mi interior" en Letras: ventanita 262×238 abajo a la derecha, al costado de la letra (compu); en celular 262 de 390 de ancho.
+- Arrastre (mouse en compu, touch en celular) a (40,120), a más allá de la esquina de arriba a la izquierda, de abajo a la derecha y al centro: siempre queda adentro (x/y mínimos 8; máximos pantalla − tamaño − 8). Agrandar: 642×398 en compu, 376×248 en celular (corrida para no salirse); achicar vuelve a 262×238. Al navegar a Acordes la posición y el video siguen (6 s sonando).
+- Un solo audio: abrir un video extra → principal YouTube pausado, extra sonando; elegir el audio subido → extra pausado, audio sonando; pista adicional en `AudioTracksModal` → principal YouTube pausado; Espacio → principal sonando y **pista pausada** (el caso nuevo).
+- Permisos: Músico (Camila) ve los links sin formulario ni borrar; `POST /canciones/:id/links` → **403** (Admin → 201). Links de prueba borrados.
+- tsc limpio en frontend y backend (backend sin cambios), lint, 98 tests (4 nuevos), build.
+
+**Sin verificar / a mirar en el teléfono real:** en la emulación de Chrome, un toque a "Agrandar" muy seguido de un arrastre a veces no generaba el `click` (los eventos de puntero llegaban, el click no; con una pausa normal de ~1 s andaba casi siempre). Se descartó que fuera la estructura (se separó la zona de arrastre de los botones) y no se pudo confirmar si pasa en un celular real; si pasa, se ve como "hay que tocar dos veces". iPhone/Safari real no probado. En celular la ventanita chica igual tapa una parte de la letra (es lo mínimo que permite YouTube): por eso se puede mover.
+
+---
+
 ## 2026-09-26 — Letras: al entrar sin canción, las últimas subidas para elegir (frontend)
 
 **Pedido de Pablo:** al entrar a Letras, en vez de "Seleccioná una canción / La letra aparecerá acá", mostrar ahí mismo las últimas canciones subidas para elegir una.
