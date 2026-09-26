@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Letra + acordes: líneas sin letra como compases (frontend)
+
+**Pedido de Pablo:** en "Letra + acordes", un acorde que está solo en una línea (ej. la intro "[A]") se muestra como "| A |"; si está en la letra, queda como está.
+
+**Cambio (`ChordSheet.tsx`):** `isChordOnlyLine` — una línea con acordes y sin letra (solo "-", ":]" o espacios fuera de los acordes; las notas "(…)" no cuentan como letra) se dibuja con el mismo render de compases de "Solo acordes". No se le aplican las uniones de "Solo acordes" (repeticiones, líneas cortas): en "Letra + acordes" cada línea queda en su lugar.
+
+**Verificado en el navegador** ("Desde mi interior"): intro → "| D | A | Em | Bm - A/Db |" ×2 y "| A |"; el verso con letra sin cambios. 62 tests en verde.
+
+**Visto de paso (sin tocar):** "Desde mi interior" tiene tono **Dm** en la base, pero los acordes están escritos en D; como Dm usa bemoles, "A/C#" se muestra "A/Db". O el tono de la canción es D (y hay que corregirlo en la ficha), o la regla de sostenidos/bemoles para tonos menores debería mantener la sensible (C# en Dm).
+
+---
+
 ## 2026-09-26 — Fix: editor de acordes desalineado al final (frontend)
 
 **Reporte de Pablo:** en el editor de acordes, abajo de todo "se buguea, no me deja borrar la última línea" ("[VERSO]" se veía en un lugar distinto de donde estaba).
