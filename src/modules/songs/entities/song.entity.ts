@@ -1,8 +1,10 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   Relation,
@@ -12,6 +14,7 @@ import { Tag } from "../../tags/entities/tag.entity";
 import { AudioTrack } from "./audio-track.entity";
 import { SongLink } from "./song-link.entity";
 import { SongPlayStat } from "./song-play-stat.entity";
+import { TipoCancion } from "./tipo-cancion.entity";
 
 @Entity("songs")
 export class Song extends BaseAuditEntity {
@@ -53,6 +56,14 @@ export class Song extends BaseAuditEntity {
 
   @Column({ type: "varchar", nullable: true })
   lyricsImageKey!: string | null;
+
+  /** Tipo (Alabanza / Adoración), obligatorio; se devuelve siempre con la canción */
+  @ManyToOne(() => TipoCancion, { eager: true, nullable: false })
+  @JoinColumn({ name: "tipo_id" })
+  tipo!: Relation<TipoCancion>;
+
+  @Column({ type: "uuid" })
+  tipoId!: string;
 
   /** Portada real (key de la imagen en el bucket, carpeta "portadas"). null = se usa `cover` */
   @Column({ type: "varchar", nullable: true })

@@ -1,9 +1,10 @@
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TagsService } from "../../tags/services/tags.service";
 import { SongPlayStat } from "../entities/song-play-stat.entity";
 import { Song } from "../entities/song.entity";
+import { TipoCancion } from "../entities/tipo-cancion.entity";
 import { SongsService } from "./songs.service";
 
 function setup({ songExists = true, statThisMonth = null as SongPlayStat | null } = {}) {
@@ -17,6 +18,7 @@ function setup({ songExists = true, statThisMonth = null as SongPlayStat | null 
     songRepo as unknown as Repository<Song>,
     playStatRepo as unknown as Repository<SongPlayStat>,
     {} as TagsService,
+    {} as Repository<TipoCancion>,
   );
   return { service, playStatRepo };
 }
@@ -67,6 +69,7 @@ describe("SongsService.update — portada (coverKey)", () => {
       songRepo as unknown as Repository<Song>,
       {} as Repository<SongPlayStat>,
       {} as TagsService,
+      {} as Repository<TipoCancion>,
     );
     return { service };
   }
@@ -90,5 +93,49 @@ describe("SongsService.update — portada (coverKey)", () => {
     await expect(service.update("s1", { title: "Otro" })).resolves.toMatchObject({
       coverKey: "portadas/abc",
     });
+  });
+});
+
+describe("SongsService — tipo de canción (Alabanza / Adoración)", () => {
+  const ALABANZA = "11111111-1111-4111-8111-111111111111";
+  const ADORACION = "22222222-2222-4222-8222-222222222222";
+  function setupTipo() {
+    const song = { id: "s1", tipoId: ALABANZA, tipo: { id: ALABANZA, nombre: "Alabanza" } } as Song;
+    const songRepo = {
+      findOne: vi.fn().mockResolvedValue(song),
+      save: vi.fn().mockImplementation(async (s: Song) => s),
+    };
+    const tipoRepo = {
+      exists: vi.fn().mockImplementation(async ({ where }: { where: { id: string } }) =>
+        [ALABANZA, ADORACION].includes(where.id),
+      ),
+    };
+    const service = new SongsService(
+      songRepo as unknown as Repository<Song>,
+      {} as Repository<SongPlayStat>,
+      {} as TagsService,
+      tipoRepo as unknown as Repository<TipoCancion>,
+    );
+    return { service, songRepo };
+  }
+
+  it("editar cambia el tipo (y la relación cargada no lo pisa)", async () => {
+    const { service } = setupTipo();
+    const saved = await service.update("s1", { tipoId: ADORACION });
+    expect(saved.tipoId).toBe(ADORACION);
+    expect(saved.tipo.id).toBe(ADORACION);
+  });
+
+  it("un tipo inexistente → 400, sin guardar", async () => {
+    const { service, songRepo } = setupTipo();
+    await expect(
+      service.update("s1", { tipoId: "33333333-3333-4333-8333-333333333333" }),
+    ).rejects.toThrow(BadRequestException);
+    expect(songRepo.save).not.toHaveBeenCalled();
+  });
+
+  it("si no viene tipoId, el tipo no se toca", async () => {
+    const { service } = setupTipo();
+    expect((await service.update("s1", { title: "Otro" })).tipoId).toBe(ALABANZA);
   });
 });

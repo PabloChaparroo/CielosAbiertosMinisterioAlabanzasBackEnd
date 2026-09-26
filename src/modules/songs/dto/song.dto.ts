@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { ArrayNotEmpty, IsArray, IsInt, IsOptional, IsString, Min } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsInt, IsOptional, IsString, IsUUID, Min } from "class-validator";
 
 export class CreateSongDto {
   @IsString()
@@ -40,6 +40,10 @@ export class CreateSongDto {
   @IsOptional()
   @IsString()
   coverKey?: string | null;
+
+  /** Tipo de canción (GET /tipos-cancion), obligatorio */
+  @IsUUID()
+  tipoId!: string;
 
   @IsArray()
   @ArrayNotEmpty()
