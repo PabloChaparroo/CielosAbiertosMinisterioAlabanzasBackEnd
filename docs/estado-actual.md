@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Solo acordes: sección a la izquierda, compases a la derecha (frontend)
+
+**Pedido de Pablo:** ver "Solo acordes" como su hoja de ensayo: "Intro:   | Em | G | D | A |", con cada sección a la izquierda y sus compases a la derecha (antes el título de la sección iba arriba, con renglones en blanco en el medio).
+
+**Cambio (`ChordSheet.tsx`):** en Solo acordes las líneas se agrupan bajo su sección y se dibujan en una grilla de dos columnas (nombre de la sección · sus renglones de compases); las líneas vacías no suman renglones. Las notas del título de una sección ("{Interludio} (Igual a la Intro)") van del lado de los acordes, para no ensanchar toda la columna de secciones. La grilla es del ancho de su contenido, así el ajuste automático del tamaño de letra sigue funcionando. **En celular** (<640px) dos columnas no entran ni con la letra mínima (443px de hoja en 366px), así que ahí la sección va arriba de sus compases, como antes. "Letra + acordes" no cambia. Se sacó el render de cada línea a una función (`renderLine`) compartida por los dos modos.
+
+**Verificado en el navegador:** "El nombre" y "Tus cuerdas de amor" a 1400px (secciones alineadas en una columna, compases a la derecha, "Interludio ↱ Igual a la Intro") y a 400px (sin desborde: hoja 326px en 366px). 93 tests.
+
+**Visto de paso (sin tocar, ya existía):** en Solo acordes el texto suelto de una línea se descarta, por eso "3ro: [Gm] [Bb]" de "El nombre" se ve solo como "| Gm | Bb |" (y se junta con la línea anterior).
+
+---
+
 ## 2026-09-26 — YouTube como reproductor principal (frontend)
 
 **Pedido de Pablo:** usar el reproductor de YouTube como reproductor principal. Regla: una canción puede no tener ni audio ni YouTube; **si tiene los dos, suena YouTube**; si no, el audio subido.
