@@ -4,6 +4,354 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Subir a producción solo algunas canciones: `export-canciones` + `publicar-canciones` (backend)
+
+**Pedido de Pablo:** subir a Neon solo 4 canciones ya corregidas en local (Santo Espíritu — Esperanza de vida; Al Estar Aquí — Marcos Witt ft. Taya; Este es mi deseo — Claudio Freidzon; Santo espíritu — Averly Morillo), sin tocar las otras 57 que sigue corrigiendo.
+
+**Por qué no `songs:import`:** lee `seeds/data/cancionero.ts`, que quedó desactualizado respecto de la base local (ahí "Santo Espíritu" es de Christine D'Clario y "Este es mi deseo" de Hillsong; no tiene links de YouTube) y además da de baja las canciones de prueba. La fuente de verdad pasa a ser la base local.
+
+**Dos scripts, se corren con `node` directo después de `npm run build`** (no con `npm run x -- args`: en Windows npm pasa los argumentos por cmd, que rompe las comillas y convierte el `|` en una tubería):
+- `export-canciones.js --solo "Título|Artista" …` — **solo lee** la base local y escribe `seeds/data/publicar-canciones.json` (datos, tipo, temas por nombre, links). Cada `--solo` tiene que coincidir con exactamente una canción activa por título + artista (sin distinguir mayúsculas); si no, no escribe nada. Sin `--solo` no hace nada. Se niega con `DB_SSL=true`.
+- `publicar-canciones.js --solo … [--confirmar]` — sin `--confirmar` es **simulación** (lee la base destino, dice qué haría, rollback). Con `--confirmar` solo **inserta** `songs`, `song_tags`, `song_links` en una transacción; nunca modifica ni da de baja. Ya existe (título + artista) → no se toca; mismo título y otro artista → se sube y avisa. Los `--solo` tienen que coincidir exactamente con el archivo (ni uno de más ni de menos). Duración, portada (gradiente) y tono tal cual local; sin audio/pistas/portada subida (estas 4 no tienen).
+
+**Verificado en local:** export de las 4 (61 activas en local); negativos: artista viejo "Christine D'Clario…" → 0 coincidencias, sin `--solo` → error, `DB_SSL=true` → error, `--solo` faltante en publicar → error. Publicar contra la base local → las 4 "ya existe", 0 altas. Base temporal recién migrada con "Santo Espíritu — Christine D'Clario" precargada: simulación no escribe (sigue 1 canción); `--confirmar` → 4 altas con aviso para #1 y #4 (se distinguen por artista); segunda corrida → 0 altas; datos + temas + links de las 4 idénticos a local (md5). Huella md5 de `songs`, `song_tags` y `song_links` locales igual antes y después. tsc, oxlint, 88 tests. **Sin verificar:** el estado real de Neon (lo muestra la simulación que corre Pablo).
+
+---
+
+## 2026-09-26 — Eliminar canción definitivamente (solo Admin) + fix de setlists (backend + frontend)
+
+**Pedido de Pablo:** un botón para **eliminar** una canción (no darla de baja), para ahorrar espacio, borrando todo lo relacionado (letra, acordes, pistas, links…); solo el Admin, con un modal de confirmación donde hay que escribir el título.
+
+**Permiso:** recurso nuevo **`cancion-definitiva`** (32 permisos en el catálogo); migración `AddCancionDefinitivaPermission` se lo da **solo a Admin**. No se usó `cancion:delete` porque también lo tiene el Líder (lo usa para borrar pistas y links), y no se compara por nombre de rol (criterio ya establecido). Solo cuenta la acción "delete" (como en `estadisticas`). Se puede dar a otro rol desde Roles y permisos ("Canciones: eliminar definitivamente").
+
+**Backend:** `DELETE /canciones/:id/definitivo` (`SongPurgeService`), en una transacción: junta las keys de archivos (audio, foto de letra, portada subida, audios de las pistas), **saca la canción de los setlists** (`setlist_items` no deja borrarla), borra la canción — temas, reproducciones, anotaciones, favoritos, pistas y links se van por `ON DELETE CASCADE` — y, ya confirmado, **borra los archivos del bucket** (`StorageService.deleteObjects`; si falla se registra, la canción ya está borrada). Funciona también con canciones dadas de baja. Devuelve `{ deletedFiles, removedFromSetlists }`. `DELETE /canciones/:id` (dar de baja) sigue igual. Tests: orden (setlists antes que la canción), keys sin repetir, 404 sin tocar nada, la ruta exige `cancion-definitiva:delete`. 88 tests.
+
+**Frontend:** en el modal de editar canción, botón "Eliminar canción" (solo con el permiso) → `DeleteSongModal`: lista lo que se borra (incluye de qué setlists se saca, con nombre), y el botón "Eliminar definitivamente" se habilita recién con el título exacto escrito. Al terminar, `removeSong` la saca de la lista, de los setlists y de favoritos, y corta el reproductor si estaba sonando.
+
+**Bug encontrado al verificar, arreglado:** **los setlists no cargaban** si alguno tenía una canción dada de baja: la API devuelve ese ítem con `song: null` y `mapSetlist` hacía `item.song.id`, así que fallaba la carga de todos. Pasaba desde el import del cancionero (dio de baja las 21 de prueba, algunas en setlists de prueba). Ahora esos ítems se omiten. Test nuevo; 94 tests en el frontend.
+
+**Verificado:** API → Líder 403; Admin 200 y 0 filas en la base, archivos 404 en MinIO; repetir → 404. Pantalla (con una canción de prueba con audio real en MinIO, pista, link, favorito y en "Culto de prueba"): el Líder no ve el botón; el modal dice "se saca de 1 setlist: Culto de prueba"; sin título o con título incompleto el botón no se habilita; con el exacto → 200 `{ deletedFiles: 2, removedFromSetlists: 1 }`, la canción desaparece de la lista y de la base (setlist, favorito, links: 0). No quedaron canciones de prueba.
+
+**Deploy:** requiere correr la migración (Render la corre en el build).
+
+---
+
+## 2026-09-26 — Fix: la canción se cortaba al cambiar de módulo (frontend)
+
+**Reporte de Pablo:** reproducir una canción y pasar a otro módulo → se cortaba y volvía a empezar.
+
+**Causa:** el `MiniPlayer` estaba dentro de `AppLayout`, y cada pantalla monta su propio `AppLayout`: navegar desmontaba el reproductor (y el `<audio>` / el iframe de YouTube) y lo volvía a crear desde cero.
+
+**Arreglo:** el `MiniPlayer` se monta una sola vez en `AuthGate` (dentro de `AppProvider`, al lado de las rutas) y se sacó de `AppLayout`. El estado de qué suena ya vivía en `AppProvider`, así que no hubo que tocar nada más. Los modos "En vivo" de Letras/Acordes (z-50) siguen por encima de la barra (z-40).
+
+**Encontrado al verificar, arreglado:** el **video flotante de YouTube tapaba el panel "Pistas relacionadas"** (no se podía elegir una pista mientras sonaba un video). El flotante pasó a z-35: arriba del contenido y del encabezado (z-30), debajo de la barra y su panel (z-40); en pantalla completa sigue arriba (z-55).
+
+**Verificado en el navegador:** YouTube ("Santo Espíritu") sonando mientras se pasa por Letras, Acordes, Inicio y Setlists → sigue sonando sin reiniciarse (3,8 s → 12,2 s); audio subido ("Desde mi interior", elegido desde el panel de pistas con el video flotante visible) por Favoritos, Inicio y Letras → sigue sonando (2,9 s → 9,3 s). 93 tests.
+
+---
+
+## 2026-09-26 — Solo acordes: sección a la izquierda, compases a la derecha (frontend)
+
+**Pedido de Pablo:** ver "Solo acordes" como su hoja de ensayo: "Intro:   | Em | G | D | A |", con cada sección a la izquierda y sus compases a la derecha (antes el título de la sección iba arriba, con renglones en blanco en el medio).
+
+**Cambio (`ChordSheet.tsx`):** en Solo acordes las líneas se agrupan bajo su sección y se dibujan en una grilla de dos columnas (nombre de la sección · sus renglones de compases); las líneas vacías no suman renglones. Las notas del título de una sección ("{Interludio} (Igual a la Intro)") van del lado de los acordes, para no ensanchar toda la columna de secciones. La grilla es del ancho de su contenido, así el ajuste automático del tamaño de letra sigue funcionando. **En celular** (<640px) dos columnas no entran ni con la letra mínima (443px de hoja en 366px), así que ahí la sección va arriba de sus compases, como antes. "Letra + acordes" no cambia. Se sacó el render de cada línea a una función (`renderLine`) compartida por los dos modos.
+
+**Verificado en el navegador:** "El nombre" y "Tus cuerdas de amor" a 1400px (secciones alineadas en una columna, compases a la derecha, "Interludio ↱ Igual a la Intro") y a 400px (sin desborde: hoja 326px en 366px). 93 tests.
+
+**Visto de paso (sin tocar, ya existía):** en Solo acordes el texto suelto de una línea se descarta, por eso "3ro: [Gm] [Bb]" de "El nombre" se ve solo como "| Gm | Bb |" (y se junta con la línea anterior).
+
+---
+
+## 2026-09-26 — YouTube como reproductor principal (frontend)
+
+**Pedido de Pablo:** usar el reproductor de YouTube como reproductor principal. Regla: una canción puede no tener ni audio ni YouTube; **si tiene los dos, suena YouTube**; si no, el audio subido.
+
+**Condición de YouTube que define el diseño:** sus reglas no permiten usar el reproductor **oculto** para escuchar solo el audio (tiene que verse, ~200px mínimo). Por eso:
+- en la barra, mientras suena, aparece un **video flotante** (abajo a la derecha, 356×200; en celular casi a lo ancho, arriba de la barra), con botones para abrir la pantalla completa y para pausar (pausado se oculta);
+- en la pantalla completa el video ocupa el lugar de la portada.
+Es **siempre el mismo iframe** (`YoutubeStage`, en un portal, que se mueve siguiendo el lugar de la portada, también durante la animación): abrir o cerrar la pantalla completa no reinicia el video.
+
+**Cambio (`MiniPlayer.tsx` + `YoutubeStage.tsx` + `lib/youtube-api.ts`):**
+- Reproductor oficial por la **IFrame Player API** (`youtube.com/iframe_api`, se carga al montar el reproductor). Nunca se descarga ni procesa audio.
+- Los controles de la app manejan video o audio con la misma interfaz: play/pausa, barra de progreso (duración real del video), ±5 s, volver al inicio, volumen, teclado (Espacio, flechas, 0/Home), atrás (un toque al inicio / dos a la anterior) y siguiente. Pausar o reproducir desde los controles propios del video actualiza el botón de la app.
+- **Siguiente / anterior** recorren las canciones con audio **o** YouTube (antes solo con audio).
+- "Pistas relacionadas" y el desplegable "Audio" suman "Video de YouTube" (activo por defecto si la canción tiene video): se puede pasar al audio subido o a una pista y volver; al cambiar de canción vuelve a YouTube. Otros links de YouTube de la canción siguen abriéndose en el modal embebido.
+- Bugs encontrados al probar y arreglados antes de commitear: elegir el audio subido cuando ya era el actual lo pausaba (`play()` alterna); al pasar a la siguiente canción el video nuevo quedaba en pausa (YouTube emite "pausado" al cambiar de video y se tomaba como pausa del usuario → se ignora hasta que el nuevo empieza a sonar).
+
+**Verificado en el navegador** (1400×900 y 400×860): "Desde mi interior" (audio + YouTube) → suena YouTube y el audio subido no; flotante visible 356×200 mientras suena y oculto en pausa; progreso al 50% → el video salta a 3:07; pantalla completa → el mismo video sigue (no se reinicia) en el lugar de la portada; desplegable → audio subido suena y el video se desmonta; volver a YouTube; siguiente → "Santo Espíritu" (link de YouTube cargado por Pablo) arranca solo; Espacio pausa. En celular: flotante arriba de la barra y el video suena. Link de prueba temporal en "Océanos" borrado.
+
+**Ajuste de diseño (pedido de Pablo):** en la pantalla completa con YouTube, el **video va arriba y grande** (a lo ancho, hasta 72rem, limitado por el alto de la pantalla para que todo entre sin scroll) y abajo, en compu, dos columnas: título, artista y temas a la izquierda; tono/compás/BPM/duración y el selector de audio a la derecha; progreso y controles (más grandes: play 80px, atrás/siguiente 44px) a lo ancho. Sin video (portada) queda el diseño de antes. Verificado sin scroll en 1440×768 (video 683×384), 1920×1080 (1072×603) y 400×860.
+
+**Limitaciones (de YouTube, no evitables):** en el celular, con pantalla bloqueada o la app en segundo plano, YouTube corta el sonido (el audio subido no); si el video tiene publicidad, aparece; el flotante tapa parte de la pantalla mientras suena. **Sin verificar:** iPhone/Safari real (política de autoplay más estricta: si el primer play no arrancara, se toca play de nuevo).
+
+---
+
+## 2026-09-26 — Portada desde YouTube (sin subir imágenes), tipo en columna y fix de borrar links (backend + frontend)
+
+**Pedido de Pablo:** (1) en Escuchar, el tipo (Alabanza / Adoración) en su propia columna, no como etiqueta al lado del artista; (2) **cambio de planes con la portada**: usar la miniatura del video de YouTube de la canción y **no permitir subir portadas**, para ahorrar tiempo de carga y almacenamiento.
+
+**Portada:**
+- La portada de una canción es la miniatura de su **primer link relacionado de YouTube** (en el orden de los links; los links que no son de YouTube no cuentan). Imagen oficial de `i.ytimg.com`: no se descarga, no se guarda nada.
+- Backend: `GET /canciones` y `GET /canciones/:id` incluyen los `links` (ordenados). Frontend: `mapSong` calcula `youtubeVideoId` con el mismo `parseYoutubeVideoId` del reproductor embebido (un link de YouTube roto no cuenta).
+- `Cover` (compartido por todos los listados): miniatura de YouTube → portada subida antes (compatibilidad, ya no se puede subir) → gradiente. En listados usa `mqdefault` (16:9, sin franjas, recortada al cuadrado); en la vista grande del reproductor `maxresdefault`, con `mqdefault` de respaldo si el video no la tiene; carga diferida (`loading="lazy"`).
+- Al agregar o borrar un link, la portada de la canción se actualiza sin recargar.
+- `UploadModal`: se sacó el campo "Portada". **Queda sin tocar en el backend** la columna `cover_key` y la carpeta `portadas` de storage (no molestan; se pueden quitar con una migración si se confirma que no vuelven).
+
+**Tipo en columna:** columna "Tipo" en la tabla de Escuchar (desde md), entre Título/Temas y Secuencia; la etiqueta al lado del artista se sacó.
+
+**Bug encontrado al verificar (existía desde que están los links), arreglado:** borrar un link relacionado lo borraba en la base pero la pantalla mostraba "Failed to execute 'json' on 'Response'…" y el link seguía en la lista: `DELETE /links/:id` responde 200 **sin cuerpo** y `apiRequest` intentaba leerlo como JSON. Ahora una respuesta sin cuerpo no es un error.
+
+**Verificado en el navegador:** encabezado "# · Título · Tipo · Secuencia · Tono/Compás/BPM · Duración"; "Desde mi interior" con la miniatura de su video (cargada, 320px); a "Océanos" se le agregó un link de YouTube → apareció la portada; al borrarlo (sin error) → volvió el gradiente (dato de prueba borrado); el formulario ya no tiene "Portada". 93 tests en el frontend, 85 en el backend.
+
+---
+
+## 2026-09-26 — Cancionero real: `npm run songs:import` + 28 temas nuevos (backend + frontend)
+
+**Pedido de Pablo:** cargar el cancionero real de la iglesia (texto extraído de "Adoraciones", `adoraciones-texto-extraido.txt`) con un script que corre **una sola vez y a mano** (como `admin:create`, no `seed:run`), dando de baja las canciones de prueba. Letra y acordes tal cual el documento; nada se busca ni se completa por fuera.
+
+**Lo que se encontró en el documento (y se charló antes de escribir código):**
+- Son **61** canciones (no 54). Solo 9 tienen letra completa con acordes (A quién iré … Creo en ti); las demás son mayormente progresiones por sección ("PLANTILLA") con alguna línea de letra, o sin letra — quedan así, para completar desde la app.
+- Buena parte del texto la agregó una **IA** al armar el documento (descripciones, "Busca la letra…", "Rellena la letra aquí…", artistas "usualmente X", temas "sugeridos"). **Los temas y varios artistas son sugerencias de esa IA**, no datos del equipo.
+
+**Decisiones de Pablo:** tipo Adoración salvo 4 Alabanzas (Dios Imparable, Dios es más grande, Exaltado estás, Salmos 108); artista faltante → "Sin especificar"; **sacar todo el texto de la IA dirigido al lector**; **agregar los 28 temas tal cual**, sin fusionar (los ordena él). Por propuesta aceptada: duración 4:00 (el documento no la trae); tonalidad con varias opciones → la de inicio (Al Estar Aquí F#, Hasta que tu gloria Em, Cristo Jesús F, Dios háblame A, Inagotable Amor C#, Tumbas a Jardines B); "usualmente X" → X; dos artistas posibles → "A / B"; Cuan Grande es Dios sin compás → 4/4; Por un momento… BPM "65-70" → 68.
+
+**Temas agregados al catálogo (28, migración `AddCancioneroTags`):** Fe, Rendición, Identidad, Exaltación, Búsqueda, Alabanza, Guerra Espiritual, Avivamiento, Servicio, Victoria, Milagros, Esperanza, Confianza, Testimonio, Fidelidad, Espíritu Santo, Protección, Salvación, Poder, Redención, Majestad, Oración, Reino de Dios, Hambre espiritual, Restauración, Resurrección, Humildad, Consagración. **Razón:** son los que usa el documento; Pablo pidió cargarlos todos sin fusionar para revisarlos él (se había propuesto consolidar a 5, porque muchos son sinónimos y los sugirió la IA). Ojo: el **tema** "Alabanza" convive con el **tipo** "Alabanza". La migración reemplaza el CHECK `CHK_tags_valor` e inserta los 28 (`down` los quita). `GET /tags` ahora también para invitados.
+
+**Frontend:** el catálogo de temas se trae del backend (`GET /tags`) en vez de estar fijo en el frontend: los próximos cambios del catálogo no tocan el frontend. `Tag` pasa a `string`.
+
+**Script `npm run songs:import`** (`seeds/import-cancionero.ts` + datos en `seeds/data/cancionero.ts`):
+- Muestra la base destino; todo en una transacción (si algo falla, no guarda nada); verifica que existan los temas y tipos (si no, pide correr las migraciones).
+- Da de **baja** (soft delete, como la app) las 21 de prueba por **título + artista exactos**: las 20 del seed demo + "Prueba Multitrack — Test". Soft delete porque 4 estaban en setlists de prueba (`setlist_items` no deja borrar) y así no se toca Setlists.
+- Inserta las canciones; **idempotente**: una canción activa con mismo título y artista no se toca; si está **vacía** (sin letra) se completa (caso "A quién iré" local); si ya hay una con el mismo título y otro artista, **no la toca ni la duplica** y avisa "REVISAR A MANO" (caso "Desde mi interior — Hilsson" local, que tiene audio, portada, pista y link reales).
+- Bug encontrado al probar, arreglado: "Santo espíritu" (Averly Morillo) y "Santo Espíritu" (Christine D'Clario) tienen el mismo título → la segunda se tomaba como "ya cargada". Ahora las canciones del propio documento no cuentan como cargadas a mano.
+- Tests de los datos: 61 canciones sin repetir, todos los temas en el catálogo, exactamente 4 Alabanzas, sin frases de la IA, datos obligatorios completos. 85 tests en el backend.
+
+**Texto de la IA sacado** (si la frase venía antes de acordes, los acordes quedan): "(Rellena la letra aquí…):", "(Progresión completa):", "(Sigue con/la misma progresión/la progresión anotada/…):", "(Continúa con…):", "(Acomoda el resto de la letra…):", "(Busca la letra completa…)", "(En tu documento esta canción tiene…)", "(Nota: En el documento también tienes…)" (Hay una unción), "(Nota: Tienes también el detalle de la Subida…)" (¿Quién podrá?). **Tres que llevaban información musical y se perdió** (revisar contra el original): Tumbas a Jardines "verso 4 E - F# | G#m |"; Tus cuerdas de amor "el verso se repite 4 veces"; Trae aquí el cielo: "[Bm] [%]" es la salida del primer coro de vuelta al verso (quedaron los acordes, sin la aclaración). Se dejaron las notas de interpretación que no le hablan al lector: "(Termina con la progresión del Verso)", "Final = Verso", "(Se repite, luego sube la intensidad)", "(Aquí luego se repite el Coro y el Interludio)", "(Interludio corto antes de subir)", "(Esta progresión circular se repite…)", "(Y va al coro)". También se sacaron números de página, "PLANTILLA"/"LETRA CON ACORDES" y los renglones en blanco de la extracción del PDF.
+
+**Para revisar a mano en la app:** las 3 marcadas "REVISAR" en el documento (Apasionado, Al estar ante ti, Al Estar Aquí); artistas "Sin especificar" (Al estar ante ti, Espíritu santo, En memoria de ti, Salmos 108, Si tú presencia…, Hay una unción, Hasta que tu gloria, Mi refugio, Yo navegaré, Yo me rindo a Él); duraciones (todas 4:00); "Desde mi interior" local no se tocó (el documento dice tono Am, la cargada está en D).
+
+**Bug encontrado al verificar, arreglado (frontend `lib/chords.ts`):** las canciones en **Eb, Ab o Bb** mostraban los acordes con sostenidos (D#, G#, A#) aun sin transponer: `transposeKey` siempre devolvía el nombre con sostenido ("Eb" → "D#") y la hoja decide sostenidos/bemoles por ese nombre. Ahora conserva los nombres de `KEYS` (Eb, Ab, Bb; Ebm, Bbm). Afectaba a El nombre, Lo harás otra vez y Poderoso Dios. Test nuevo; 92 tests en el frontend.
+
+**Verificado en local:** migración + import → 21 bajas, 59 nuevas + "Santo Espíritu" tras el arreglo, "A quién iré" completada → **61 activas**; segunda corrida: 0 nuevas (no duplica). En el navegador: Escuchar lista 61; el filtro de temas trae los nuevos (filtro "Guerra Espiritual" → Dios es más grande); Apasionado en Letra + acordes bien alineada; transponer +1 (F → F#) funciona; El nombre en Solo acordes con Eb/Ab; Cuando levanto mis manos con sus acordes arriba y la letra aparte.
+
+**Producción:** lo corre Pablo, en una terminal nueva con las variables de Neon (ver el mensaje del ticket), después de que el deploy aplique la migración.
+
+---
+
+## 2026-09-26 — Videos de YouTube embebidos desde el reproductor (frontend)
+
+**Pedido de Pablo:** ticket de "pista relacionada de tipo YouTube" (reproducir un video embebido dentro de la app con el iframe oficial, sin extraer ni alojar audio). Al cargar un link de YouTube en "Links relacionados" vio que no aparecía en el reproductor.
+
+**Decisión de modelo (aprobada por Pablo): usar los `SongLink` existentes, no extender `AudioTrack`.** Se había planteado agregar un discriminador `source: "upload" | "youtube"` a `AudioTrack` (recomendado frente a una entidad separada: la lista, el orden, el nombre, el CRUD y los permisos son los mismos). Pero Pablo ya carga los videos como links: con el discriminador habría que cargar el mismo video dos veces (como link y como pista) y sumar migración y columnas. En cambio, **todo link cuya URL sea un video de YouTube se ofrece como pista reproducible**: cero cambios de backend, cero migración, y los links ya cargados funcionan sin volver a cargarlos. Permisos: los mismos de los links (agregar exige `cancion:write`).
+
+**Cambio (solo frontend):**
+- `lib/youtube.ts`: `parseYoutubeVideoId` normaliza `youtube.com/watch?v=` (con `&t=`, `&list=`, `m.`/`music.`), `youtu.be/…?si=`, `embed/`, `shorts/`, `live/` y el ID solo; valida 11 caracteres **`A-Za-z0-9-_`** (el ticket decía "alfanuméricos", pero muchos IDs reales tienen `-` o `_`); `null` para links rotos o de otros dominios (incluido `evil.com/youtube.com/…`). 21 tests.
+- `YoutubeEmbed`: modal con el iframe oficial `https://www.youtube.com/embed/ID?enablejsapi=1`, sus propios controles; al abrir pausa el reproductor de la app; si el reproductor vuelve a sonar (Espacio), le pide al video `pauseVideo` por la API oficial del iframe (postMessage). Escape o click afuera lo cierra (y el video se corta).
+- MiniPlayer: carga los links de la canción; los de YouTube aparecen en "Pistas relacionadas" y en el desplegable "Audio" de la pantalla completa con el ícono de YouTube; elegirlos abre el embed.
+- Links relacionados: ícono de YouTube en los links de video; un link que parece de YouTube pero no lleva a un video → "No reconocemos ese link de YouTube — pegá el link del video (youtube.com/watch?v=… o youtu.be/…)." y no se guarda.
+
+**Verificado en el navegador:** "Desde mi interior" con el link que cargó Pablo → aparece en el panel con el ícono; al tocarlo se abre embebido en la app (la página sigue en /escuchar), el iframe carga el video real y el video suena; el audio principal se pausó al abrirlo; Espacio con el video abierto → el audio principal suena y el video queda pausado (verificado en el `<video>` del iframe); Escape cierra. Link roto → mensaje y 0 pedidos POST. Músico (sin `cancion:write`): ve los links pero no el formulario para agregar. 91 tests en el frontend.
+
+**Sin tocar:** `Song.audioKey`, `AudioTrack`, backend. La idea de extender `AudioTrack` con un discriminador queda descartada mientras los videos se carguen como links.
+
+---
+
+## 2026-09-26 — Columna "Secuencia" y filtro con/sin secuencia en Escuchar (backend + frontend)
+
+**Pedido de Pablo:** ver rápido qué canciones tienen secuencia (multitracks = pistas relacionadas / `AudioTrack`): columna "Secuencia" con un check amarillo si tiene y "-" blanco si no, y filtros por con / sin secuencia.
+
+**Backend:** `GET /canciones` y `GET /canciones/:id` devuelven `trackCount` (cantidad de pistas, con `loadRelationCountAndMap`: cuenta sin traer las pistas). `findById` pasó a query builder para poder contarlas; los tests del servicio simulan esa cadena. 80 tests.
+
+**Frontend:**
+- `Song.trackCount` (`mapSong`: backend viejo sin el campo → 0).
+- Escuchar: columna **Secuencia** (check `text-primary` / "-") y filtro "Con y sin secuencia · Con secuencia · Sin secuencia".
+- Al agregar o borrar una pista desde el modal de pistas, la columna se actualiza sin recargar.
+- Tabla: el encabezado quedaba desalineado con las filas (cada fila calculaba su propio ancho para las columnas `auto`) → anchos fijos; la columna **Temas** se muestra desde 2xl (1536px) para que las acciones siempre entren. Verificado a 1700, 1300, 1100 y 900px sin scroll horizontal.
+
+**Verificado en el navegador:** 2 checks (Desde mi interior, Prueba Multitrack) y 21 "-"; "Con secuencia" → esas 2; "Sin secuencia" → 21; todas → 23. 70 tests en el frontend.
+
+---
+
+## 2026-09-26 — Tipo de canción: Alabanza / Adoración (backend + frontend)
+
+**Pedido de Pablo:** una clase más en canciones, `TipoCancion`: "Alabanza" (rápidas) y "Adoración" (lentas), **obligatoria** en cada canción y para filtrar. Decisión de Pablo: las canciones existentes quedan todas como **Alabanza** y se corrigen a mano.
+
+**Backend:**
+- Entidad `TipoCancion` (tabla `tipos_cancion`: `id`, `nombre` único). Tabla y no lista fija en el código porque "por ahora" son dos: sumar un tipo es cargar una fila. Sin ABM desde la app (se cargan por migración, como los temas).
+- Migración `AddTipoCancion`: crea la tabla con Alabanza y Adoración, agrega `songs.tipo_id`, pone todas las canciones existentes en Alabanza y recién ahí la deja `NOT NULL` con clave foránea.
+- `Song.tipo` (relación, se devuelve siempre) + `tipoId`; el DTO de alta exige `tipoId` (UUID); en edición es opcional. Un tipo inexistente → 400 (en vez de un error de la base).
+- `GET /tipos-cancion` (lectura, invitados incluidos) para el formulario y el filtro.
+- `update()` ahora recarga la canción al final (como `create()`) para devolver el tipo con su nombre.
+- Seed demo: canciones como Alabanza.
+- Tests: DTO (sin tipo → rechazada; id inválido → rechazado; en edición opcional) y servicio (cambiar tipo, tipo inexistente → 400 sin guardar, sin `tipoId` no se toca). 80 tests.
+
+**Frontend:**
+- `Song.tipoId` / `Song.tipo` (nombre); `mapSong` tolera un backend sin el campo.
+- Formulario de canción: selector "Tipo" obligatorio (en el alta arranca sin elegir; Guardar se habilita recién con tipo).
+- Escuchar: filtro "Todos los tipos · Adoración · Alabanza" (la lista viene del backend, aparece aunque ninguna canción tenga ese tipo) y etiqueta del tipo al lado del artista.
+- Reproductor a pantalla completa: el tipo junto a los temas.
+- El filtrado es en el cliente (como el de temas: la lista ya viene entera); no se agregó `?tipo=` al backend.
+- Para no confundir el **tipo** "Adoración" con el **tema** "Adoración", el tipo usa botones grandes y una etiqueta en mayúsculas distinta de los chips de temas.
+
+**Verificado en el navegador:** alta sin tipo → Guardar deshabilitado, con tipo → habilitado; editar "Mi Refugio" a Adoración (PATCH 200 con `tipo.nombre`), filtro Adoración → solo Mi Refugio, Alabanza → 22; después se volvió a dejar en Alabanza (base local: 23 activas en Alabanza). 69 tests en el frontend.
+
+**Deploy:** correr la migración (en Render va en el Build Command) **antes o junto** con el frontend: el formulario nuevo exige un tipo y el backend viejo lo rechazaría como campo desconocido.
+
+---
+
+## 2026-09-26 — Mi perfil: vuelve la subida de foto de perfil, hasta 5MB (frontend)
+
+**Pedido de Pablo:** poder subir foto de perfil desde "Mi perfil", con un máximo de 5MB (se había sacado del formulario el 2026-09-25 hasta implementarla).
+
+**Cambio:** se recuperó la subida que ya existía (revert del commit que la había sacado: URL firmada a la carpeta `avatares`, barra de progreso, `PATCH /auth/me` con `avatarKey`; el backend ya la aceptaba y valida jpg/png/webp del lado del servidor). Ajustes: tope **5MB** (`MAX_AVATAR_BYTES`, con el mismo `validateImageFile` parametrizado de la portada) en vez de los 8MB de la letra; el selector solo ofrece jpg/png/webp; vista previa de la foto elegida antes de guardar; texto de ayuda "jpg, png o webp — hasta 5MB".
+
+**Verificado en el navegador:** `.txt` → "Formato no soportado — subí una imagen jpg, png o webp."; PNG de 6MB → "La imagen supera el límite de 5MB."; imagen válida → vista previa, PATCH 200 con `avatarKey: avatares/…` y la foto se ve en el modal y en el Sidebar. Después se volvió a dejar a Martín sin foto en la base local.
+
+---
+
+## 2026-09-26 — Reproductor a pantalla completa: animación, diseño ancho y selector de audios (frontend)
+
+**Pedido de Pablo:** que la pantalla completa del reproductor suba con una animación, sea más ancha, muestre las características del tema y tenga un desplegable para alternar entre sus audios.
+
+**Cambio (`MiniPlayer.tsx`):**
+- Animación: sube desde abajo al abrir (`tw-animate-css`, 300ms) y baja al cerrar (250ms; se desmonta recién al terminar). Aplica a la flecha y a Escape.
+- En compu (≥768px) dos columnas: portada grande a la izquierda; título, datos y controles a la derecha. En celular sigue en una columna.
+- Características: tarjetas con Tono, Compás, BPM y Duración, y los temas (tags).
+- Desplegable "Audio": el original y las pistas relacionadas (las mismas que ya mostraba el panel de la barra); elegir una cambia el audio que suena. Solo aparece si el tema tiene más de un audio.
+
+**Verificado en el navegador** (1400×900 y 400×860, "Desde mi interior"): a los 80ms el panel está a mitad de camino y termina en y=0; al cerrar sigue montado bajando y a los 500ms se desmonta; el desplegable lista "Original — Desde mi interior" y la pista "a", y alterna entre ambos. `tsc` y lint limpios.
+
+---
+
+## 2026-09-26 — Portada de canción (cover art) — backend + frontend
+
+**Pedido de Pablo:** subir una portada (imagen) por canción y mostrarla en lugar del placeholder genérico en todos los listados. Decisiones ya tomadas: campo `coverKey`, tope 5MB, jpg/png/webp sin HEIC, subida por URL firmada, campo dentro del `UploadModal` existente.
+
+**Investigación:** el backend **no tenía** nada de portada real: `Song.cover` es un `varchar NOT NULL` con un **gradiente CSS** que el frontend genera al dar de alta — es el placeholder, y se mantiene como fallback. Foto de letra confirmada sin cambios: 8MB, jpg/png/webp (`image-validation.ts`).
+
+**Backend:**
+- Migración `AddSongCoverKey` (`cover_key varchar NULL`); `Song.coverKey`; `coverKey` opcional en el DTO (`null` la quita); `update()` la asigna.
+- Storage: carpeta nueva **`portadas`** con whitelist **server-side** jpg/png/webp (no se repitió la deuda de `letras`, que sigue sin whitelist en el backend).
+- Tests: `portadas` acepta jpg/png/webp y rechaza HEIC y audio; `update` guarda, quita (null) y no toca la portada si no viene. 73 tests.
+
+**Frontend:**
+- **Decisión: `validateImageFile` parametrizado** (`validateImageFile(file, maxBytes = MAX_IMAGE_BYTES)` + `MAX_COVER_BYTES = 5MB`), no un archivo duplicado. Razón: la regla (qué es una imagen válida) es la misma y solo cambia un número; duplicarla haría que el día que se sume un formato haya que acordarse de tocar dos lugares. Distinto de audio vs. imagen, donde las reglas sí son distintas. La llamada de Letras no cambió (usa el default de 8MB); el mensaje de tamaño sale del tope ("…límite de 5MB").
+- **`Cover` compartido** (ya existía, solo pintaba el gradiente): ahora resuelve la URL firmada de `coverKey` con cache por key (mismo criterio que `Avatar`) y cae al gradiente si no hay portada o la imagen no carga. Así se actualizan sin tocarlos: MiniPlayer (barra y pantalla completa), Inicio (canción del mes y lista), Escuchar, Letras, y Setlists (detalle y alta — sin tocar archivos de Setlists).
+- Lugares que dibujaban el gradiente a mano y pasan a `Cover`: Estadísticas (top 10), Inicio (más tocadas), Acordes (buscador) y **Favoritos** (una línea, aprobado por Pablo: que la portada aparezca igual en todos lados; no toca lógica de Favoritos).
+- `UploadModal`: campo "Portada" con vista previa local, cambiar y quitar; se sube por URL firmada al guardar (igual que el audio) y el error se muestra en el campo.
+- Tests: `mapSong` con `coverKey` (incluido backend viejo sin el campo → null); `validateImageFile` con los dos topes y formatos. 68 tests.
+
+**Verificado en el navegador real (MinIO local):** `.txt` → "Formato no soportado — subí una imagen jpg, png o webp."; PNG de 6MB → "La imagen supera el límite de 5MB."; portada real subida (PATCH 200, `coverKey: portadas/…`) y vista en Escuchar, MiniPlayer, pantalla completa, Inicio, Letras, Acordes, Favoritos y Estadísticas; las canciones sin portada siguen con el gradiente; "Quitar portada" → `coverKey: null` y vuelve el gradiente. Las dos canciones de prueba quedaron sin portada (como estaban); los 2 archivos de prueba quedaron en MinIO local sin referencia.
+
+**Encontrado de paso (no tocado):**
+- `SongsService.update()` **no guarda `compas`**: editar el compás de una canción se ignora en silencio.
+- El comentario de `image-validation.ts` dice que es "espejo del whitelist real" de `letras`, pero el backend no valida `letras` (deuda ya documentada en `storage.service.ts`).
+- Límite de tamaño solo del lado del cliente (igual que audio/letra): la URL firmada con PUT no restringe tamaño.
+
+**Deploy:** requiere correr la migración (en Render va en el Build Command).
+
+---
+
+## 2026-09-26 — Fix: atajos de acordes en tonos menores (frontend)
+
+**Reporte de Pablo:** "Desde mi interior" está en Dm y la barra "Acordes en Dm" mostraba los de D mayor (D Em Gbm G A Bm Dbdim).
+
+**Causa:** `diatonicChords` le sacaba la "m" al tono y siempre armaba la escala mayor (con bemoles, porque Dm usa bemoles → "Gbm", "Dbdim").
+
+**Arreglo (`lib/chords.ts`):** en tono menor usa la escala menor natural: Dm → Dm Edim F Gm Am Bb C; Em → Em F#dim G Am Bm C D; Bm → Bm C#dim D Em F#m G A. Mayores sin cambios. 2 tests nuevos (64 en total).
+
+**A revisar (datos, no código):** los acordes cargados en "Desde mi interior" (D, A, Em, Bm, A/C#) son de **D mayor**; si la canción es en D, conviene corregir el tono en su ficha (ahora con Dm los atajos van a mostrar los de Dm, y "A/C#" se ve "A/Db").
+
+---
+
+## 2026-09-26 — Letra + acordes: líneas sin letra como compases (frontend)
+
+**Pedido de Pablo:** en "Letra + acordes", un acorde que está solo en una línea (ej. la intro "[A]") se muestra como "| A |"; si está en la letra, queda como está.
+
+**Cambio (`ChordSheet.tsx`):** `isChordOnlyLine` — una línea con acordes y sin letra (solo "-", ":]" o espacios fuera de los acordes; las notas "(…)" no cuentan como letra) se dibuja con el mismo render de compases de "Solo acordes". No se le aplican las uniones de "Solo acordes" (repeticiones, líneas cortas): en "Letra + acordes" cada línea queda en su lugar.
+
+**Verificado en el navegador** ("Desde mi interior"): intro → "| D | A | Em | Bm - A/Db |" ×2 y "| A |"; el verso con letra sin cambios. 62 tests en verde.
+
+**Visto de paso (sin tocar):** "Desde mi interior" tiene tono **Dm** en la base, pero los acordes están escritos en D; como Dm usa bemoles, "A/C#" se muestra "A/Db". O el tono de la canción es D (y hay que corregirlo en la ficha), o la regla de sostenidos/bemoles para tonos menores debería mantener la sensible (C# en Dm).
+
+---
+
+## 2026-09-26 — Fix: editor de acordes desalineado al final (frontend)
+
+**Reporte de Pablo:** en el editor de acordes, abajo de todo "se buguea, no me deja borrar la última línea" ("[VERSO]" se veía en un lugar distinto de donde estaba).
+
+**Causa:** el editor es un `textarea` transparente encima de una capa (`<pre>`) que dibuja los colores. Al final del scroll las dos capas no coincidían: (1) un salto de línea al final del texto el `<pre>` no lo dibuja y el `textarea` sí → la capa de colores era más corta; (2) el `textarea` (elemento en línea) medía 7px menos que su contenedor → la capa de colores podía scrollear distinto. Lo que se veía no era donde estaba el cursor.
+
+**Arreglo (`ChordProEditor.tsx`):** espacio al final del `<pre>` cuando el texto termina en salto de línea; `textarea` como `block`; `scrollbar-gutter: stable` en las dos capas para que la barra de scroll no cambie el ancho de una sola (con barras de Windows visibles, cortaría las líneas largas en otro lugar).
+
+**Verificado en el navegador** (40 líneas largas + "[VERSO]" al final, sin guardar nada): antes, abajo de todo, scroll 4632 vs 4596 y alto 5050 vs 5021; después ancho, alto, alto visible y scroll idénticos en las dos capas.
+
+---
+
+## 2026-09-25 — Solo acordes: repeticiones entre líneas seguidas (frontend)
+
+**Pedido de Pablo:** en "Solo acordes", si varias líneas seguidas repiten los mismos compases (ej. el verso de "A quién iré": "| D | Bm |" / "| G | D - A |" tres veces), mostrarlas una sola vez con el signo de repetición: "| D | Bm | G | D - A |x3]". "Letra + acordes" no cambia.
+
+**Cambio:** `mergeRepeatedChartLines` en `lib/chords.ts`: dentro de un tramo de líneas de acordes "simples" seguidas (una sección, una línea vacía o una línea con ":]", marcas o notas "(…)" cortan el tramo), toma desde cada línea el tramo más largo cuyos compases sean un mismo grupo repetido y lo junta en una línea; esa línea la comprime la lógica que ya existía ("|:]" para 2, "|xN]" para más). Siempre en líneas enteras: si la última vuelta es distinta, se junta lo que se repite y el resto queda como está. De paso, `chartBars` e `isSimpleChartLine` se movieron de `ChordSheet` a `lib/chords.ts` (mismo criterio, ahora compartido y testeado).
+
+**Tests:** 6 nuevos (55 en total): el verso completo de "A quién iré" → una línea con 3 vueltas; dos líneas iguales; última vuelta distinta; líneas distintas; sección/línea vacía cortan; ":]", marcas y notas se respetan.
+
+**Verificado en el navegador:** "A quién iré" en la base local (verso de 4 líneas) → "| D | Bm | G | D - A |:]"; intro y coro sin cambios.
+
+**Ampliación (pedido de Pablo):** dos líneas seguidas de 2 compases cada una van en un mismo renglón: "| Em | % |" + "| G | A |" → "| Em | % | G | A |" (`joinShortChartLines`, se aplica después de juntar repeticiones). Solo líneas "simples" y que no sean una repetición; se juntan de a dos (cuatro líneas cortas → dos renglones); una de 2 compases junto a una de 3 no se junta. 5 tests más (60 en total). No verificado en el navegador con datos reales: en la base local el coro de "A quién iré" tiene notas "(letra...)", que a propósito no se juntan.
+
+**Segunda ampliación:** también las líneas de **1 compás** (lo que está entre "|" es un compás, aunque sea "Bm - A"): "| Bm - A |" + "| G - A/C# |" → "| Bm - A | G - A/C# |". Regla final: líneas cortas (1 o 2 compases) seguidas se suman en un renglón mientras no pase de 4 compases. 62 tests.
+
+**A tener en cuenta:** la comparación es exacta. En la versión de 6 líneas del verso, la última ("…eterni[D]dad? sino [A]Tú, Jesús.") no tiene el "-" entre D y A, así que da "| G | D | A |" (tres compases) y no se considera igual; hay que escribir "sino - [A]Tú" para que salga x3.
+
+---
+
+## 2026-09-25 — Reproductor a pantalla completa en celular (frontend)
+
+**Pedido de Pablo:** en celular, tocar el tema en el reproductor de abajo abre una vista a pantalla completa estilo Spotify (portada y nombre grandes) con canción siguiente y "atrás": un toque vuelve al principio del tema y dos toques seguidos van a la canción anterior.
+
+**Cambio (`MiniPlayer.tsx`, solo frontend):**
+- En celular (<640px) tocar la portada o el nombre abre la vista: portada grande, título, artista, favorito, barra de progreso con tiempos, atrás / play-pausa / siguiente y botón para cerrar. En compu tocar el nombre sigue como antes (reanuda).
+- La vista va en un portal a `body`: el `backdrop-blur` de la barra hace que un `fixed` de adentro quede encerrado en ella.
+- **Siguiente/anterior:** no existe una cola de reproducción, así que recorren el repertorio en el orden de la lista (el de Escuchar), salteando canciones sin audio; circular (después de la última vuelve a la primera).
+- **Atrás:** un toque → `currentTime = 0`; otro toque dentro de 1,5 s → canción anterior.
+- De paso: con el audio principal sonando, el subtítulo repetía el nombre del tema ("A quién iré · Marcos Witt"); ahora muestra solo el artista (barra y vista completa).
+
+**Verificado con navegador real (400×860, táctil):** en la base local solo 1 canción tiene audio, así que la prueba simuló en el navegador (sin tocar la base) que todas tenían audio y sirvió un audio mudo de 60 s. Resultado: abre a pantalla completa ocupando toda la pantalla; un toque en atrás a los 5,6 s → vuelve a 0,3 s en el mismo tema; siguiente → "Desde mi interior"; doble toque atrás → vuelve a "A quién iré"; cerrar funciona; en 1300px no se abre. `tsc` y lint limpios.
+
+**Ampliación (2026-09-26, pedido de Pablo):** la pantalla completa también se abre en compu al tocar la portada o el nombre del tema (antes, en compu, tocar el nombre reanudaba). Contenido centrado con ancho acotado y portada de hasta 420px (o 55% del alto); **Escape** la cierra. Verificado en 1400×900: abre ocupando toda la pantalla, "siguiente" funciona, Escape cierra; celular sin cambios.
+
+**Sin verificar:** en un celular real con audio real de R2 (reproducción en segundo plano / pantalla bloqueada no se tocó).
+
+---
+
+## 2026-09-25 — Tests unitarios con Vitest en el frontend + tests en el CI (frontend)
+
+**Pedido de Pablo:** testear la lógica aislada y crítica del frontend — transposición de acordes, cálculos de Estadísticas y mapeo de datos de los servicios —, sin tests de componentes React ni end-to-end, y sin repetir lo que ya cubren los tests del backend (permisos). Trabajo en `develop`; `main` solo por PR.
+
+**Qué se testea (49 tests, 5 archivos `*.spec.ts`, co-ubicados):**
+- **`lib/chords.ts`**: `transposeChord` (subir/bajar, bemoles en tonalidades con bemoles, entrada con `#` o `b`, calidad del acorde intacta, acordes con bajo `G/B`, vuelta de la octava, ida y vuelta, valores inválidos sin tocar); `transposeKey`, `semitonesBetween`; `diatonicChords` (D → D Em F#m G A Bm C#dim; F → F Gm Am Bb C Dm Edim); `parseChordPro` transpone acordes pero **no** las marcas ("Baja Tono" empieza con B, "x3", "%"), no trata "[CORO]" como acorde y no se cae con corchetes mal cerrados o texto vacío.
+- **Estadísticas**: más tocadas por mes (orden, tope 8, meses sin datos = 0), comparativa anual (suma por año, orden por el último año, canción solo con 2025 aparece con 2026 = 0), distribución por tema (una canción con varios temas suma a cada uno), evolución mensual y top 10 histórico.
+- **Mapeo**: `mapSong` (tags `{id, valor}` → nombres, `playStats` → `playsByMonth`, sin stats → `{}`, `audioKey`, `addedAt`, compás por defecto 4/4), `mapSetlist` (ítems ordenados por posición sin mutar el original, nota solo si tiene texto, líder/equipo, defaults), `mapAnnotation` (autor → `authorId`, `songId` del parámetro).
+
+**Cambio de código (sin cambio de comportamiento):** los cálculos de Estadísticas vivían dentro de `useMemo` en `EstadisticasPage`; se extrajeron **tal cual** a funciones puras en `features/estadisticas/lib/stats.ts` y la página las llama. `mapSong`/`mapSetlist`/`mapAnnotation` y sus tipos crudos pasaron a `export`.
+
+**Verificación en el navegador:** con reproducciones de prueba cargadas en la base local se sacó una "foto" del DOM (Playwright) de Estadísticas (mes, agosto, año), Canciones, lista y detalle de Setlists y Anotaciones **antes y después** del cambio → idénticas (única diferencia: el atributo `data-tsd-source` de desarrollo, que lleva números de línea del fuente). Los números de la verificación anterior de Estadísticas no estaban en este changelog, así que los datos de los tests son los mismos que se cargaron para esta verificación. Las reproducciones de prueba se borraron después (la tabla estaba vacía).
+
+**Chequeo de que los tests protegen de verdad:** bug metido a propósito en `lib/chords.ts` (un semitono de más) → fallan los tests de transposición; también en la distribución por tema (solo el primer tema) y en `mapSetlist` (sin ordenar) → fallan los suyos. Todo restaurado, 49 en verde.
+
+**Infraestructura:** `vitest.config.ts` propio (alias `@`, `src/**/*.spec.ts`, entorno node) — no carga `vite.config.ts` porque trae los plugins de Lovable/TanStack/Nitro y el guard de `VITE_API_URL`. Script `npm test`. tsc, lint (0 errores) y build pasan; los specs **no** llegan a `.output` (Vite solo empaqueta lo que se importa; verificado).
+
+**CI (frontend):** paso `Tests (vitest)` entre lint y build, y el CI ahora corre también en cada **push a `develop`**. El nombre del job (`tsc + lint + build`) no se cambió, por la protección de `main`.
+
+**Encontrado de paso (no se tocó, pendiente):**
+- **"Comparativa 2025 vs 2026" no dibuja barras** aunque haya datos de los dos años — igual antes y después del cambio. Causa probable: los `<Bar>` de Recharts van dentro de un Fragment en el condicional, y Recharts no los reconoce ahí.
+- En Estadísticas, los meses (`MONTHS`), los años (`2025`, `2026`) y el mes inicial (`2026-09`) están fijos en el código; en 2027 hay que tocarlos.
+- `bun.lock` no se actualizó (bun no está instalado acá); el CI y Vercel usan `package-lock.json`.
+- El contenedor Postgres local de Docker apareció **recreado con las variables de Neon** (usuario `neondb_owner`, puerto 5432, que choca con un Postgres nativo de Windows) — probablemente por correr `docker compose`/`npm run dev` en una terminal donde habían quedado exportadas las variables de `admin:create`. Se recreó desde una terminal limpia (puerto 5435, usuario `cielos`, datos intactos). Recomendación: usar una terminal nueva después de correr comandos contra producción.
+
+---
+
 ## 2026-09-25 — Tests unitarios con Vitest en el backend + tests en el CI
 
 **Pedido de Pablo:** empezar a testear la lógica aislada y crítica del backend (no end-to-end todavía): permisos efectivos (incluido "propia vs. de todos" de anotaciones), lógica de cálculo sin base de datos y DTOs con reglas de negocio no triviales; sumar los tests al CI. Flujo nuevo: `main` protegida por status checks → se trabaja en `develop` y se entra a `main` por PR.

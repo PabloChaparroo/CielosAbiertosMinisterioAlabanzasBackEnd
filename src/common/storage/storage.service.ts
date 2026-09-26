@@ -1,6 +1,12 @@
-import { BadRequestException, Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from "@nestjs/common";
 import {
   CreateBucketCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
   HeadBucketCommand,
   PutObjectCommand,
@@ -37,6 +43,9 @@ const ALLOWED_AUDIO_CONTENT_TYPES = [
 
 const ALLOWED_AVATAR_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+/** Portadas de canciones: mismos formatos que avatares (sin HEIC: no se ve en Chrome/Android) */
+const ALLOWED_COVER_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly logger = new Logger(StorageService.name);
@@ -70,8 +79,12 @@ export class StorageService implements OnModuleInit {
       await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
     } catch {
       try {
-        await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
-        this.logger.log(`Bucket "${this.bucket}" no existía, se creó automáticamente.`);
+        await this.client.send(
+          new CreateBucketCommand({ Bucket: this.bucket }),
+        );
+        this.logger.log(
+          `Bucket "${this.bucket}" no existía, se creó automáticamente.`,
+        );
       } catch (err) {
         this.logger.warn(
           `No se pudo verificar/crear el bucket "${this.bucket}" — la subida de archivos va a fallar hasta que exista. ${err instanceof Error ? err.message : err}`,
@@ -93,25 +106,69 @@ export class StorageService implements OnModuleInit {
    * puramente client-side y cualquiera con las devtools puede saltarlo.
    */
   async getUploadUrl(
-    folder: "audios" | "letras" | "avatares",
+    folder: "audios" | "letras" | "avatares" | "portadas",
     contentType: string,
   ): Promise<{ uploadUrl: string; key: string }> {
-    if (folder === "audios" && !ALLOWED_AUDIO_CONTENT_TYPES.includes(contentType)) {
+    if (
+      folder === "audios" &&
+      !ALLOWED_AUDIO_CONTENT_TYPES.includes(contentType)
+    ) {
       throw new BadRequestException(
         "Formato de audio no soportado. Subí un archivo mp3, wav, ogg, m4a o aac.",
       );
     }
-    if (folder === "avatares" && !ALLOWED_AVATAR_CONTENT_TYPES.includes(contentType)) {
-      throw new BadRequestException("Formato de imagen no soportado. Subí un jpg, png o webp.");
+    if (
+      folder === "avatares" &&
+      !ALLOWED_AVATAR_CONTENT_TYPES.includes(contentType)
+    ) {
+      throw new BadRequestException(
+        "Formato de imagen no soportado. Subí un jpg, png o webp.",
+      );
+    }
+    if (
+      folder === "portadas" &&
+      !ALLOWED_COVER_CONTENT_TYPES.includes(contentType)
+    ) {
+      throw new BadRequestException(
+        "Formato de portada no soportado. Subí un jpg, png o webp.",
+      );
     }
     const key = `${folder}/${randomUUID()}`;
-    const command = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType });
-    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn: UPLOAD_URL_TTL_SECONDS });
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ContentType: contentType,
+    });
+    const uploadUrl = await getSignedUrl(this.client, command, {
+      expiresIn: UPLOAD_URL_TTL_SECONDS,
+    });
     return { uploadUrl, key };
+  }
+
+  /**
+   * Borra archivos del bucket (al eliminar una canción definitivamente). Si falla, se registra y
+   * no se tira error: la canción ya se borró de la base y un archivo huérfano no rompe nada.
+   */
+  async deleteObjects(keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    try {
+      await this.client.send(
+        new DeleteObjectsCommand({
+          Bucket: this.bucket,
+          Delete: { Objects: keys.map((Key) => ({ Key })), Quiet: true },
+        }),
+      );
+    } catch (err) {
+      this.logger.warn(
+        `No se pudieron borrar ${keys.length} archivo(s) del bucket: ${err instanceof Error ? err.message : err}`,
+      );
+    }
   }
 
   async getDownloadUrl(key: string): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.client, command, { expiresIn: DOWNLOAD_URL_TTL_SECONDS });
+    return getSignedUrl(this.client, command, {
+      expiresIn: DOWNLOAD_URL_TTL_SECONDS,
+    });
   }
 }

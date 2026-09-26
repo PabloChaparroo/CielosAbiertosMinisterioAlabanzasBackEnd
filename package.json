@@ -17,6 +17,7 @@
     "migration:revert": "npm run build && typeorm migration:revert -d dist/config/data-source.js",
     "seed:run": "npm run build && node dist/database/seeds/run-seed.js",
     "admin:create": "npm run build && node dist/database/seeds/create-admin.js",
+    "songs:import": "npm run build && node dist/database/seeds/import-cancionero.js",
     "lint": "oxlint .",
     "format": "oxfmt .",
     "test": "vitest run --config vitest.unit.config.ts",

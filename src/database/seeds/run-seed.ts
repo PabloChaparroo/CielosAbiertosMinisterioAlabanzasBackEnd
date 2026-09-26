@@ -176,11 +176,16 @@ async function run() {
   const tagRows: Array<{ id: string; valor: string }> = await runner.query(`SELECT id, valor FROM "tags"`);
   const tagIdByValor = new Map(tagRows.map((t) => [t.valor, t.id]));
 
+  // el seed carga todas como "Alabanza", igual que la migración con las canciones existentes
+  const [alabanza]: Array<{ id: string }> = await runner.query(
+    `SELECT id FROM "tipos_cancion" WHERE nombre = 'Alabanza'`,
+  );
+
   for (const [i, [title, artist, key, bpm, duration, tags]] of titles.entries()) {
     const id = songId(i);
     await runner.query(
-      `INSERT INTO "songs" (id, title, artist, key, bpm, compas, duration, cover, chordpro)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      `INSERT INTO "songs" (id, title, artist, key, bpm, compas, duration, cover, chordpro, tipo_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [
         id,
         title,
@@ -191,6 +196,7 @@ async function run() {
         duration,
         covers[i % covers.length],
         bodies[i % bodies.length],
+        alabanza!.id,
       ],
     );
     for (const tag of tags) {

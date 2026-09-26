@@ -1,13 +1,24 @@
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TagsService } from "../../tags/services/tags.service";
 import { SongPlayStat } from "../entities/song-play-stat.entity";
 import { Song } from "../entities/song.entity";
+import { TipoCancion } from "../entities/tipo-cancion.entity";
 import { SongsService } from "./songs.service";
 
+/** findById usa un query builder (para contar las pistas): se simula la cadena hasta getOne() */
+function qbReturning(result: unknown) {
+  return vi.fn(() => {
+    const qb: Record<string, unknown> = {};
+    for (const m of ["leftJoinAndSelect", "loadRelationCountAndMap", "where"]) qb[m] = () => qb;
+    qb.getOne = vi.fn().mockResolvedValue(result);
+    return qb;
+  });
+}
+
 function setup({ songExists = true, statThisMonth = null as SongPlayStat | null } = {}) {
-  const songRepo = { findOne: vi.fn().mockResolvedValue(songExists ? { id: "s1" } : null) };
+  const songRepo = { createQueryBuilder: qbReturning(songExists ? { id: "s1" } : null) };
   const playStatRepo = {
     findOne: vi.fn().mockResolvedValue(statThisMonth),
     save: vi.fn().mockImplementation(async (s: SongPlayStat) => s),
@@ -17,6 +28,7 @@ function setup({ songExists = true, statThisMonth = null as SongPlayStat | null 
     songRepo as unknown as Repository<Song>,
     playStatRepo as unknown as Repository<SongPlayStat>,
     {} as TagsService,
+    {} as Repository<TipoCancion>,
   );
   return { service, playStatRepo };
 }
@@ -53,5 +65,87 @@ describe("SongsService.registerPlay — reproducciones por mes", () => {
     const { service, playStatRepo } = setup({ songExists: false });
     await expect(service.registerPlay("nope")).rejects.toThrow(NotFoundException);
     expect(playStatRepo.save).not.toHaveBeenCalled();
+  });
+});
+
+describe("SongsService.update — portada (coverKey)", () => {
+  function setupUpdate(coverKey: string | null) {
+    const song = { id: "s1", title: "Océanos", coverKey } as Song;
+    const songRepo = {
+      createQueryBuilder: qbReturning(song),
+      save: vi.fn().mockImplementation(async (s: Song) => s),
+    };
+    const service = new SongsService(
+      songRepo as unknown as Repository<Song>,
+      {} as Repository<SongPlayStat>,
+      {} as TagsService,
+      {} as Repository<TipoCancion>,
+    );
+    return { service };
+  }
+
+  it("guarda la key de la portada subida", async () => {
+    const { service } = setupUpdate(null);
+    await expect(service.update("s1", { coverKey: "portadas/abc" })).resolves.toMatchObject({
+      coverKey: "portadas/abc",
+    });
+  });
+
+  it("null quita la portada (vuelve al gradiente)", async () => {
+    const { service } = setupUpdate("portadas/abc");
+    await expect(service.update("s1", { coverKey: null })).resolves.toMatchObject({
+      coverKey: null,
+    });
+  });
+
+  it("si no viene coverKey, la portada no se toca", async () => {
+    const { service } = setupUpdate("portadas/abc");
+    await expect(service.update("s1", { title: "Otro" })).resolves.toMatchObject({
+      coverKey: "portadas/abc",
+    });
+  });
+});
+
+describe("SongsService — tipo de canción (Alabanza / Adoración)", () => {
+  const ALABANZA = "11111111-1111-4111-8111-111111111111";
+  const ADORACION = "22222222-2222-4222-8222-222222222222";
+  function setupTipo() {
+    const song = { id: "s1", tipoId: ALABANZA, tipo: { id: ALABANZA, nombre: "Alabanza" } } as Song;
+    const songRepo = {
+      createQueryBuilder: qbReturning(song),
+      save: vi.fn().mockImplementation(async (s: Song) => s),
+    };
+    const tipoRepo = {
+      exists: vi.fn().mockImplementation(async ({ where }: { where: { id: string } }) =>
+        [ALABANZA, ADORACION].includes(where.id),
+      ),
+    };
+    const service = new SongsService(
+      songRepo as unknown as Repository<Song>,
+      {} as Repository<SongPlayStat>,
+      {} as TagsService,
+      tipoRepo as unknown as Repository<TipoCancion>,
+    );
+    return { service, songRepo };
+  }
+
+  it("editar cambia el tipo (y la relación cargada no lo pisa)", async () => {
+    const { service } = setupTipo();
+    const saved = await service.update("s1", { tipoId: ADORACION });
+    expect(saved.tipoId).toBe(ADORACION);
+    expect(saved.tipo.id).toBe(ADORACION);
+  });
+
+  it("un tipo inexistente → 400, sin guardar", async () => {
+    const { service, songRepo } = setupTipo();
+    await expect(
+      service.update("s1", { tipoId: "33333333-3333-4333-8333-333333333333" }),
+    ).rejects.toThrow(BadRequestException);
+    expect(songRepo.save).not.toHaveBeenCalled();
+  });
+
+  it("si no viene tipoId, el tipo no se toca", async () => {
+    const { service } = setupTipo();
+    expect((await service.update("s1", { title: "Otro" })).tipoId).toBe(ALABANZA);
   });
 });
