@@ -22,6 +22,8 @@ Es **siempre el mismo iframe** (`YoutubeStage`, en un portal, que se mueve sigui
 
 **Verificado en el navegador** (1400×900 y 400×860): "Desde mi interior" (audio + YouTube) → suena YouTube y el audio subido no; flotante visible 356×200 mientras suena y oculto en pausa; progreso al 50% → el video salta a 3:07; pantalla completa → el mismo video sigue (no se reinicia) en el lugar de la portada; desplegable → audio subido suena y el video se desmonta; volver a YouTube; siguiente → "Santo Espíritu" (link de YouTube cargado por Pablo) arranca solo; Espacio pausa. En celular: flotante arriba de la barra y el video suena. Link de prueba temporal en "Océanos" borrado.
 
+**Ajuste de diseño (pedido de Pablo):** en la pantalla completa con YouTube, el **video va arriba y grande** (a lo ancho, hasta 72rem, limitado por el alto de la pantalla para que todo entre sin scroll) y abajo, en compu, dos columnas: título, artista y temas a la izquierda; tono/compás/BPM/duración y el selector de audio a la derecha; progreso y controles (más grandes: play 80px, atrás/siguiente 44px) a lo ancho. Sin video (portada) queda el diseño de antes. Verificado sin scroll en 1440×768 (video 683×384), 1920×1080 (1072×603) y 400×860.
+
 **Limitaciones (de YouTube, no evitables):** en el celular, con pantalla bloqueada o la app en segundo plano, YouTube corta el sonido (el audio subido no); si el video tiene publicidad, aparece; el flotante tapa parte de la pantalla mientras suena. **Sin verificar:** iPhone/Safari real (política de autoplay más estricta: si el primer play no arrancara, se toca play de nuevo).
 
 ---
