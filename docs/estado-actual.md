@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Fix: Inicio se desbordaba en celular (frontend)
+
+**Reporte de Pablo (probado en el celular):** en Inicio la página quedaba más ancha que la pantalla y corrida hacia un costado (hero cortado, tarjetas saliéndose).
+
+**Causa:** la grilla de tarjetas (Próximo setlist / Canción del mes / Últimas subidas / Tus favoritos) no definía columnas debajo de `sm`; la columna implícita toma el ancho de su contenido, y los textos `truncate` (sin salto de línea: "Santo Espíritu · Al Estar Aquí · …") la estiraban. Con las canciones reales (títulos largos) la página medía 630px en un celular de 390px.
+
+**Cambio (`InicioPage.tsx`):** `grid-cols-1` explícito (en Tailwind es `minmax(0, 1fr)`, no crece con el contenido). Desde `sm` no cambia nada.
+
+**Verificado:** navegador headless a 390px como invitado: antes el documento medía 630px de ancho, después 390px, las tarjetas truncan con "…" y el resto de Inicio se ve completo. tsc, lint, 94 tests.
+
+---
+
 ## 2026-09-26 — Subir a producción solo algunas canciones: `export-canciones` + `publicar-canciones` (backend)
 
 **Pedido de Pablo:** subir a Neon solo 4 canciones ya corregidas en local (Santo Espíritu — Esperanza de vida; Al Estar Aquí — Marcos Witt ft. Taya; Este es mi deseo — Claudio Freidzon; Santo espíritu — Averly Morillo), sin tocar las otras 57 que sigue corrigiendo.
