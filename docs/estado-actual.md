@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Video flotante: aparece arriba del perfil en la barra lateral (frontend)
+
+**Pedido de Pablo:** que la ventanita del video de YouTube aparezca justo arriba del perfil (el hueco vacío de la barra lateral), y que se pueda seguir moviendo con el mouse a donde quiera.
+
+**Cambio (`useFloatingWindow` + `Sidebar`):** el lugar por defecto (hasta que se la arrastra) se calcula desde el bloque del perfil de la barra lateral fija (`data-sidebar-profile`): centrada en la barra, 8px arriba del perfil; se recalcula al agrandar/achicar y al cambiar el tamaño de la ventana. Sin barra lateral (celular, o compu angosta < 1024px) sigue abajo a la derecha. Arrastrarla, los límites de pantalla y el recuerdo de la posición no cambian.
+
+**Verificado en el navegador:** 1440×900 → perfil y 775→900, ventanita x 8→270 · y 529→767 (arriba del perfil, dentro de la barra); arrastrada con el mouse a (900,300) → x 869→1131; 390×844 → abajo a la derecha como antes. **A tener en cuenta:** en pantallas de poca altura (ej. 900px) la ventanita tapa los últimos ítems del menú (Estadísticas, Roles y Permisos) hasta que se la mueve; en la pantalla de Pablo ese espacio está vacío.
+
+---
+
 ## 2026-09-26 — Reproductor a pantalla completa: fondo negro, controles pegados a la lista y audios a la derecha (frontend)
 
 **Pedido de Pablo (sobre el rediseño anterior):** sacar el fondo morado y ponerlo negro; subir los controles (con pocos temas quedaban abajo de todo, con un hueco grande); en el espacio vacío debajo de tono/compás/BPM/duración, una lista con scroll de los audios del tema que suena.
