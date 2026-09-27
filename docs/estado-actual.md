@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Reproductor a pantalla completa: fondo negro, controles pegados a la lista y audios a la derecha (frontend)
+
+**Pedido de Pablo (sobre el rediseño anterior):** sacar el fondo morado y ponerlo negro; subir los controles (con pocos temas quedaban abajo de todo, con un hueco grande); en el espacio vacío debajo de tono/compás/BPM/duración, una lista con scroll de los audios del tema que suena.
+
+**Cambio (`FullPlayer.tsx`):** fondo `bg-black` (antes el degradé `gradient-sky` de Inicio); la tarjeta de la izquierda mide lo que su contenido (hasta el alto de la pantalla): los controles quedan justo debajo del último tema y, con muchos temas, la lista scrollea y los controles siguen visibles; nueva tarjeta **"Audios de este tema"** en la columna derecha (video de YouTube, original, pistas, videos extra; el que suena marcado "Sonando"; tocar uno lo hace sonar), ocupa el resto de la columna con scroll propio (en celular, hasta 16rem). Se quitó el desplegable de audios dentro de la lista (quedaba duplicado).
+
+**Verificado en el navegador (1440×900 y 390×844):** fondo negro; controles debajo del último tema; "Audios de este tema" con Video de YouTube (Sonando) · Original · pista "a"; sin desborde en celular; 0 errores. tsc y lint limpios.
+
+---
+
 ## 2026-09-26 — Reproductor a pantalla completa rediseñado + Alabanzas/Adoraciones + aleatorio (frontend)
 
 **Pedido de Pablo:** no le gustaba el diseño del reproductor a pantalla completa; eligió un mockup de Figma (reproductor tipo Spotify: tema grande arriba con "Play", pestañas, lista de temas, controles abajo y "Currently Playing" a la derecha), con los colores de la app. Que muestre otras canciones para seguir escuchando, que el tema se pueda desplegar con sus otros audios, poder alternar para que suenen solo alabanzas o solo adoraciones, y modo aleatorio.
