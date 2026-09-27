@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Reproductor a pantalla completa rediseñado + Alabanzas/Adoraciones + aleatorio (frontend)
+
+**Pedido de Pablo:** no le gustaba el diseño del reproductor a pantalla completa; eligió un mockup de Figma (reproductor tipo Spotify: tema grande arriba con "Play", pestañas, lista de temas, controles abajo y "Currently Playing" a la derecha), con los colores de la app. Que muestre otras canciones para seguir escuchando, que el tema se pueda desplegar con sus otros audios, poder alternar para que suenen solo alabanzas o solo adoraciones, y modo aleatorio.
+
+**Diseño (`components/layout/FullPlayer.tsx`, nuevo; sale de `MiniPlayer`, que ya tenía 719 líneas):**
+- Compu, dos columnas. **Izquierda:** tipo (chip), título grande, artista, temas; "Reproducir/Pausar" (dorado) y favorito; pestañas **Todas / Alabanzas / Adoraciones**; la lista para seguir escuchando (#, portada, título/artista, tono · BPM, duración, favorito; el tema que suena resaltado en dorado con barritas animadas); **el tema actual se despliega** (flecha) con sus audios: video de YouTube, original, pistas y videos extra — elegir uno lo hace sonar; controles fijos abajo (volumen, anterior, play, siguiente, aleatorio, progreso). **Derecha:** "Reproduciendo ahora" con el video (o la portada) + título, y tarjeta de tono / compás / BPM / duración. Círculos decorativos del mockup en el encabezado.
+- Celular: una columna — video arriba, características, tema, pestañas, lista (con scroll propio, hasta 55% de la pantalla) y controles fijos abajo.
+- La lista se desplaza sola hasta el tema que suena (solo la lista por dentro: con `scrollIntoView` se movía toda la pantalla y en celular el video quedaba fuera de vista — encontrado al probar).
+- Se quitó el desplegable "Audio" y el diseño anterior (reemplazado por la lista desplegable).
+
+**Cola (`lib/queue.ts`, funciones puras, 6 tests):** `buildQueue` = canciones reproducibles (audio o YouTube) filtradas por tipo; `pickNext` = siguiente/anterior dando la vuelta; si el tema que suena no es del tipo elegido, el siguiente es el primero de la lista (y la lista lo avisa). **Aleatorio:** siguiente = cualquier otra de la cola (nunca repite la actual); **anterior en aleatorio vuelve a la que sonó antes** (historial de hasta 50), no a otra al azar. El filtro y el aleatorio aplican también a siguiente/anterior de la barra. **Al terminar un tema sigue con el siguiente de la cola** (antes se quedaba en pausa) — audio subido y YouTube.
+
+**Verificado en el navegador (1440×900 y 390×844):** abre con "Desde mi interior" (video en la tarjeta derecha, 366×206; en celular 340×191), lista con los 7 temas reproducibles de la base local, audios desplegados (Video de YouTube · Original · pista "a"); elegir "Original" → suena el audio subido y queda marcado; pestaña Alabanzas → 1 tema (la base local solo tiene una alabanza reproducible) y siguiente vuelve al principio del mismo; aleatorio en Adoraciones → Santo Espíritu → Este es mi deseo → Al Estar Aquí → Cuando levanto mis manos; anterior (doble toque) → Al Estar Aquí; llevar el progreso al final → pasa solo a Santo Espíritu; sin desborde en celular (390px); 0 errores de página. tsc, lint, 104 tests (6 nuevos), build.
+
+**Sin verificar:** con pocas alabanzas reproducibles en la base local, el filtro "Alabanzas" se probó con un solo tema; iPhone real.
+
+---
+
 ## 2026-09-26 — Videos de YouTube en una ventanita flotante chica y arrastrable (frontend)
 
 **Pedido de Pablo:** que las pistas relacionadas de YouTube se vean en un mini-reproductor flotante, chico y arrastrable por toda la pantalla (sin salirse), con botón para agrandar y para cerrar, nunca a tamaño completo tapando la letra/acordes; un solo audio a la vez.
