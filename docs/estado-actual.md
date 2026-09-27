@@ -10,6 +10,8 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Cambio (`FullPlayer.tsx`):** fondo `bg-black` (antes el degradé `gradient-sky` de Inicio); la tarjeta de la izquierda mide lo que su contenido (hasta el alto de la pantalla): los controles quedan justo debajo del último tema y, con muchos temas, la lista scrollea y los controles siguen visibles; nueva tarjeta **"Audios de este tema"** en la columna derecha (video de YouTube, original, pistas, videos extra; el que suena marcado "Sonando"; tocar uno lo hace sonar), ocupa el resto de la columna con scroll propio (en celular, hasta 16rem). Se quitó el desplegable de audios dentro de la lista (quedaba duplicado).
 
+**Ajuste (pedido de Pablo):** la columna derecha se estiraba hasta abajo de la pantalla aunque la tarjeta de la izquierda terminara antes. Ahora, en compu, la columna derecha **mide lo mismo que la tarjeta izquierda** (se mide con `ResizeObserver`; en celular no aplica) y la lista de audios scrollea adentro. Para que la derecha siempre entre (video + características + al menos 2 audios), la tarjeta izquierda tiene un alto mínimo de 45rem: con pocos temas (ej. pestaña Alabanzas con uno) el espacio sobrante queda en la lista y los controles al pie de la tarjeta. Medido: Todas 68→884 las dos columnas; Alabanzas 68→788 las dos, contenido de la derecha 720 = alto 720 (sin desborde); pantalla de 760px de alto, también iguales.
+
 **Verificado en el navegador (1440×900 y 390×844):** fondo negro; controles debajo del último tema; "Audios de este tema" con Video de YouTube (Sonando) · Original · pista "a"; sin desborde en celular; 0 errores. tsc y lint limpios.
 
 ---
