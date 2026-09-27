@@ -4,6 +4,91 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-09-26 — Reproductor a pantalla completa: fondo negro, controles pegados a la lista y audios a la derecha (frontend)
+
+**Pedido de Pablo (sobre el rediseño anterior):** sacar el fondo morado y ponerlo negro; subir los controles (con pocos temas quedaban abajo de todo, con un hueco grande); en el espacio vacío debajo de tono/compás/BPM/duración, una lista con scroll de los audios del tema que suena.
+
+**Cambio (`FullPlayer.tsx`):** fondo `bg-black` (antes el degradé `gradient-sky` de Inicio); la tarjeta de la izquierda mide lo que su contenido (hasta el alto de la pantalla): los controles quedan justo debajo del último tema y, con muchos temas, la lista scrollea y los controles siguen visibles; nueva tarjeta **"Audios de este tema"** en la columna derecha (video de YouTube, original, pistas, videos extra; el que suena marcado "Sonando"; tocar uno lo hace sonar), ocupa el resto de la columna con scroll propio (en celular, hasta 16rem). Se quitó el desplegable de audios dentro de la lista (quedaba duplicado).
+
+**Ajuste (pedido de Pablo):** la columna derecha se estiraba hasta abajo de la pantalla aunque la tarjeta de la izquierda terminara antes. Ahora, en compu, la columna derecha **mide lo mismo que la tarjeta izquierda** (se mide con `ResizeObserver`; en celular no aplica) y la lista de audios scrollea adentro. Para que la derecha siempre entre (video + características + al menos 2 audios), la tarjeta izquierda tiene un alto mínimo de 45rem: con pocos temas (ej. pestaña Alabanzas con uno) el espacio sobrante queda en la lista y los controles al pie de la tarjeta. Medido: Todas 68→884 las dos columnas; Alabanzas 68→788 las dos, contenido de la derecha 720 = alto 720 (sin desborde); pantalla de 760px de alto, también iguales.
+
+**Verificado en el navegador (1440×900 y 390×844):** fondo negro; controles debajo del último tema; "Audios de este tema" con Video de YouTube (Sonando) · Original · pista "a"; sin desborde en celular; 0 errores. tsc y lint limpios.
+
+---
+
+## 2026-09-26 — Reproductor a pantalla completa rediseñado + Alabanzas/Adoraciones + aleatorio (frontend)
+
+**Pedido de Pablo:** no le gustaba el diseño del reproductor a pantalla completa; eligió un mockup de Figma (reproductor tipo Spotify: tema grande arriba con "Play", pestañas, lista de temas, controles abajo y "Currently Playing" a la derecha), con los colores de la app. Que muestre otras canciones para seguir escuchando, que el tema se pueda desplegar con sus otros audios, poder alternar para que suenen solo alabanzas o solo adoraciones, y modo aleatorio.
+
+**Diseño (`components/layout/FullPlayer.tsx`, nuevo; sale de `MiniPlayer`, que ya tenía 719 líneas):**
+- Compu, dos columnas. **Izquierda:** tipo (chip), título grande, artista, temas; "Reproducir/Pausar" (dorado) y favorito; pestañas **Todas / Alabanzas / Adoraciones**; la lista para seguir escuchando (#, portada, título/artista, tono · BPM, duración, favorito; el tema que suena resaltado en dorado con barritas animadas); **el tema actual se despliega** (flecha) con sus audios: video de YouTube, original, pistas y videos extra — elegir uno lo hace sonar; controles fijos abajo (volumen, anterior, play, siguiente, aleatorio, progreso). **Derecha:** "Reproduciendo ahora" con el video (o la portada) + título, y tarjeta de tono / compás / BPM / duración. Círculos decorativos del mockup en el encabezado.
+- Celular: una columna — video arriba, características, tema, pestañas, lista (con scroll propio, hasta 55% de la pantalla) y controles fijos abajo.
+- La lista se desplaza sola hasta el tema que suena (solo la lista por dentro: con `scrollIntoView` se movía toda la pantalla y en celular el video quedaba fuera de vista — encontrado al probar).
+- Se quitó el desplegable "Audio" y el diseño anterior (reemplazado por la lista desplegable).
+
+**Cola (`lib/queue.ts`, funciones puras, 6 tests):** `buildQueue` = canciones reproducibles (audio o YouTube) filtradas por tipo; `pickNext` = siguiente/anterior dando la vuelta; si el tema que suena no es del tipo elegido, el siguiente es el primero de la lista (y la lista lo avisa). **Aleatorio:** siguiente = cualquier otra de la cola (nunca repite la actual); **anterior en aleatorio vuelve a la que sonó antes** (historial de hasta 50), no a otra al azar. El filtro y el aleatorio aplican también a siguiente/anterior de la barra. **Al terminar un tema sigue con el siguiente de la cola** (antes se quedaba en pausa) — audio subido y YouTube.
+
+**Verificado en el navegador (1440×900 y 390×844):** abre con "Desde mi interior" (video en la tarjeta derecha, 366×206; en celular 340×191), lista con los 7 temas reproducibles de la base local, audios desplegados (Video de YouTube · Original · pista "a"); elegir "Original" → suena el audio subido y queda marcado; pestaña Alabanzas → 1 tema (la base local solo tiene una alabanza reproducible) y siguiente vuelve al principio del mismo; aleatorio en Adoraciones → Santo Espíritu → Este es mi deseo → Al Estar Aquí → Cuando levanto mis manos; anterior (doble toque) → Al Estar Aquí; llevar el progreso al final → pasa solo a Santo Espíritu; sin desborde en celular (390px); 0 errores de página. tsc, lint, 104 tests (6 nuevos), build.
+
+**Sin verificar:** con pocas alabanzas reproducibles en la base local, el filtro "Alabanzas" se probó con un solo tema; iPhone real.
+
+---
+
+## 2026-09-26 — Videos de YouTube en una ventanita flotante chica y arrastrable (frontend)
+
+**Pedido de Pablo:** que las pistas relacionadas de YouTube se vean en un mini-reproductor flotante, chico y arrastrable por toda la pantalla (sin salirse), con botón para agrandar y para cerrar, nunca a tamaño completo tapando la letra/acordes; un solo audio a la vez.
+
+**Lo que ya estaba hecho (tickets "Videos de YouTube embebidos" y "YouTube como reproductor principal") y no se tocó:** los links de YouTube de la canción ya son pistas reproducibles; `parseYoutubeVideoId` (watch?v=, youtu.be, embed, shorts, live; 21 tests); iframe oficial; link de YouTube inválido rechazado con mensaje; portada = miniatura del primer link de YouTube; agregar links exige `cancion:write`; el video principal ya pausaba al audio de la app y viceversa.
+
+**Decisión de modelo — se mantiene `SongLink`, no se extiende `AudioTrack` (sin cambios de backend ni migración):** ya se había decidido y aprobado así. Mirando el código de nuevo: los videos ya se cargan como links y el reproductor ya los ofrece como pistas; un discriminador `upload | youtube` en `AudioTrack` obligaría a cargar el mismo video dos veces (como link, que da la portada, y como pista), más una migración y un `audioKey` que para YouTube quedaría vacío. Entre las dos opciones del ticket, si algún día hiciera falta, el discriminador en `AudioTrack` sigue siendo mejor que una entidad separada (misma lista, orden, CRUD y permisos). Permisos: los de `SongLink` — agregar `cancion:write` (igual criterio que `AudioTrack`).
+
+**Decisión de arrastre — implementación propia con Pointer Events, sin biblioteca:** Pointer Events cubren mouse, touch y lápiz con un solo código (react-draggable y similares manejan mouse y touch por separado, y suman una dependencia para ~40 líneas); `setPointerCapture` hace que el arrastre siga aunque el dedo pase sobre el iframe del video (que si no se "come" los eventos); `touch-action: none` solo en la zona de arrastre para que el celular no haga scroll mientras se arrastra. El límite de pantalla es una función pura (`clampToViewport`, 4 tests): margen de 8px, también al agrandar y al girar/cambiar el tamaño de la pantalla.
+
+**Persistencia de la posición — en memoria, no en el navegador ni en el backend:** se mantiene al navegar entre pantallas (el reproductor ya no se desmonta) y la comparten las ventanitas (un video extra se abre donde quedó la última); al recargar vuelve a la esquina de abajo a la derecha — igual que el video, que al recargar también se corta. Guardarla en `localStorage` podía dejarla en un lugar raro al abrir en otro tamaño de pantalla.
+
+**Cambio:**
+- `hooks/useFloatingWindow.ts` + `components/common/FloatingVideoFrame.tsx`: ventanita con barra (grip + título para arrastrar; botones abrir reproductor / agrandar-achicar / cerrar). **Chica = 260×200** (YouTube exige que el reproductor embebido mida al menos 200×200px; el video queda con franjas); grande = 16:9 hasta 640px de ancho. Antes, en celular el video ocupaba casi todo el ancho.
+- `YoutubeStage` (video principal): usa la ventanita; en la pantalla completa del reproductor la misma ventanita se "clava" sobre la portada, sin barra — misma estructura, así el iframe no se recrea y el video no se reinicia. Cerrar = pausar y ocultar (como antes).
+- `YoutubeEmbed` (otros videos de YouTube de la canción): **dejó de ser un modal grande** con fondo oscuro que tapaba todo; ahora es la misma ventanita flotante. Se agregó `playsinline=1` (en iPhone, sin eso el video se abre a pantalla completa nativa).
+- **Un solo audio a la vez — lo que faltaba:** si sonaba una pista subida (`AudioTracksModal`) y arrancaba el reproductor principal (Espacio) o un video extra, la pista seguía sonando. `lib/exclusive-audio.ts`: la pista y el video extra avisan por un evento de `window` al empezar a sonar y el otro se pausa; la pista además se pausa cuando arranca el principal. `Song.audioKey` y la subida de pistas no se tocaron.
+- Portada con la miniatura de YouTube: ya estaba hecho (ticket de portada), no hacía falta otro.
+
+**Verificado en el navegador (Chromium, 1400×900 y 390×844 con eventos touch reales):**
+- Links (Admin): URL `youtube.com/watch?v=abc` → "No reconocemos ese link de YouTube…" y **0 POST**; `youtu.be/…?si=…` → se guarda.
+- Reproducir "Desde mi interior" en Letras: ventanita 262×238 abajo a la derecha, al costado de la letra (compu); en celular 262 de 390 de ancho.
+- Arrastre (mouse en compu, touch en celular) a (40,120), a más allá de la esquina de arriba a la izquierda, de abajo a la derecha y al centro: siempre queda adentro (x/y mínimos 8; máximos pantalla − tamaño − 8). Agrandar: 642×398 en compu, 376×248 en celular (corrida para no salirse); achicar vuelve a 262×238. Al navegar a Acordes la posición y el video siguen (6 s sonando).
+- Un solo audio: abrir un video extra → principal YouTube pausado, extra sonando; elegir el audio subido → extra pausado, audio sonando; pista adicional en `AudioTracksModal` → principal YouTube pausado; Espacio → principal sonando y **pista pausada** (el caso nuevo).
+- Permisos: Músico (Camila) ve los links sin formulario ni borrar; `POST /canciones/:id/links` → **403** (Admin → 201). Links de prueba borrados.
+- tsc limpio en frontend y backend (backend sin cambios), lint, 98 tests (4 nuevos), build.
+
+**Sin verificar / a mirar en el teléfono real:** en la emulación de Chrome, un toque a "Agrandar" muy seguido de un arrastre a veces no generaba el `click` (los eventos de puntero llegaban, el click no; con una pausa normal de ~1 s andaba casi siempre). Se descartó que fuera la estructura (se separó la zona de arrastre de los botones) y no se pudo confirmar si pasa en un celular real; si pasa, se ve como "hay que tocar dos veces". iPhone/Safari real no probado. En celular la ventanita chica igual tapa una parte de la letra (es lo mínimo que permite YouTube): por eso se puede mover.
+
+---
+
+## 2026-09-26 — Letras: al entrar sin canción, las últimas subidas para elegir (frontend)
+
+**Pedido de Pablo:** al entrar a Letras, en vez de "Seleccioná una canción / La letra aparecerá acá", mostrar ahí mismo las últimas canciones subidas para elegir una.
+
+**Cambio (`LetrasPage.tsx`):** el estado vacío pasa a ser una lista de las 8 primeras canciones disponibles (mismo orden que "Últimas subidas" de Inicio, el que devuelve la API; respeta el filtro `songIds` de un setlist), con portada, título y artista; tocar una abre su letra (no la reproduce, igual que tocar el título en el buscador). Sin canciones → "Todavía no hay canciones".
+
+**Acordes no cambia:** nunca mostró ese mensaje — si no se eligió ninguna, abre directamente la primera canción.
+
+**Verificado:** navegador headless a 390px como invitado: Letras muestra "Últimas canciones subidas" con 8 canciones, sin desborde (390px); tocar "Al Estar Aquí" abre su letra. tsc, lint, 94 tests.
+
+---
+
+## 2026-09-26 — Fix: Inicio se desbordaba en celular (frontend)
+
+**Reporte de Pablo (probado en el celular):** en Inicio la página quedaba más ancha que la pantalla y corrida hacia un costado (hero cortado, tarjetas saliéndose).
+
+**Causa:** la grilla de tarjetas (Próximo setlist / Canción del mes / Últimas subidas / Tus favoritos) no definía columnas debajo de `sm`; la columna implícita toma el ancho de su contenido, y los textos `truncate` (sin salto de línea: "Santo Espíritu · Al Estar Aquí · …") la estiraban. Con las canciones reales (títulos largos) la página medía 630px en un celular de 390px.
+
+**Cambio (`InicioPage.tsx`):** `grid-cols-1` explícito (en Tailwind es `minmax(0, 1fr)`, no crece con el contenido). Desde `sm` no cambia nada.
+
+**Verificado:** navegador headless a 390px como invitado: antes el documento medía 630px de ancho, después 390px, las tarjetas truncan con "…" y el resto de Inicio se ve completo. tsc, lint, 94 tests.
+
+---
+
 ## 2026-09-26 — Subir a producción solo algunas canciones: `export-canciones` + `publicar-canciones` (backend)
 
 **Pedido de Pablo:** subir a Neon solo 4 canciones ya corregidas en local (Santo Espíritu — Esperanza de vida; Al Estar Aquí — Marcos Witt ft. Taya; Este es mi deseo — Claudio Freidzon; Santo espíritu — Averly Morillo), sin tocar las otras 57 que sigue corrigiendo.
