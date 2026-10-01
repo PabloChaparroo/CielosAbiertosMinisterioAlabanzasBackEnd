@@ -14,11 +14,20 @@ import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
 import { User } from "../../users/entities/user.entity";
 import { SetlistItem } from "./setlist-item.entity";
 
-export const EVENT_TYPES = ["Culto Domingo", "Ensayo", "Evento Especial"] as const;
+export const EVENT_TYPES = [
+  "Culto Domingo a la mañana",
+  "Culto Domingo a la tarde",
+  "Culto Miércoles",
+  "Culto Sábado Jóvenes",
+  "Ensayo",
+  "Evento Especial",
+] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
 @Entity("setlists")
-@Check(`"type" IN ('Culto Domingo','Ensayo','Evento Especial')`)
+@Check(
+  `"type" IN ('Culto Domingo a la mañana','Culto Domingo a la tarde','Culto Miércoles','Culto Sábado Jóvenes','Ensayo','Evento Especial')`,
+)
 export class Setlist extends BaseAuditEntity {
   @PrimaryGeneratedColumn("uuid")
   id!: string;

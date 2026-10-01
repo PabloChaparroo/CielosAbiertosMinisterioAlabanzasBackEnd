@@ -76,7 +76,7 @@ classDiagram
     +date: Date
     +type: string
   }
-  note for Setlist "CHECK: type IN ('Culto Domingo','Ensayo','Evento Especial')"
+  note for Setlist "CHECK: type IN ('Culto Domingo a la mañana', 'Culto Domingo a la tarde', 'Culto Miércoles', 'Culto Sábado Jóvenes', 'Ensayo', 'Evento Especial')"
 
   class SetlistItem {
     <<tabla: setlist_items>>
