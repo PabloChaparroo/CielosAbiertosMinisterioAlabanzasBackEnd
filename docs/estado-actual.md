@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Fix: un coro de 2 compases repetido 3 veces salía con :] en vez de x3 (frontend)
+
+**Reportado por Pablo:** coro `| D - A | E - F#m |` tres veces + `| D - A | E |` se veía `| D - A | E - F#m |:]` / `| D - A | E - F#m | D - A | E |`.
+
+**Causa:** `packChartRows` solo buscaba vueltas de 4 compases o más; esta mide 2. Partía en filas de 4 y la primera fila (la mitad repetida) se mostraba con `:]`.
+
+**Cambio:** `MIN_REPEAT_BARS` 4 → 2 (un solo acorde repetido no cuenta). Se elige la vuelta que cubre más compases seguidos; con empate, la más corta (`x4` antes que `:]`).
+
+**Verificado:** tests nuevos (el coro de Pablo → `| D - A | E - F#m |x3]` + `| D - A | E |`; misma mitad 4 veces → `x4`); los anteriores siguen pasando (136). En el navegador, igual.
+---
+
 ## 2026-10-02 — Solo acordes: filas de 4 compases; el "-" solo si está escrito (frontend)
 
 **Corrección de Pablo a la entrada de abajo ("1 línea = 1 compás"), que se revirtió** (`git revert`): no quería unir los acordes de una línea; el `-` va solo donde está escrito ("El verso empieza con [A][D], no hay ningún - entre medio"). Lo que quería es que los compases salgan **siempre de a 4 por fila**.
