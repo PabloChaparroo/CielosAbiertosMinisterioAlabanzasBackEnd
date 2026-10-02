@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Fix: Chrome traducía la app ("Acordes" → "Acuerdos") (frontend)
+
+**Reportado por Pablo:** a una compañera, en producción, el menú le mostraba "Acuerdos", "Listas de canciones", "Instalar aplicación", "Administración".
+
+**Causa:** el traductor automático de Chrome. La página se declaraba en inglés (`<html lang="en">`, de la plantilla inicial), así que Chrome la traducía "al español".
+
+**Cambio (`__root.tsx`):** `<html lang="es" translate="no">` + `<meta name="google" content="notranslate">`. Un cancionero traducido rompe letras y nombres de acordes.
+
+**Verificado:** el HTML que entrega el servidor trae `lang="es" translate="no"` y el meta. **A tener en cuenta:** a quien ya tiene la traducción activada puede quedarle hasta recargar; si sigue, en Chrome: ⋮ → Traducir → Mostrar original / Nunca traducir este sitio.
+---
+
 ## 2026-10-02 — Solo acordes: compases centrados en su columna (frontend)
 
 **Pedido de Pablo:** en la vista de compases quedaba mucho espacio a la derecha de los compases cortos; el `%` tenía que verse en el medio.
