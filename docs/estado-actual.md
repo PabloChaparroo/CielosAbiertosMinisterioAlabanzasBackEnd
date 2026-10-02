@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Solo acordes: el coro repetido con un renglón vacío en el medio va con :] (frontend)
+
+**Reportado por Pablo:** en "Al estar ante ti" el coro tiene dos vueltas con los mismos acordes y se mostraba entero dos veces en vez de una con `:]`.
+
+**Causa:** `mergeRepeatedChartLines` cortaba el tramo en cualquier línea vacía, y entre las dos vueltas hay un renglón en blanco.
+
+**Cambio (`lib/chords.ts`):** las líneas vacías ya no cortan el tramo (las secciones y las líneas con notas/marcas sí); si quedan adentro de lo que se juntó, desaparecen. Además, si la vuelta que se repite tiene **más de 4 compases** y termina justo al final de una línea, se deja la primera vuelta **en sus renglones** con `:]` (o `x3`…) al final, en vez de una sola fila que no entra en pantalla. Las repeticiones cortas siguen en una fila (`| D | Bm | G | D - A |x3]`). Se cambió a propósito el test que fijaba que "una línea vacía corta el tramo".
+
+**Verificado:** 140 tests (nuevos: el coro de Pablo y una vuelta larga x3). En el navegador (vista previa, sin guardar): `| D/F# - G | D/F# | G - A/C# | Bm |` / `| A | G - A/C# | D |` / `| Em | A |:]` / `| C | A4 |`.
+---
+
 ## 2026-10-02 — Solo acordes: x2 / x3 / x4 fuera del compás (frontend)
 
 **Pedido de Pablo:** `| D | A | Em | Bm - A/C# x4 |` — las repeticiones tienen que ir fuera del `|`.
