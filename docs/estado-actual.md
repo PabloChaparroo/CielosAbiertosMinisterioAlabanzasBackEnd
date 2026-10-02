@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Fix: "Copiar" del Transportador tiraba la página con el traductor de Chrome (frontend)
+
+**Reportado por Pablo:** a una compañera, en producción, al tocar Copiar en el Transportador le salía "Esta página no se cargó" (la pantalla de error, traducida por Chrome).
+
+**Causa:** problema conocido de React con el traductor de Google: el traductor reemplaza los textos por `<font>` con la traducción; cuando React quiere cambiar "Copiar" por "Copiado" busca el texto original, ya no está, y tira error. Pasaba porque la app se declaraba en inglés (ver la entrada de "Acuerdos").
+
+**Cambio:** (1) de fondo, la app ya pide no traducirse (`translate="no"`, entrada anterior); (2) además el texto del botón va en un `<span key>`, así React reemplaza el elemento entero y no depende del texto. De paso, las páginas de error y de "no encontrada" estaban en inglés (de la plantilla): ahora en español.
+
+**Verificado en el navegador simulando el traductor** (textos reemplazados por `<font>`): con el código anterior la página se cae al tocar Copiar; con el arreglo no, y el portapapeles queda bien en los dos casos. 133 tests, tsc.
+---
+
 ## 2026-10-02 — Inicio: "Ministerio de Adoración" debajo del título (frontend)
 
 **Pedido de Pablo:** que aparezca "Ministerio de Adoración" en algún lado de Inicio.
