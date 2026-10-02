@@ -4,6 +4,38 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Módulo Transportador: acordes arriba de la letra → formato del cancionero (backend + frontend)
+
+**Pedido de Pablo:** las canciones de internet traen los acordes en la línea de arriba de la letra; pasarlas a mano al formato del cancionero (`Te al[G]abo`) lleva mucho tiempo. Un módulo donde se pega la canción y sale convertida para copiarla en Acordes. **No guarda nada.** Solo para quien tenga el permiso (hoy, Admin).
+
+**Permiso:** recurso nuevo **`transportador`** (36 permisos en el catálogo); migración `AddTransportadorPermission` se lo da **solo a Admin**. Solo cuenta "read" (abrir el módulo), como en `estadisticas`. Se puede dar a otro rol desde Roles y permisos ("Transportador de acordes"). Los permisos van en el token: hay que volver a iniciar sesión para ver el módulo.
+
+**Frontend:** ruta `/transportador` (ítem "Transportador" en Música, `MODULE_READ_PERMISSION` → `transportador:read`). Conversión en `lib/chords-over-lyrics.ts`: cada acorde entra en la columna donde estaba (tabs → espacios, sin contar la sangría de la letra); acorde pasado el final de la línea va al final; línea de acordes sin letra abajo queda `[G] [D] x2`; encabezados (`Coro:`, `VERSO 1`, `[Intro]`, `Intro: G D Em C`) → `{Coro}`; una línea es de acordes solo si todos sus tokens son acordes o marcas (`|`, `x2`), así "A ti te alabo" no se toma como acordes. Botones Copiar y Limpiar.
+
+**Verificado:** 25 tests nuevos (incluido que el resultado lo lee `parseChordPro` con los mismos acordes y secciones); 133 tests front, 88 back. En el navegador: Admin ve el módulo, convierte el ejemplo de Pablo y Copiar deja el resultado en el portapapeles; Líder no lo ve y por URL le sale "Sección restringida". Migración corrida en local. **Sin verificar:** producción (orden: deploy backend + `npm run migration:run`, después el front, después re-login).
+
+---
+
+## 2026-10-02 — Duración de Canciones desde el video principal de YouTube + columna Acciones (frontend)
+
+**Pedido de Pablo:** la duración de cada canción decía 4:00 (el valor por defecto) en todas; que muestre la del video principal de YouTube. Además el encabezado "Duración" quedaba encima de los botones de acción.
+
+**Cambio:** sin API key de YouTube (decisión de Pablo): `lib/youtube-duration.ts` lee la duración con un player oculto de la IFrame API (de a uno, timeout 10s) y se guarda con `PATCH /canciones/:id { duration }`. Al cambiar el video principal (primer link de YouTube) desde Links se actualiza sola; para las existentes, botón "Duraciones de YouTube" en Canciones (solo `cancion:write`) con progreso. Tabla: "Duración" y "Acciones" pasan a ser columnas separadas.
+
+**Verificado en el navegador (base local):** 4:00 → 4:53, 4:15, 5:27, 13:41…, persiste al recargar; sin video siguen en 4:00. **A tener en cuenta:** es la duración del video completo (una versión en vivo larga da 13:41); el editor de la canción sigue pisando la duración con la del audio subido si se guarda; en producción hay que apretar el botón una vez.
+
+---
+
+## 2026-10-02 — Seguridad: TanStack Start 1.168.60 (CVE-2026-102989) (frontend)
+
+**Motivo:** Vercel bloqueaba el deploy de `develop` por `@tanstack/react-start@1.168.32`: CVE-2026-102989 / GHSA-qx66-fv34-fjm8, XSS reflejado crítico (CVSS 9.3) en respuestas de server functions (`>=1.143.12 <1.168.60`). No se usó `DANGEROUSLY_DEPLOY_VULNERABLE_TANSTACK_START_XSS`.
+
+**Cambio:** `react-start` 1.168.60 (`start-server-core` 1.169.39), `react-router` 1.170.41, `router-plugin` 1.168.42 — los pins exactos de `react-start`/`start-plugin-core`, una sola copia del router en `package-lock.json` y `bun.lock`. Cambio de API: `ErrorComponentProps.error` pasó a `unknown`; el `errorComponent` raíz usa el tipo oficial. Se agregó `CHANGELOG.md` en el front. De paso: `ChordSheet.tsx` sin formatear rompía el lint del CI.
+
+**Verificado:** tsc, build y build con `VERCEL=1`; login, las 8 pantallas, navegación y search params en el navegador. **Encontrado de paso (ya existía, mismo resultado con 1.168.32):** `useApp must be used inside AppProvider` en consola al entrar sin sesión a `/acordes` o `/escuchar`, antes de redirigir a `/login`. Sin arreglar.
+
+---
+
 ## 2026-09-26 — Video flotante: aparece arriba del perfil en la barra lateral (frontend)
 
 **Pedido de Pablo:** que la ventanita del video de YouTube aparezca justo arriba del perfil (el hueco vacío de la barra lateral), y que se pueda seguir moviendo con el mouse a donde quiera.
