@@ -4,7 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
-## 2026-10-02 — Solo acordes: cada línea con letra es un compás (frontend)
+## 2026-10-02 — Solo acordes: filas de 4 compases; el "-" solo si está escrito (frontend)
+
+**Corrección de Pablo a la entrada de abajo ("1 línea = 1 compás"), que se revirtió** (`git revert`): no quería unir los acordes de una línea; el `-` va solo donde está escrito ("El verso empieza con [A][D], no hay ningún - entre medio"). Lo que quería es que los compases salgan **siempre de a 4 por fila**.
+
+**Cambio (`packChartRows` en `lib/chords.ts`, reemplaza a `mergeRepeatedChartLines` + `joinShortChartLines`):** cada acorde es un compás (unidos solo con `-` escrito); los compases de un tramo (hasta una sección o una línea con notas/marcas/`:]` a mano; las líneas vacías no cortan) se acomodan corridos en filas de 4, sin importar cuántos acordes tenga cada línea de letra. Antes de partir en filas se busca una vuelta de 4 compases o más que se repita seguida: se escribe una vez, en sus filas de 4, con `:]` (o `x3`…) al final, y sigue lo que viene (así el coro de "Al estar ante ti", vuelta de 9 compases, conserva su `:]`). Una fila que repite su mitad se sigue mostrando como antes (`| A | D | A | D |` → `| A | D |:]`).
+
+**Verificado:** tests de las dos funciones viejas reemplazados por 9 de `packChartRows` (verso de Pablo, coro de "Al estar ante ti", líneas de distinto largo, x3, secciones, marcas, `%`); 134 en total. En el navegador con el texto de Pablo: `| A | D | A/C# - F#m | D |:]` / `| A | D | Bm | F#m |` / `| D | E | F#m | D |` / `| A | D |:]`.
+---
+
+## 2026-10-02 — [REVERTIDO] Solo acordes: cada línea con letra es un compás (frontend)
 
 **Pedido de Pablo:** que el verso se vea en 4 compases, `| A | D | A/C# - F#m | D |:]`, y no `| A | D | A/C# | F#m |` + `| D |`. Elegido explícitamente: **1 línea de letra = 1 compás**.
 
