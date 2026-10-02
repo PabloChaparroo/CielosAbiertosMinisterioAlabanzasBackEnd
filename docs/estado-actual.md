@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Fix: la letra de una canción nueva arrancaba con texto de ejemplo (frontend)
+
+**Reportado por Pablo:** al crear una canción, el campo de letra venía con `{estrofa 1}` / `[G]Nueva canción del minis[D]terio` y había que borrarlo a mano cada vez.
+
+**Cambio (`UploadModal`):** en alta el campo arranca vacío; el ejemplo pasa a `placeholder` (se ve en gris y desaparece al escribir o pegar). Editar una canción no cambia: carga su letra. La letra sigue siendo obligatoria para guardar.
+
+**Verificado en el navegador:** Subir canción → valor vacío con el placeholder; Editar → conserva la letra.
+---
+
 ## 2026-10-02 — Fix: controles del reproductor descentrados en celular (frontend)
 
 **Reportado por Pablo:** en el reproductor a pantalla completa, anterior / play / siguiente se veían corridos a la izquierda en el celular.
