@@ -25,9 +25,9 @@ function setup({
 }
 
 describe("catálogo de permisos", () => {
-  it("son 8 recursos × 4 acciones = 32 permisos, sin repetidos", () => {
-    expect(PERMISSION_CATALOG).toHaveLength(32);
-    expect(new Set(PERMISSION_CATALOG).size).toBe(32);
+  it("son 9 recursos × 4 acciones = 36 permisos, sin repetidos", () => {
+    expect(PERMISSION_CATALOG).toHaveLength(36);
+    expect(new Set(PERMISSION_CATALOG).size).toBe(36);
   });
 
   it("formato recurso:acción, incluida la distinción propia/todas de anotaciones", () => {

@@ -8,7 +8,7 @@ const LEADER = "11111111-0000-4000-8000-000000000002";
 const valid = {
   title: "Culto del domingo",
   date: "2026-09-27",
-  type: "Culto Domingo",
+  type: "Culto Domingo a la mañana",
   leaderId: LEADER,
   items: [{ songId: SONG, key: "G" }],
   teamIds: [LEADER],
