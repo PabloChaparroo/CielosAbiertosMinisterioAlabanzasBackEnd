@@ -4,6 +4,13 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Inicio: "Ministerio de Adoración" debajo del título (frontend)
+
+**Pedido de Pablo:** que aparezca "Ministerio de Adoración" en algún lado de Inicio.
+
+**Cambio (`InicioPage`):** debajo de "Cielos Abiertos", en mayúsculas espaciadas (mismo estilo que el login). Verificado en el navegador en compu (1280px) y celular (Pixel 7).
+---
+
 ## 2026-10-02 — Fix: Chrome traducía la app ("Acordes" → "Acuerdos") (frontend)
 
 **Reportado por Pablo:** a una compañera, en producción, el menú le mostraba "Acuerdos", "Listas de canciones", "Instalar aplicación", "Administración".
