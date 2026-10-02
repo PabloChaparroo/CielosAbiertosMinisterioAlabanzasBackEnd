@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Acordes: pasar el texto a otro tono y guardarlo así (frontend)
+
+**Pedido de Pablo:** el selector de tono solo cambiaba la vista (derecha); el texto que se guarda (izquierda) seguía en el tono original. Quería poder guardar la canción en el tono nuevo.
+
+**Cambio:** editando, si el tono elegido no es el de la canción aparece **"Pasar el texto a {tono}"**: reescribe los acordes del borrador (`transposeChordPro` en `lib/chords.ts`) y ese tono pasa a ser el de partida. **Guardar** manda la letra nueva **y** `key` (si no, la canción quedaría "original C" con acordes en D y se transportaría dos veces). Cancelar vuelve al tono guardado. Solo se tocan acordes: secciones (`[Intro]`), marcas (`[%]`, `[x3]`, `[Sube Tono]`, `[Baja Tono]` — empieza con B) y letra quedan igual; usa el `isChord` del Transportador (reconoce `Am7b5`, `G4`, `(E)`); bemoles o sostenidos según el tono de destino.
+
+**Verificado:** 5 tests nuevos (138 en total), tsc, lint. En el navegador (Guardar interceptado, no se guardó nada): D → +2 → "Pasar el texto a E": `G A F#m G Bm7 A G Em7` → `A B G#m A C#m7 B A F#m7`, selector en E, Guardar manda `key: "E"` con esos acordes; Cancelar vuelve a D.
+---
+
 ## 2026-10-02 — Fix: "Copiar" del Transportador tiraba la página con el traductor de Chrome (frontend)
 
 **Reportado por Pablo:** a una compañera, en producción, al tocar Copiar en el Transportador le salía "Esta página no se cargó" (la pantalla de error, traducida por Chrome).
