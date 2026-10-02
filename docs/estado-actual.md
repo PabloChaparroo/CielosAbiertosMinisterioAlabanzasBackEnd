@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Módulo Instalar app: guía para tenerla en el celular (frontend)
+
+**Pedido de Pablo:** un módulo que vean todos con una guía de cómo instalar la app en el celular, para tener un acceso directo rápido.
+
+**Cambio:** ruta `/instalar` ("Instalar app" en Principal, sin permiso: cualquiera con sesión, invitados incluidos). Pestañas Android (Chrome: ⋮ → Instalar y crear acceso directo), iPhone (Safari: Compartir → Agregar a inicio) y Computadora (Chrome/Edge); abre sola la del dispositivo. Si el navegador ofrece el cartel nativo (`beforeinstallprompt`, escuchado desde que carga la app en `lib/install-prompt.ts`), aparece un botón "Instalar app" directo; si ya se usa instalada, lo dice. **Antes no era instalable de verdad:** no había manifest. Nuevo `public/manifest.webmanifest` (nombre, `standalone`, colores) + íconos PNG 192/512 (maskable) y `apple-touch-icon` 180, hechos desde el favicon; `theme-color` y título para iPhone en el `<head>`.
+
+**Verificado en el navegador:** músico lo ve en el menú del celular; Pixel 7 → pestaña Android, iPhone 14 → iPhone; Chromium: manifest sin errores y **0 errores de instalabilidad**. **Sin verificar:** la instalación real en un celular (headless no muestra el cartel); el botón directo solo aparece en Chrome/Edge/Android, nunca en iPhone.
+
+---
+
 ## 2026-10-02 — Módulo Transportador: acordes arriba de la letra → formato del cancionero (backend + frontend)
 
 **Pedido de Pablo:** las canciones de internet traen los acordes en la línea de arriba de la letra; pasarlas a mano al formato del cancionero (`Te al[G]abo`) lleva mucho tiempo. Un módulo donde se pega la canción y sale convertida para copiarla en Acordes. **No guarda nada.** Solo para quien tenga el permiso (hoy, Admin).
