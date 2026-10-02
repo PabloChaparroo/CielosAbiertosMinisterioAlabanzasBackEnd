@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Solo acordes: cada línea con letra es un compás (frontend)
+
+**Pedido de Pablo:** que el verso se vea en 4 compases, `| A | D | A/C# - F#m | D |:]`, y no `| A | D | A/C# | F#m |` + `| D |`. Elegido explícitamente: **1 línea de letra = 1 compás**.
+
+**Cambio (`chordsOnly` en `lib/chords.ts`):** en una línea **con letra**, todos sus acordes van unidos con `-` en un mismo compás. Las líneas que ya son solo acordes (`[D] [A] [Em] [Bm]-[A/C#]`, típicas de intros) siguen compás por compás; las marcas (`%`, `x3`, `Sube Tono`) nunca se unen. Las filas de 4 y el `:]` salen solos de lo que ya existía (`joinShortChartLines`, `mergeRepeatedChartLines`).
+
+**Cambia otras canciones (avisado antes de elegir):** ej. "Al estar ante ti": "Digno es el co[G]rdero de[D/F#] Dios" pasa de `| D/F# - G | D/F# |` a `| D/F# - G - D/F# |`; el coro queda en una fila de 4 con `:]`. Se actualizaron 3 tests a la regla nueva y se agregó el verso de Pablo (141 tests).
+
+**Verificado en el navegador** (vista previa, sin guardar): `| A | D | A/C# - F#m | D |:]`; un puente sin repetir sale en filas de 4.
+---
+
 ## 2026-10-02 — Solo acordes: el coro repetido con un renglón vacío en el medio va con :] (frontend)
 
 **Reportado por Pablo:** en "Al estar ante ti" el coro tiene dos vueltas con los mismos acordes y se mostraba entero dos veces en vez de una con `:]`.
