@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Fix: controles del reproductor descentrados en celular (frontend)
+
+**Reportado por Pablo:** en el reproductor a pantalla completa, anterior / play / siguiente se veían corridos a la izquierda en el celular.
+
+**Causa y cambio (`FullPlayer`):** la fila tiene volumen a la izquierda (w-40) y aleatorio a la derecha (w-10). En celular el volumen se oculta, así que a la izquierda no quedaba nada y el grupo del medio se corría 20px. Se agregó un hueco de w-10 a la izquierda solo en celular.
+
+**Verificado:** iPhone 14 y 1400px de ancho → el play queda a 0.0px del centro de la fila.
+---
+
 ## 2026-10-02 — Logo del ministerio como ícono de la app (frontend)
 
 **Pedido de Pablo:** usar el logo (alas, cruz, "Cielos Abiertos") como ícono de la app instalada y de la ventana de Windows. Pablo subió el original en alta calidad como `public/icono.jpeg` (1916×1896).
