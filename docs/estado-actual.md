@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Ventanita de YouTube más chica: 200×200 (frontend)
+
+**Pedido de Pablo:** achicar más la ventanita del video en el celular, tapaba media lista.
+
+**Cambio (`FLOAT_SMALL` en `useFloatingWindow`):** 260×200 → **200×200**, el mínimo que exige YouTube para el reproductor embebido (más chico deja de reproducir; esconderlo mientras suena va contra sus condiciones). Queda 60px más angosta; el video sigue con franjas negras arriba y abajo. El tamaño grande no cambia.
+
+**Verificado en el navegador (Pixel 7):** reproductor 200×200, ventanita 206×238 con borde y barra; título y los 3 botones entran.
+---
+
 ## 2026-10-02 — Fix: la letra de una canción nueva arrancaba con texto de ejemplo (frontend)
 
 **Reportado por Pablo:** al crear una canción, el campo de letra venía con `{estrofa 1}` / `[G]Nueva canción del minis[D]terio` y había que borrarlo a mano cada vez.
