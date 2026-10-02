@@ -13,6 +13,9 @@ export const CRUD_RESOURCES = [
   // Recurso aparte de "cancion" porque cancion:delete lo tiene también el Líder (borrar pistas y
   // links); solo cuenta la acción "delete" — el resto no se usa, como en "estadisticas".
   "cancion-definitiva",
+  // módulo Transportador: pasa acordes escritos arriba de la letra al formato del cancionero (no
+  // guarda nada, es solo del front). Solo cuenta "read" (abrir el módulo).
+  "transportador",
 ] as const;
 export type CrudResource = (typeof CRUD_RESOURCES)[number];
 
