@@ -8,7 +8,7 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Pedido de Pablo:** usar el logo (alas, cruz, "Cielos Abiertos") como ícono de la app instalada y de la ventana de Windows. Pablo subió el original en alta calidad como `public/icono.jpeg` (1916×1896).
 
-**Cambio:** todos los íconos salen de `icono.jpeg` sin recortar (completado a cuadrado con negro, achicado de a mitades para que quede nítido): `icon-192/512.png` (manifest, ventana y barra de tareas de Windows), `icon-maskable-512.png` (logo al 80% para que Android lo recorte en círculo sin cortarlo), `apple-touch-icon.png`, `favicon.ico` (16/32/48) y `favicon-96.png` (pestaña). Se borró `music-favicon.svg` (la nota amarilla).
+**Cambio:** todos los íconos salen de `icono.jpeg` sin recortar (completado a cuadrado con negro, achicado de a mitades para que quede nítido): `icon-192/512.png` (manifest, ventana y barra de tareas de Windows), `icon-maskable-512.png` (logo al 80% para que Android lo recorte en círculo sin cortarlo), `apple-touch-icon.png`, `favicon.ico` (16/32/48) y `favicon-96.png` (pestaña). Se borró `music-favicon.svg` (la nota amarilla). El logo también reemplaza la nube del encabezado del sidebar (`icon-192.png`, redondo, 40px).
 
 **Verificado:** Chromium sin errores de manifest ni de instalabilidad; los 6 archivos se sirven bien. **A tener en cuenta:** quien ya instaló la app ve el ícono nuevo cuando el navegador refresca el manifest (puede tardar hasta un día); a 16px el texto del logo no se lee.
 
