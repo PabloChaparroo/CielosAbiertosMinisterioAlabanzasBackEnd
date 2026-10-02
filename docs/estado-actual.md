@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Solo acordes: x2 / x3 / x4 fuera del compás (frontend)
+
+**Pedido de Pablo:** `| D | A | Em | Bm - A/C# x4 |` — las repeticiones tienen que ir fuera del `|`.
+
+**Cambio (`chordChartSegments` en `ChordSheet`):** un `[x2]`, `[x3]`, `[x4]`… con un compás abierto lo cierra y va afuera, con la misma notación que ya usaban las repeticiones agrupadas y `:]`: `| D | A | Em | Bm - A/C# |x4]` (se sigue alineando con los renglones de arriba). Si la marca está al principio de la línea queda `x2 | G | D |` (antes salía pegado: `x2| G`). Otras marcas (Sube Tono, Baja Tono) no cambian.
+
+**Verificado en el navegador** (vista previa, sin guardar): el intro de Pablo, `| G | D |x2]`, `| Em | C | D |x3]`, `x2 | G | D |`. 138 tests.
+
+---
+
+## 2026-10-02 — Se puede crear una canción sin letra (frontend)
+
+**Pedido de Pablo:** poder crear la canción sin cargar la letra.
+
+**Cambio (`UploadModal`):** la letra deja de ser obligatoria para Guardar (siguen siéndolo nombre, artista y tipo); el campo dice "(opcional)" y "Se puede cargar después". El backend ya aceptaba texto vacío (`@IsString`, columna `NOT NULL` con `""`).
+
+**Verificado contra la base local:** creada una canción sin letra (`POST /canciones` → 201, `chordpro: ""`), Acordes y Letras la abren sin errores, y se borró definitivamente al terminar.
+---
+
 ## 2026-10-02 — Acordes: pasar el texto a otro tono y guardarlo así (frontend)
 
 **Pedido de Pablo:** el selector de tono solo cambiaba la vista (derecha); el texto que se guarda (izquierda) seguía en el tono original. Quería poder guardar la canción en el tono nuevo.
