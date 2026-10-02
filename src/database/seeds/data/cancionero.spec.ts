@@ -36,7 +36,8 @@ describe("cancionero (datos de songs:import)", () => {
       expect(s.key, s.title).toMatch(/^[A-G][#b]?m?$/);
       expect(s.artist.trim(), s.title).not.toBe("");
       expect(s.chordpro.trim(), s.title).not.toBe("");
-      expect(s.tags.length, s.title).toBeGreaterThan(0);
+      // los temas pueden faltar: "Al estar ante ti" solo tenía "Adoración", que es un tipo y dejó
+      // de ser tema (migración RemoveTipoTags)
     }
   });
 });

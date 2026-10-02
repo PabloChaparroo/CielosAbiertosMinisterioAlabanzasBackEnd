@@ -36,7 +36,7 @@ export const CANCIONERO: CancioneroSong[] = [
     key: "G",
     bpm: 84,
     compas: "4/4",
-    tags: ["Adoración", "Entrega"],
+    tags: ["Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [G] [Bm] [G] [D] - [A]
@@ -62,7 +62,7 @@ export const CANCIONERO: CancioneroSong[] = [
     key: "F",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Entrega"],
+    tags: ["Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Bb] [F] [C] [Dm]
@@ -97,7 +97,7 @@ export const CANCIONERO: CancioneroSong[] = [
     key: "D",
     bpm: 72,
     compas: "4/4",
-    tags: ["Adoración"],
+    tags: [],
     tipo: ADORACION,
     chordpro: `{Intro}
 [D] [A] [Em] [Bm] - [A/C#]
@@ -135,7 +135,7 @@ Y al que es[C]tá en el trono sea el ho[A]nor [%]
     key: "A",
     bpm: 71,
     compas: "4/4",
-    tags: ["Adoración", "Entrega"],
+    tags: ["Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [A]
@@ -167,7 +167,7 @@ Final = Verso`,
     key: "Dm",
     bpm: 72,
     compas: "6/8",
-    tags: ["Adoración", "Gratitud"],
+    tags: ["Gratitud"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Dm] [C] [Bb] [F]
@@ -191,7 +191,7 @@ Oh, el in[Dm]menso, sin i[C]gual, asombro[Bb]so amor de [F]Dios`,
     key: "A",
     bpm: 68,
     compas: "4/4",
-    tags: ["Adoración", "Fe", "Entrega", "Rendición"],
+    tags: ["Fe", "Entrega", "Rendición"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [A] [A/F#] [A/E] [A/F#]
@@ -224,7 +224,7 @@ Que estar a tus [F#m]pies, que estar a tus pies
     key: "Am",
     bpm: 72,
     compas: "4/4",
-    tags: ["Adoración", "Identidad", "Fe", "Sanidad"],
+    tags: ["Identidad", "Fe", "Sanidad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Am] - [G] [C]
@@ -264,7 +264,7 @@ Que estar a tus [F#m]pies, que estar a tus pies
     key: "F#",
     bpm: 60,
     compas: "4/4",
-    tags: ["Adoración", "Comunión", "Exaltación", "Fe"],
+    tags: ["Comunión", "Exaltación", "Fe"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [F#] [B] [Emb] - [C#] [B] - [Bm]
@@ -305,7 +305,7 @@ Te [G#m7]adoraré te ado[C#sus4]raré
     key: "Am",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Fe", "Sanidad"],
+    tags: ["Fe", "Sanidad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Am] - [G] [F]
@@ -333,7 +333,7 @@ Precioso hijo de Dios
     key: "D",
     bpm: 63,
     compas: "4/4",
-    tags: ["Adoración", "Sanidad", "Fe", "Rendición"],
+    tags: ["Sanidad", "Fe", "Rendición"],
     tipo: ADORACION,
     // la línea en blanco después de los acordes es a propósito: sin ella, el parser pega una
     // línea de solo acordes con la letra de abajo, y acá los acordes no son de esa línea
@@ -390,7 +390,7 @@ Levanta tus manos`,
     key: "F",
     bpm: 67,
     compas: "4/4",
-    tags: ["Adoración", "Rendición", "Fe", "Gratitud"],
+    tags: ["Rendición", "Fe", "Gratitud"],
     tipo: ADORACION,
     chordpro: `{Coro}
 [F]Cristo Je[G]sús
@@ -404,7 +404,7 @@ Eres mi pleni[Am]tud - [Em]`,
     key: "G",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Exaltación", "Júbilo"],
+    tags: ["Exaltación", "Júbilo"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [G] [G] - [D/F#] [Em] [Em] - [D] [C] [D] [G]
@@ -430,7 +430,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "Am",
     bpm: 69,
     compas: "4/4",
-    tags: ["Adoración", "Rendición", "Entrega"],
+    tags: ["Rendición", "Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [F] [C] - [G] |:]
@@ -457,7 +457,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "A",
     bpm: 65,
     compas: "4/4",
-    tags: ["Adoración", "Exaltación"],
+    tags: ["Exaltación"],
     tipo: ADORACION,
     chordpro: `{Verso}
 [A]No tengo nada para ofre[F#m]cer
@@ -475,7 +475,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "A",
     bpm: 82,
     compas: "3/4",
-    tags: ["Fe", "Júbilo", "Adoración"],
+    tags: ["Fe", "Júbilo"],
     tipo: ALABANZA,
     chordpro: `{Intro}
 [A/C#] [D] [F#m] [E] |:]
@@ -536,7 +536,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "A",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Fe", "Comunión"],
+    tags: ["Fe", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [D] [F#m] [D] [F#m] [D] [F#m] [E] [%]
@@ -565,7 +565,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "G",
     bpm: 64,
     compas: "4/4",
-    tags: ["Adoración", "Entrega"],
+    tags: ["Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Em] - [G/B] [C] - [D]
@@ -586,7 +586,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "G",
     bpm: 72,
     compas: "4/4",
-    tags: ["Adoración", "Rendición", "Entrega"],
+    tags: ["Rendición", "Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C] [%] [Bm] [Em]
@@ -607,7 +607,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "G",
     bpm: 67,
     compas: "4/4",
-    tags: ["Adoración", "Comunión"],
+    tags: ["Comunión"],
     tipo: ADORACION,
     chordpro: `{Verso}
 [G] [D] [Em] [C] |:]
@@ -661,7 +661,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "E",
     bpm: 62,
     compas: "4/4",
-    tags: ["Adoración", "Rendición", "Comunión"],
+    tags: ["Rendición", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Verso}
 [E]Quiero entre[A]gar - [B]te [E]mis ilu[C#m]siones
@@ -679,7 +679,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "A",
     bpm: 66,
     compas: "4/4",
-    tags: ["Comunión", "Gratitud", "Adoración", "Rendición"],
+    tags: ["Comunión", "Gratitud", "Rendición"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [A] - [D] - [A] - [F#m] [F#m] [E] - [D] - [A] [A]
@@ -752,7 +752,7 @@ Y todos lo ve[C]rán, cuán [D]grande es [G]Dios
     key: "B",
     bpm: 65,
     compas: "4/4",
-    tags: ["Búsqueda", "Adoración", "Comunión"],
+    tags: ["Búsqueda", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [B/D#] [F#] |:]
@@ -789,7 +789,7 @@ Coro Batería: [C#] - [F#] [B]
     key: "Em",
     bpm: 74,
     compas: "4/4",
-    tags: ["Júbilo", "Alabanza", "Exaltación"],
+    tags: ["Júbilo", "Exaltación"],
     tipo: ALABANZA,
     chordpro: `{Intro}
 [Em] [D] [Bm7] [Em] |:]
@@ -810,7 +810,7 @@ Coro Batería: [C#] - [F#] [B]
     key: "D",
     bpm: 68,
     compas: "4/4",
-    tags: ["Adoración", "Búsqueda", "Comunión"],
+    tags: ["Búsqueda", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [G] [A] [F#m] [G]
@@ -857,7 +857,7 @@ Inunda este lu[G]gar y llena la at[Em]mósfera
     key: "G",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Exaltación", "Júbilo"],
+    tags: ["Exaltación", "Júbilo"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C] - [G] [D] [Bm] [Em] - [D] [G] |:]
@@ -879,7 +879,7 @@ _2doVers [G]
     key: "A",
     bpm: 68,
     compas: "4/4",
-    tags: ["Sanidad", "Adoración", "Fe", "Comunión"],
+    tags: ["Sanidad", "Fe", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Verso}
 [D]Hay una un[E]ción a[A]quí
@@ -914,7 +914,7 @@ Con el po[D]der de tu Es[E]píritu [A]Santo [%]
     key: "Em",
     bpm: 70,
     compas: "4/4",
-    tags: ["Búsqueda", "Adoración", "Avivamiento"],
+    tags: ["Búsqueda", "Avivamiento"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C] - [Em] [D] |:]
@@ -937,7 +937,7 @@ Con el po[D]der de tu Es[E]píritu [A]Santo [%]
     key: "D",
     bpm: 68,
     compas: "4/4",
-    tags: ["Exaltación", "Adoración", "Fe", "Victoria"],
+    tags: ["Exaltación", "Fe", "Victoria"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [D]
@@ -966,7 +966,7 @@ Con el po[D]der de tu Es[E]píritu [A]Santo [%]
     key: "C#",
     bpm: 84,
     compas: "6/8",
-    tags: ["Gratitud", "Adoración", "Identidad"],
+    tags: ["Gratitud", "Identidad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C#] [%] [Bbm] [%] [Ab] [%] [Gb] [%] :]
@@ -1028,7 +1028,7 @@ La [Am]niña de tus [F]ojos, porque me amaste a mí
     key: "F#",
     bpm: 68,
     compas: "4/4",
-    tags: ["Búsqueda", "Rendición", "Adoración"],
+    tags: ["Búsqueda", "Rendición"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [B] [F#/Bb] [B] [C#]
@@ -1188,7 +1188,7 @@ En ti mis [G]ojos fi[D]ja[A]ré
     key: "Bb",
     bpm: 73,
     compas: "4/4",
-    tags: ["Exaltación", "Majestad", "Adoración"],
+    tags: ["Exaltación", "Majestad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [Bb]
@@ -1231,7 +1231,7 @@ Pode[Cm]roso [Bb]Dios - [F]
     key: "C",
     bpm: 70,
     compas: "4/4",
-    tags: ["Adoración", "Exaltación", "Comunión"],
+    tags: ["Exaltación", "Comunión"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C] [G] [Am] - [F] [G] |:]
@@ -1284,7 +1284,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "A",
     bpm: 72,
     compas: "4/4",
-    tags: ["Exaltación", "Adoración", "Majestad"],
+    tags: ["Exaltación", "Majestad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [A] [%] [A/C#] - [D] [A]
@@ -1385,7 +1385,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "E",
     bpm: 74,
     compas: "4/4",
-    tags: ["Gratitud", "Adoración", "Confianza"],
+    tags: ["Gratitud", "Confianza"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [A] [C#m] [E] [G#m]
@@ -1458,7 +1458,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "C#m",
     bpm: 73,
     compas: "4/4",
-    tags: ["Adoración", "Rendición", "Entrega"],
+    tags: ["Rendición", "Entrega"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [C#m] [A] |:]
@@ -1483,7 +1483,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "D",
     bpm: 68,
     compas: "4/4",
-    tags: ["Adoración", "Gratitud", "Humildad"],
+    tags: ["Gratitud", "Humildad"],
     tipo: ADORACION,
     chordpro: `{Intro}
 [D] - [A] [Em] - [G] |:]
@@ -1524,7 +1524,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "C",
     bpm: 85,
     compas: "4/4",
-    tags: ["Búsqueda", "Adoración", "Espíritu Santo"],
+    tags: ["Búsqueda", "Espíritu Santo"],
     tipo: ADORACION,
     chordpro: `{Verso}
 [C] - [F] [C] || [F] [%] [C] [%] |:]
@@ -1539,7 +1539,7 @@ De Tu fra[Em]gancia, de Tu po[C]der
     key: "Dm",
     bpm: 70,
     compas: "4/4",
-    tags: ["Espíritu Santo", "Avivamiento", "Adoración"],
+    tags: ["Espíritu Santo", "Avivamiento"],
     tipo: ADORACION,
     chordpro: `{Verso / Coro}
 [Dm] [C] [Bb] [Gm] [A]

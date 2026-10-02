@@ -1,8 +1,7 @@
 import { Check, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-/** Temas originales del catálogo */
+/** Temas originales del catálogo (sin "Adoración": es un tipo de canción, no un tema) */
 const BASE_TAGS = [
-  "Adoración",
   "Júbilo",
   "Navidad",
   "Sanidad",
@@ -14,7 +13,8 @@ const BASE_TAGS = [
 
 /**
  * Temas agregados con el cancionero real (migración AddCancioneroTags): los 28 que usa el
- * documento, tal cual, sin fusionar — Pablo los va a revisar y ordenar a mano.
+ * documento, tal cual, sin fusionar — Pablo los va a revisar y ordenar a mano. Sin "Alabanza": es
+ * un tipo de canción, no un tema (migración RemoveTipoTags).
  */
 export const CANCIONERO_TAGS = [
   "Fe",
@@ -22,7 +22,6 @@ export const CANCIONERO_TAGS = [
   "Identidad",
   "Exaltación",
   "Búsqueda",
-  "Alabanza",
   "Guerra Espiritual",
   "Avivamiento",
   "Servicio",
