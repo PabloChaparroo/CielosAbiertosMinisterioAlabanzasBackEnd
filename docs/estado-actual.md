@@ -4,6 +4,26 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Adoración y Alabanza dejan de ser temas (backend)
+
+**Pedido de Pablo:** en Temas aparecían "Adoración" y "Alabanza", que son **tipos** de canción (`tipos_cancion`), no temas.
+
+**Cambio:** migración `RemoveTipoTags` borra esos dos de `tags` (sus asignaciones en `song_tags` se van por `ON DELETE CASCADE`) y rehace el `CHECK` con los 34 temas que quedan (lista escrita en la migración; comprobado que es igual a la de la entidad). El **tipo** de cada canción no se toca. Entidad `Tag` sin los dos; `cancionero.ts` y `run-seed.ts` sin ellos en las listas de temas. "Al estar ante ti" solo tenía "Adoración" y quedó sin temas: el test del cancionero ya no exige al menos un tema (no se le inventó uno). El `down` vuelve a crear los dos temas pero **no** las asignaciones borradas.
+
+**Verificado:** 88 tests back, tsc, oxlint; migración corrida en local; en el navegador el filtro y el formulario muestran 34 temas sin los dos, y el filtro de tipos sigue con Adoración y Alabanza. **En producción:** `npm run migration:run` (borra esas asignaciones en las canciones de producción).
+
+---
+
+## 2026-10-02 — Fix: las listas de los desplegables se veían blancas (frontend)
+
+**Reportado por Pablo:** al abrir un filtro (tipo, secuencia, temas) la lista salía blanca con letras doradas.
+
+**Cambio (`styles.css`):** `color-scheme: dark` en `html` (la app es solo oscura: los controles nativos del navegador se dibujan oscuros) y `option` con fondo de tarjeta y texto normal, aunque el filtro esté dorado por tener algo elegido. Arregla los 8 lugares que usan `<select>`.
+
+**Verificado:** estilos calculados en el navegador (`color-scheme: dark`, opción oscura con texto claro). La lista abierta en sí no sale en las capturas automáticas: falta mirarla en Windows.
+
+---
+
 ## 2026-10-02 — Ventanita de YouTube más chica: 200×200 (frontend)
 
 **Pedido de Pablo:** achicar más la ventanita del video en el celular, tapaba media lista.
