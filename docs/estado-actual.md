@@ -4,6 +4,43 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Ventanita de YouTube más chica: 200×200 (frontend)
+
+**Pedido de Pablo:** achicar más la ventanita del video en el celular, tapaba media lista.
+
+**Cambio (`FLOAT_SMALL` en `useFloatingWindow`):** 260×200 → **200×200**, el mínimo que exige YouTube para el reproductor embebido (más chico deja de reproducir; esconderlo mientras suena va contra sus condiciones). Queda 60px más angosta; el video sigue con franjas negras arriba y abajo. El tamaño grande no cambia.
+
+**Verificado en el navegador (Pixel 7):** reproductor 200×200, ventanita 206×238 con borde y barra; título y los 3 botones entran.
+---
+
+## 2026-10-02 — Fix: la letra de una canción nueva arrancaba con texto de ejemplo (frontend)
+
+**Reportado por Pablo:** al crear una canción, el campo de letra venía con `{estrofa 1}` / `[G]Nueva canción del minis[D]terio` y había que borrarlo a mano cada vez.
+
+**Cambio (`UploadModal`):** en alta el campo arranca vacío; el ejemplo pasa a `placeholder` (se ve en gris y desaparece al escribir o pegar). Editar una canción no cambia: carga su letra. La letra sigue siendo obligatoria para guardar.
+
+**Verificado en el navegador:** Subir canción → valor vacío con el placeholder; Editar → conserva la letra.
+---
+
+## 2026-10-02 — Fix: controles del reproductor descentrados en celular (frontend)
+
+**Reportado por Pablo:** en el reproductor a pantalla completa, anterior / play / siguiente se veían corridos a la izquierda en el celular.
+
+**Causa y cambio (`FullPlayer`):** la fila tiene volumen a la izquierda (w-40) y aleatorio a la derecha (w-10). En celular el volumen se oculta, así que a la izquierda no quedaba nada y el grupo del medio se corría 20px. Se agregó un hueco de w-10 a la izquierda solo en celular.
+
+**Verificado:** iPhone 14 y 1400px de ancho → el play queda a 0.0px del centro de la fila.
+---
+
+## 2026-10-02 — Logo del ministerio como ícono de la app (frontend)
+
+**Pedido de Pablo:** usar el logo (alas, cruz, "Cielos Abiertos") como ícono de la app instalada y de la ventana de Windows. Pablo subió el original en alta calidad como `public/icono.jpeg` (1916×1896).
+
+**Cambio:** todos los íconos salen de `icono.jpeg` sin recortar (completado a cuadrado con negro, achicado de a mitades para que quede nítido): `icon-192/512.png` (manifest, ventana y barra de tareas de Windows), `icon-maskable-512.png` (logo al 80% para que Android lo recorte en círculo sin cortarlo), `apple-touch-icon.png`, `favicon.ico` (16/32/48) y `favicon-96.png` (pestaña). Se borró `music-favicon.svg` (la nota amarilla). El logo también reemplaza la nube del encabezado del sidebar (`icon-192.png`, redondo, 40px). Y el de la pantalla de login (96px, con el brillo dorado). Al abrir la app, la pantalla de carga (mientras se confirma la sesión, `AuthGate`) muestra el logo grande con un pulso en vez de solo el spinner; y el manifest usa fondo negro (`background_color: #000000`) para que la pantalla de inicio que arma Android con el ícono haga juego con el fondo del logo. iPhone no arma pantalla de inicio sola: ahí se ve la pantalla de carga de la app.
+
+**Verificado:** Chromium sin errores de manifest ni de instalabilidad; los 6 archivos se sirven bien. **A tener en cuenta:** quien ya instaló la app ve el ícono nuevo cuando el navegador refresca el manifest (puede tardar hasta un día); a 16px el texto del logo no se lee.
+
+---
+
 ## 2026-10-02 — Módulo Instalar app: guía para tenerla en el celular (frontend)
 
 **Pedido de Pablo:** un módulo que vean todos con una guía de cómo instalar la app en el celular, para tener un acceso directo rápido.
