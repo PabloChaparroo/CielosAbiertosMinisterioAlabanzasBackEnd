@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Solo acordes: compases centrados en su columna (frontend)
+
+**Pedido de Pablo:** en la vista de compases quedaba mucho espacio a la derecha de los compases cortos; el `%` tenía que verse en el medio.
+
+**Cambio (`ChordSheet`, `alignBars`):** cada columna sigue midiendo lo que su compás más largo en toda la hoja (así los `|` quedan alineados entre renglones), pero el compás ahora va **centrado** en ese ancho en vez de pegado a la izquierda: `|   %    |`, `|  F#m   |`.
+
+**Verificado en el navegador** (vista previa del editor, sin guardar) con el ejemplo de Pablo: `| D  |   Bm   | G  | D - A9 |:]` / `| D  |  F#m   | G  |   %    |:]`.
+---
+
 ## 2026-10-02 — Adoración y Alabanza dejan de ser temas (backend)
 
 **Pedido de Pablo:** en Temas aparecían "Adoración" y "Alabanza", que son **tipos** de canción (`tipos_cancion`), no temas.
