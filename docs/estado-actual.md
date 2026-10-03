@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — Nuevo setlist: título por defecto con la fecha (frontend)
+
+**Pedido de Pablo:** que el título predeterminado sea la fecha elegida ("Domingo 04/10"), editable; si primero escribió un nombre y después cambia la fecha, que no se lo pise.
+
+**Cambio (`NewSetlistModal`):** el título arranca con `titleForDate(fecha)` (día de la semana + dd/mm) y se actualiza al cambiar la fecha (desplegable o calendario) mientras el usuario no haya escrito uno propio. Escribir un título lo deja fijo; borrarlo entero vuelve a seguir la fecha. Si el setlist sale de una lista predefinida, se respeta su título.
+
+**Verificado en el navegador:** al abrir "Domingo 04/10"; miércoles 14/10 → "Miércoles 14/10"; fecha a mano 25/10 → "Domingo 25/10"; escribir "Santa Cena" y elegir 11/10 → sigue "Santa Cena" (la fecha sí cambia); borrar y elegir 18/10 → "Domingo 18/10".
+---
+
 ## 2026-10-03 — Nuevo setlist: desplegable de fechas (frontend)
 
 **Pedido de Pablo:** los atajos "Este domingo / Domingo siguiente / Este miércoles / Miércoles siguiente" confundían (dos "siguiente"); que sea un desplegable con los próximos 4 domingos y 4 miércoles.
