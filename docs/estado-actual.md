@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — Reproductor: repetir la canción y repetir un tramo (frontend)
+
+**Pedido de Pablo:** un botón para que la canción se repita, y otro para repetir un tramo en loop (ej. practicar el solo de guitarra de 3:45 a 4:20) hasta sacarlo.
+
+**Cambio:** `RepeatControls` (nuevo), en la pantalla completa (fila debajo de la barra de progreso, para no descentrar anterior/play/siguiente) y en la barra de abajo en compu (solo íconos). **Repetir**: al terminar vuelve al principio en vez de pasar a la siguiente. **Repetir tramo**: panel con Desde / Hasta (`3:45`, también segundos sueltos) y botón "Ahora" para marcar el momento que va sonando; al activarlo salta al inicio del tramo (y arranca si estaba en pausa); al llegar al "Hasta" vuelve al "Desde"; el botón muestra `3:45–4:20` y se quita con la ✕. Funciona con audio subido y con YouTube (`MiniPlayer`: `handleEnded` / `keepInLoop` sobre los controles comunes `media`; `YoutubeStage` expone `play()`). El tramo se borra al cambiar de canción; "Repetir" se mantiene. `lib/time.ts`: `parseTime`, `formatTime`, `validateLoop` (errores en castellano; "Hasta" pasado el final se recorta).
+
+**Verificado:** 15 tests nuevos de `lib/time` (151 en total), tsc, lint. En el navegador con "Desde mi interior" (audio subido; YouTube no reproduce en el navegador de prueba): tramo 0:05–0:08 durante 10 s → tiempo siempre entre 5,01 y 8,13 s y vuelve al inicio; al quitarlo sigue de largo; con Repetir, al llegar al final vuelve a empezar la misma canción. **Sin verificar:** el loop con un video de YouTube real (misma lógica, avisa el tiempo cada 250 ms).
+---
+
 ## 2026-10-02 — Temas opcionales al crear una canción (backend + frontend)
 
 **Contexto:** Pablo vio en producción que Temas seguía mostrando "Adoración" y "Alabanza". Causa: el commit de la migración `RemoveTipoTags` (`7dd1bd1`) estaba solo en `develop` del backend; `main` (lo que deploya Render) seguía en el merge del PR #7. Se resuelve mergeando `develop` → `main` del backend (la migración corre sola en el Build Command de Render).
