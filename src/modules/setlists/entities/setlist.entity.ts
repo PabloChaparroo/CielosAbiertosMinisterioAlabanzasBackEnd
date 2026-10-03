@@ -68,4 +68,8 @@ export class Setlist extends BaseAuditEntity {
     inverseJoinColumn: { name: "user_id" },
   })
   team!: Relation<User>[];
+
+  /** Qué toca cada miembro del equipo en esta lista: { [userId]: instrumentos } */
+  @Column({ type: "jsonb", default: () => "'{}'" })
+  teamInstruments!: Record<string, string[]>;
 }
