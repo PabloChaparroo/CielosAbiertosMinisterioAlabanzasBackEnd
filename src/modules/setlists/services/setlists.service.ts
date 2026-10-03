@@ -4,6 +4,7 @@ import { In, Repository } from "typeorm";
 import { User } from "../../users/entities/user.entity";
 import { CreateSetlistDto, UpdateSetlistDto } from "../dto/setlist.dto";
 import { SetlistItem } from "../entities/setlist-item.entity";
+import { cleanTeamInstruments } from "../team-instruments";
 import { Setlist } from "../entities/setlist.entity";
 
 @Injectable()
@@ -49,6 +50,7 @@ export class SetlistsService {
       type: dto.type,
       leader,
       team,
+      teamInstruments: cleanTeamInstruments(dto.teamInstruments, dto.teamIds),
       items: dto.items.map((item, index) =>
         this.setlistItemRepo.create({
           song: { id: item.songId } as never,
@@ -69,6 +71,13 @@ export class SetlistsService {
     }
     if (dto.teamIds) {
       setlist.team = await this.resolveTeam(dto.teamIds);
+    }
+    // si cambia el equipo o lo que toca cada uno: se limpia contra el equipo vigente
+    if (dto.teamIds || dto.teamInstruments !== undefined) {
+      setlist.teamInstruments = cleanTeamInstruments(
+        dto.teamInstruments ?? setlist.teamInstruments,
+        setlist.team.map((u) => u.id),
+      );
     }
     if (dto.items) {
       await this.setlistItemRepo.delete({ setlist: { id } });

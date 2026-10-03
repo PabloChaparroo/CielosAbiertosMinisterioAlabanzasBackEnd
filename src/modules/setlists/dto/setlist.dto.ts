@@ -10,6 +10,7 @@ import {
   IsString,
   IsUUID,
   ValidateNested,
+  IsObject,
 } from "class-validator";
 import { EVENT_TYPES, EventType } from "../entities/setlist.entity";
 
@@ -51,6 +52,11 @@ export class CreateSetlistDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   teamIds!: string[];
+
+  /** Qué toca cada miembro en esta lista: { [userId]: ["Guitarra eléctrica"] } (se valida en el servicio) */
+  @IsOptional()
+  @IsObject()
+  teamInstruments?: Record<string, string[]>;
 }
 
 export class UpdateSetlistDto extends PartialType(CreateSetlistDto) {}

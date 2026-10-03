@@ -61,6 +61,7 @@ export class UsersService {
       name: dto.name,
       avatarColor: dto.avatarColor,
       initials: dto.initials,
+      instruments: [...new Set(dto.instruments ?? [])],
     });
     return this.userRepo.save(user);
   }
@@ -75,6 +76,7 @@ export class UsersService {
       ...(dto.name !== undefined && { name: dto.name }),
       ...(dto.avatarColor !== undefined && { avatarColor: dto.avatarColor }),
       ...(dto.initials !== undefined && { initials: dto.initials }),
+      ...(dto.instruments !== undefined && { instruments: [...new Set(dto.instruments)] }),
     });
     return this.userRepo.save(user);
   }

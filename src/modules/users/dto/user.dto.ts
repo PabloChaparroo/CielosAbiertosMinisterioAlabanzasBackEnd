@@ -1,5 +1,6 @@
 import { PartialType } from "@nestjs/swagger";
-import { IsEmail, IsString, MinLength } from "class-validator";
+import { IsArray, IsEmail, IsIn, IsOptional, IsString, MinLength } from "class-validator";
+import { INSTRUMENTS } from "../instruments";
 
 export class CreateUserDto {
   @IsEmail()
@@ -17,6 +18,12 @@ export class CreateUserDto {
 
   @IsString()
   initials!: string;
+
+  /** Instrumentos que toca (puede ser más de uno) */
+  @IsOptional()
+  @IsArray()
+  @IsIn(INSTRUMENTS, { each: true })
+  instruments?: string[];
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}

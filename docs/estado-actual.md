@@ -4,6 +4,192 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — Instrumentos: qué toca cada miembro y qué toca en cada lista (backend + frontend)
+
+**Pedido de Pablo:** asignar a cada usuario los instrumentos que toca (puede ser más de uno), al crearlo o editarlo, para después decir en cada lista de canciones qué toca cada uno (ej. Sofía, guitarra). Valores fijos: Guitarra eléctrica, Guitarra acústica, Teclado, Voz, Percusión, Batería, Bajo, Sonido, Multimedia.
+
+**Backend:** `modules/users/instruments.ts` (`INSTRUMENTS`). `users.instruments` (`text[]`, default `{}`), en `CreateUserDto`/`UpdateUserDto` (`/equipo`) con `@IsIn(INSTRUMENTS, { each })`, opcional. `setlists.team_instruments` (`jsonb`, default `{}`, `{ [userId]: instrumentos }`), en `CreateSetlistDto`/`UpdateSetlistDto`; `cleanTeamInstruments` (en `setlists/team-instruments.ts`) valida en el servicio: instrumento desconocido o formato inválido → 400; descarta a quien no está en el equipo (si se lo saca del equipo, se va su instrumento), repetidos y listas vacías. Migración `AddInstruments` (sin CHECK: los valores se validan en la API para poder sumar instrumentos sin migración).
+
+**Frontend:** `InstrumentPicker` (chips, varios). Alta y edición de miembro: "Instrumentos que toca"; el detalle del miembro los muestra. Nueva lista: por cada miembro del equipo, "X toca:" con sus instrumentos (todos si no tiene cargados); si toca uno solo se marca solo. Detalle de la lista: "Equipo asignado" muestra lo que toca cada uno en esa lista (si no tiene nada, su rol) y quien puede editar lo cambia con el lápiz.
+
+**Verificado:** back 98 tests (nuevos: DTO de usuario con instrumentos, `cleanTeamInstruments`), tsc, oxlint; front 151 tests, tsc, lint. Migración corrida en local. En el navegador contra la base local: Sofía guardada con Guitarra eléctrica + Voz (su detalle los muestra); nueva lista con Sofía → solo le ofrece esos dos, se guarda `{ Sofía: [Guitarra eléctrica] }`; en el detalle se ve y con el lápiz se agrega Voz (queda guardado). Lista de prueba borrada y Sofía devuelta sin instrumentos. **En producción:** deploy del backend (la migración corre sola en Render) antes del front.
+---
+
+## 2026-10-03 — "Setlists" pasa a llamarse "Listas de canciones" (frontend)
+
+**Pedido de Pablo:** en vez de "Setlists", "Listas de canciones".
+
+**Cambio (solo textos visibles):** menú, título de la página (y pestaña del navegador), "Nueva lista" / "Nueva lista de canciones" / "Crear lista", Inicio ("Ver listas", "Próxima lista"), avisos ("Solo líderes pueden crear listas de canciones", "…modificar esta lista", "Volver a listas de canciones"), al eliminar una canción ("se saca de 2 listas de canciones"), etiqueta del permiso en Roles y Permisos, descripciones. **No se tocaron** la ruta `/setlists`, los endpoints ni los nombres internos (links y datos siguen igual).
+
+**Verificado en el navegador:** menú, página y modal con los textos nuevos; ninguna aparición de "setlist" en el texto de la página. 151 tests, tsc.
+---
+
+## 2026-10-03 — Nuevo setlist: título por defecto con la fecha (frontend)
+
+**Pedido de Pablo:** que el título predeterminado sea la fecha elegida ("Domingo 04/10"), editable; si primero escribió un nombre y después cambia la fecha, que no se lo pise.
+
+**Cambio (`NewSetlistModal`):** el título arranca con `titleForDate(fecha)` (día de la semana + dd/mm) y se actualiza al cambiar la fecha (desplegable o calendario) mientras el usuario no haya escrito uno propio. Escribir un título lo deja fijo; borrarlo entero vuelve a seguir la fecha. Si el setlist sale de una lista predefinida, se respeta su título.
+
+**Verificado en el navegador:** al abrir "Domingo 04/10"; miércoles 14/10 → "Miércoles 14/10"; fecha a mano 25/10 → "Domingo 25/10"; escribir "Santa Cena" y elegir 11/10 → sigue "Santa Cena" (la fecha sí cambia); borrar y elegir 18/10 → "Domingo 18/10".
+---
+
+## 2026-10-03 — Nuevo setlist: desplegable de fechas (frontend)
+
+**Pedido de Pablo:** los atajos "Este domingo / Domingo siguiente / Este miércoles / Miércoles siguiente" confundían (dos "siguiente"); que sea un desplegable con los próximos 4 domingos y 4 miércoles.
+
+**Cambio (`NewSetlistModal`):** un `<select>` con dos grupos (Domingos, Miércoles), 4 fechas cada uno ("Domingo 04/10 (este)", "Domingo 11/10"…; "(hoy)" si es ese día). Elegir una cambia la fecha y mantiene la hora elegida; si la fecha del formulario coincide con una opción, queda marcada en dorado.
+
+**Verificado en el navegador** (sábado 03/10): domingos 04, 11, 18, 25/10 y miércoles 07, 14, 21, 28/10; al abrir marca el domingo 04/10; elegir el 3er miércoles → 21/10 10:30; con la hora en 19:30, elegir el 2do domingo → 11/10 19:30.
+---
+
+## 2026-10-03 — Reproductor: repetir la canción y repetir un tramo (frontend)
+
+**Pedido de Pablo:** un botón para que la canción se repita, y otro para repetir un tramo en loop (ej. practicar el solo de guitarra de 3:45 a 4:20) hasta sacarlo.
+
+**Cambio:** `RepeatControls` (nuevo), en la pantalla completa (fila debajo de la barra de progreso, para no descentrar anterior/play/siguiente) y en la barra de abajo en compu (solo íconos). **Repetir**: al terminar vuelve al principio en vez de pasar a la siguiente. **Repetir tramo**: panel con Desde / Hasta (`3:45`, también segundos sueltos) y botón "Ahora" para marcar el momento que va sonando; al activarlo salta al inicio del tramo (y arranca si estaba en pausa); al llegar al "Hasta" vuelve al "Desde"; el botón muestra `3:45–4:20` y se quita con la ✕. Funciona con audio subido y con YouTube (`MiniPlayer`: `handleEnded` / `keepInLoop` sobre los controles comunes `media`; `YoutubeStage` expone `play()`). El tramo se borra al cambiar de canción; "Repetir" se mantiene. `lib/time.ts`: `parseTime`, `formatTime`, `validateLoop` (errores en castellano; "Hasta" pasado el final se recorta).
+
+**Verificado:** 15 tests nuevos de `lib/time` (151 en total), tsc, lint. En el navegador con "Desde mi interior" (audio subido; YouTube no reproduce en el navegador de prueba): tramo 0:05–0:08 durante 10 s → tiempo siempre entre 5,01 y 8,13 s y vuelve al inicio; al quitarlo sigue de largo; con Repetir, al llegar al final vuelve a empezar la misma canción. **Sin verificar:** el loop con un video de YouTube real (misma lógica, avisa el tiempo cada 250 ms).
+---
+
+## 2026-10-02 — Temas opcionales al crear una canción (backend + frontend)
+
+**Contexto:** Pablo vio en producción que Temas seguía mostrando "Adoración" y "Alabanza". Causa: el commit de la migración `RemoveTipoTags` (`7dd1bd1`) estaba solo en `develop` del backend; `main` (lo que deploya Render) seguía en el merge del PR #7. Se resuelve mergeando `develop` → `main` del backend (la migración corre sola en el Build Command de Render).
+
+**Encontrado de paso:** al crear una canción sin elegir temas, el front mandaba `["Adoración"]` por defecto (`UploadModal`), y el backend exigía al menos un tema (`@ArrayNotEmpty`). Con la migración, ese tema ya no existe: el backend lo descartaba en silencio y la canción quedaba sin temas igual.
+
+**Cambio:** backend `CreateSongDto.tags` acepta lista vacía (sigue siendo obligatorio mandar la lista); front manda los temas elegidos, aunque sean ninguno.
+
+**Verificado:** 2 tests nuevos del DTO (lista vacía aceptada, sin la lista rechazada), 90 back, 136 front, tsc, lint. Contra la base local: canción sin temas ni letra → `201` con `tags: []`, Acordes y Letras la abren, borrada al terminar.
+---
+
+## 2026-10-02 — Fix: un coro de 2 compases repetido 3 veces salía con :] en vez de x3 (frontend)
+
+**Reportado por Pablo:** coro `| D - A | E - F#m |` tres veces + `| D - A | E |` se veía `| D - A | E - F#m |:]` / `| D - A | E - F#m | D - A | E |`.
+
+**Causa:** `packChartRows` solo buscaba vueltas de 4 compases o más; esta mide 2. Partía en filas de 4 y la primera fila (la mitad repetida) se mostraba con `:]`.
+
+**Cambio:** `MIN_REPEAT_BARS` 4 → 2 (un solo acorde repetido no cuenta). Se elige la vuelta que cubre más compases seguidos; con empate, la más corta (`x4` antes que `:]`).
+
+**Verificado:** tests nuevos (el coro de Pablo → `| D - A | E - F#m |x3]` + `| D - A | E |`; misma mitad 4 veces → `x4`); los anteriores siguen pasando (136). En el navegador, igual.
+---
+
+## 2026-10-02 — Solo acordes: filas de 4 compases; el "-" solo si está escrito (frontend)
+
+**Corrección de Pablo a la entrada de abajo ("1 línea = 1 compás"), que se revirtió** (`git revert`): no quería unir los acordes de una línea; el `-` va solo donde está escrito ("El verso empieza con [A][D], no hay ningún - entre medio"). Lo que quería es que los compases salgan **siempre de a 4 por fila**.
+
+**Cambio (`packChartRows` en `lib/chords.ts`, reemplaza a `mergeRepeatedChartLines` + `joinShortChartLines`):** cada acorde es un compás (unidos solo con `-` escrito); los compases de un tramo (hasta una sección o una línea con notas/marcas/`:]` a mano; las líneas vacías no cortan) se acomodan corridos en filas de 4, sin importar cuántos acordes tenga cada línea de letra. Antes de partir en filas se busca una vuelta de 4 compases o más que se repita seguida: se escribe una vez, en sus filas de 4, con `:]` (o `x3`…) al final, y sigue lo que viene (así el coro de "Al estar ante ti", vuelta de 9 compases, conserva su `:]`). Una fila que repite su mitad se sigue mostrando como antes (`| A | D | A | D |` → `| A | D |:]`).
+
+**Verificado:** tests de las dos funciones viejas reemplazados por 9 de `packChartRows` (verso de Pablo, coro de "Al estar ante ti", líneas de distinto largo, x3, secciones, marcas, `%`); 134 en total. En el navegador con el texto de Pablo: `| A | D | A/C# - F#m | D |:]` / `| A | D | Bm | F#m |` / `| D | E | F#m | D |` / `| A | D |:]`.
+---
+
+## 2026-10-02 — [REVERTIDO] Solo acordes: cada línea con letra es un compás (frontend)
+
+**Pedido de Pablo:** que el verso se vea en 4 compases, `| A | D | A/C# - F#m | D |:]`, y no `| A | D | A/C# | F#m |` + `| D |`. Elegido explícitamente: **1 línea de letra = 1 compás**.
+
+**Cambio (`chordsOnly` en `lib/chords.ts`):** en una línea **con letra**, todos sus acordes van unidos con `-` en un mismo compás. Las líneas que ya son solo acordes (`[D] [A] [Em] [Bm]-[A/C#]`, típicas de intros) siguen compás por compás; las marcas (`%`, `x3`, `Sube Tono`) nunca se unen. Las filas de 4 y el `:]` salen solos de lo que ya existía (`joinShortChartLines`, `mergeRepeatedChartLines`).
+
+**Cambia otras canciones (avisado antes de elegir):** ej. "Al estar ante ti": "Digno es el co[G]rdero de[D/F#] Dios" pasa de `| D/F# - G | D/F# |` a `| D/F# - G - D/F# |`; el coro queda en una fila de 4 con `:]`. Se actualizaron 3 tests a la regla nueva y se agregó el verso de Pablo (141 tests).
+
+**Verificado en el navegador** (vista previa, sin guardar): `| A | D | A/C# - F#m | D |:]`; un puente sin repetir sale en filas de 4.
+---
+
+## 2026-10-02 — Solo acordes: el coro repetido con un renglón vacío en el medio va con :] (frontend)
+
+**Reportado por Pablo:** en "Al estar ante ti" el coro tiene dos vueltas con los mismos acordes y se mostraba entero dos veces en vez de una con `:]`.
+
+**Causa:** `mergeRepeatedChartLines` cortaba el tramo en cualquier línea vacía, y entre las dos vueltas hay un renglón en blanco.
+
+**Cambio (`lib/chords.ts`):** las líneas vacías ya no cortan el tramo (las secciones y las líneas con notas/marcas sí); si quedan adentro de lo que se juntó, desaparecen. Además, si la vuelta que se repite tiene **más de 4 compases** y termina justo al final de una línea, se deja la primera vuelta **en sus renglones** con `:]` (o `x3`…) al final, en vez de una sola fila que no entra en pantalla. Las repeticiones cortas siguen en una fila (`| D | Bm | G | D - A |x3]`). Se cambió a propósito el test que fijaba que "una línea vacía corta el tramo".
+
+**Verificado:** 140 tests (nuevos: el coro de Pablo y una vuelta larga x3). En el navegador (vista previa, sin guardar): `| D/F# - G | D/F# | G - A/C# | Bm |` / `| A | G - A/C# | D |` / `| Em | A |:]` / `| C | A4 |`.
+---
+
+## 2026-10-02 — Solo acordes: x2 / x3 / x4 fuera del compás (frontend)
+
+**Pedido de Pablo:** `| D | A | Em | Bm - A/C# x4 |` — las repeticiones tienen que ir fuera del `|`.
+
+**Cambio (`chordChartSegments` en `ChordSheet`):** un `[x2]`, `[x3]`, `[x4]`… con un compás abierto lo cierra y va afuera, con la misma notación que ya usaban las repeticiones agrupadas y `:]`: `| D | A | Em | Bm - A/C# |x4]` (se sigue alineando con los renglones de arriba). Si la marca está al principio de la línea queda `x2 | G | D |` (antes salía pegado: `x2| G`). Otras marcas (Sube Tono, Baja Tono) no cambian.
+
+**Verificado en el navegador** (vista previa, sin guardar): el intro de Pablo, `| G | D |x2]`, `| Em | C | D |x3]`, `x2 | G | D |`. 138 tests.
+
+---
+
+## 2026-10-02 — Se puede crear una canción sin letra (frontend)
+
+**Pedido de Pablo:** poder crear la canción sin cargar la letra.
+
+**Cambio (`UploadModal`):** la letra deja de ser obligatoria para Guardar (siguen siéndolo nombre, artista y tipo); el campo dice "(opcional)" y "Se puede cargar después". El backend ya aceptaba texto vacío (`@IsString`, columna `NOT NULL` con `""`).
+
+**Verificado contra la base local:** creada una canción sin letra (`POST /canciones` → 201, `chordpro: ""`), Acordes y Letras la abren sin errores, y se borró definitivamente al terminar.
+---
+
+## 2026-10-02 — Acordes: pasar el texto a otro tono y guardarlo así (frontend)
+
+**Pedido de Pablo:** el selector de tono solo cambiaba la vista (derecha); el texto que se guarda (izquierda) seguía en el tono original. Quería poder guardar la canción en el tono nuevo.
+
+**Cambio:** editando, si el tono elegido no es el de la canción aparece **"Pasar el texto a {tono}"**: reescribe los acordes del borrador (`transposeChordPro` en `lib/chords.ts`) y ese tono pasa a ser el de partida. **Guardar** manda la letra nueva **y** `key` (si no, la canción quedaría "original C" con acordes en D y se transportaría dos veces). Cancelar vuelve al tono guardado. Solo se tocan acordes: secciones (`[Intro]`), marcas (`[%]`, `[x3]`, `[Sube Tono]`, `[Baja Tono]` — empieza con B) y letra quedan igual; usa el `isChord` del Transportador (reconoce `Am7b5`, `G4`, `(E)`); bemoles o sostenidos según el tono de destino.
+
+**Verificado:** 5 tests nuevos (138 en total), tsc, lint. En el navegador (Guardar interceptado, no se guardó nada): D → +2 → "Pasar el texto a E": `G A F#m G Bm7 A G Em7` → `A B G#m A C#m7 B A F#m7`, selector en E, Guardar manda `key: "E"` con esos acordes; Cancelar vuelve a D.
+---
+
+## 2026-10-02 — Fix: "Copiar" del Transportador tiraba la página con el traductor de Chrome (frontend)
+
+**Reportado por Pablo:** a una compañera, en producción, al tocar Copiar en el Transportador le salía "Esta página no se cargó" (la pantalla de error, traducida por Chrome).
+
+**Causa:** problema conocido de React con el traductor de Google: el traductor reemplaza los textos por `<font>` con la traducción; cuando React quiere cambiar "Copiar" por "Copiado" busca el texto original, ya no está, y tira error. Pasaba porque la app se declaraba en inglés (ver la entrada de "Acuerdos").
+
+**Cambio:** (1) de fondo, la app ya pide no traducirse (`translate="no"`, entrada anterior); (2) además el texto del botón va en un `<span key>`, así React reemplaza el elemento entero y no depende del texto. De paso, las páginas de error y de "no encontrada" estaban en inglés (de la plantilla): ahora en español.
+
+**Verificado en el navegador simulando el traductor** (textos reemplazados por `<font>`): con el código anterior la página se cae al tocar Copiar; con el arreglo no, y el portapapeles queda bien en los dos casos. 133 tests, tsc.
+---
+
+## 2026-10-02 — Inicio: "Ministerio de Adoración" debajo del título (frontend)
+
+**Pedido de Pablo:** que aparezca "Ministerio de Adoración" en algún lado de Inicio.
+
+**Cambio (`InicioPage`):** debajo de "Cielos Abiertos", en mayúsculas espaciadas (mismo estilo que el login). Verificado en el navegador en compu (1280px) y celular (Pixel 7).
+---
+
+## 2026-10-02 — Fix: Chrome traducía la app ("Acordes" → "Acuerdos") (frontend)
+
+**Reportado por Pablo:** a una compañera, en producción, el menú le mostraba "Acuerdos", "Listas de canciones", "Instalar aplicación", "Administración".
+
+**Causa:** el traductor automático de Chrome. La página se declaraba en inglés (`<html lang="en">`, de la plantilla inicial), así que Chrome la traducía "al español".
+
+**Cambio (`__root.tsx`):** `<html lang="es" translate="no">` + `<meta name="google" content="notranslate">`. Un cancionero traducido rompe letras y nombres de acordes.
+
+**Verificado:** el HTML que entrega el servidor trae `lang="es" translate="no"` y el meta. **A tener en cuenta:** a quien ya tiene la traducción activada puede quedarle hasta recargar; si sigue, en Chrome: ⋮ → Traducir → Mostrar original / Nunca traducir este sitio.
+---
+
+## 2026-10-02 — Solo acordes: compases centrados en su columna (frontend)
+
+**Pedido de Pablo:** en la vista de compases quedaba mucho espacio a la derecha de los compases cortos; el `%` tenía que verse en el medio.
+
+**Cambio (`ChordSheet`, `alignBars`):** cada columna sigue midiendo lo que su compás más largo en toda la hoja (así los `|` quedan alineados entre renglones), pero el compás ahora va **centrado** en ese ancho en vez de pegado a la izquierda: `|   %    |`, `|  F#m   |`.
+
+**Verificado en el navegador** (vista previa del editor, sin guardar) con el ejemplo de Pablo: `| D  |   Bm   | G  | D - A9 |:]` / `| D  |  F#m   | G  |   %    |:]`.
+---
+
+## 2026-10-02 — Adoración y Alabanza dejan de ser temas (backend)
+
+**Pedido de Pablo:** en Temas aparecían "Adoración" y "Alabanza", que son **tipos** de canción (`tipos_cancion`), no temas.
+
+**Cambio:** migración `RemoveTipoTags` borra esos dos de `tags` (sus asignaciones en `song_tags` se van por `ON DELETE CASCADE`) y rehace el `CHECK` con los 34 temas que quedan (lista escrita en la migración; comprobado que es igual a la de la entidad). El **tipo** de cada canción no se toca. Entidad `Tag` sin los dos; `cancionero.ts` y `run-seed.ts` sin ellos en las listas de temas. "Al estar ante ti" solo tenía "Adoración" y quedó sin temas: el test del cancionero ya no exige al menos un tema (no se le inventó uno). El `down` vuelve a crear los dos temas pero **no** las asignaciones borradas.
+
+**Verificado:** 88 tests back, tsc, oxlint; migración corrida en local; en el navegador el filtro y el formulario muestran 34 temas sin los dos, y el filtro de tipos sigue con Adoración y Alabanza. **En producción:** `npm run migration:run` (borra esas asignaciones en las canciones de producción).
+
+---
+
+## 2026-10-02 — Fix: las listas de los desplegables se veían blancas (frontend)
+
+**Reportado por Pablo:** al abrir un filtro (tipo, secuencia, temas) la lista salía blanca con letras doradas.
+
+**Cambio (`styles.css`):** `color-scheme: dark` en `html` (la app es solo oscura: los controles nativos del navegador se dibujan oscuros) y `option` con fondo de tarjeta y texto normal, aunque el filtro esté dorado por tener algo elegido. Arregla los 8 lugares que usan `<select>`.
+
+**Verificado:** estilos calculados en el navegador (`color-scheme: dark`, opción oscura con texto claro). La lista abierta en sí no sale en las capturas automáticas: falta mirarla en Windows.
+
+---
+
 ## 2026-10-02 — Ventanita de YouTube más chica: 200×200 (frontend)
 
 **Pedido de Pablo:** achicar más la ventanita del video en el celular, tapaba media lista.
