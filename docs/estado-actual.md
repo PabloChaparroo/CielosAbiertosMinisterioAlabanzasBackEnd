@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-02 — Temas opcionales al crear una canción (backend + frontend)
+
+**Contexto:** Pablo vio en producción que Temas seguía mostrando "Adoración" y "Alabanza". Causa: el commit de la migración `RemoveTipoTags` (`7dd1bd1`) estaba solo en `develop` del backend; `main` (lo que deploya Render) seguía en el merge del PR #7. Se resuelve mergeando `develop` → `main` del backend (la migración corre sola en el Build Command de Render).
+
+**Encontrado de paso:** al crear una canción sin elegir temas, el front mandaba `["Adoración"]` por defecto (`UploadModal`), y el backend exigía al menos un tema (`@ArrayNotEmpty`). Con la migración, ese tema ya no existe: el backend lo descartaba en silencio y la canción quedaba sin temas igual.
+
+**Cambio:** backend `CreateSongDto.tags` acepta lista vacía (sigue siendo obligatorio mandar la lista); front manda los temas elegidos, aunque sean ninguno.
+
+**Verificado:** 2 tests nuevos del DTO (lista vacía aceptada, sin la lista rechazada), 90 back, 136 front, tsc, lint. Contra la base local: canción sin temas ni letra → `201` con `tags: []`, Acordes y Letras la abren, borrada al terminar.
+---
+
 ## 2026-10-02 — Fix: un coro de 2 compases repetido 3 veces salía con :] en vez de x3 (frontend)
 
 **Reportado por Pablo:** coro `| D - A | E - F#m |` tres veces + `| D - A | E |` se veía `| D - A | E - F#m |:]` / `| D - A | E - F#m | D - A | E |`.
