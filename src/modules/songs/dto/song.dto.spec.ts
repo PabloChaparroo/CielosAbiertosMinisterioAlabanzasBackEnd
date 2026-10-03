@@ -11,7 +11,7 @@ const valid = {
   duration: 540,
   cover: "linear-gradient(135deg,#000,#fff)",
   chordpro: "[D]Tu voz",
-  tags: ["Adoración"],
+  tags: ["Fe"],
   tipoId: "11111111-1111-4111-8111-111111111111",
 };
 
@@ -33,5 +33,16 @@ describe("CreateSongDto — tipo de canción obligatorio", () => {
 
   it("al editar el tipo es opcional (si no viene, no se toca)", async () => {
     expect((await validateDto(UpdateSongDto, { title: "Otro" })).fields).toEqual([]);
+  });
+});
+
+describe("CreateSongDto — temas", () => {
+  it("sin temas (lista vacía) → aceptada", async () => {
+    expect((await validateDto(CreateSongDto, { ...valid, tags: [] })).fields).toEqual([]);
+  });
+
+  it("sin la lista de temas → rechazada", async () => {
+    const { tags: _, ...sinTemas } = valid;
+    expect((await validateDto(CreateSongDto, sinTemas)).fields).toContain("tags");
   });
 });
