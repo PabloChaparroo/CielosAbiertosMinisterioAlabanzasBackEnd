@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — Nuevo setlist: desplegable de fechas (frontend)
+
+**Pedido de Pablo:** los atajos "Este domingo / Domingo siguiente / Este miércoles / Miércoles siguiente" confundían (dos "siguiente"); que sea un desplegable con los próximos 4 domingos y 4 miércoles.
+
+**Cambio (`NewSetlistModal`):** un `<select>` con dos grupos (Domingos, Miércoles), 4 fechas cada uno ("Domingo 04/10 (este)", "Domingo 11/10"…; "(hoy)" si es ese día). Elegir una cambia la fecha y mantiene la hora elegida; si la fecha del formulario coincide con una opción, queda marcada en dorado.
+
+**Verificado en el navegador** (sábado 03/10): domingos 04, 11, 18, 25/10 y miércoles 07, 14, 21, 28/10; al abrir marca el domingo 04/10; elegir el 3er miércoles → 21/10 10:30; con la hora en 19:30, elegir el 2do domingo → 11/10 19:30.
+---
+
 ## 2026-10-03 — Reproductor: repetir la canción y repetir un tramo (frontend)
 
 **Pedido de Pablo:** un botón para que la canción se repita, y otro para repetir un tramo en loop (ej. practicar el solo de guitarra de 3:45 a 4:20) hasta sacarlo.
