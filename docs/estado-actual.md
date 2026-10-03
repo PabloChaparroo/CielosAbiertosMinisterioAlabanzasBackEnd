@@ -4,6 +4,15 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — "Setlists" pasa a llamarse "Listas de canciones" (frontend)
+
+**Pedido de Pablo:** en vez de "Setlists", "Listas de canciones".
+
+**Cambio (solo textos visibles):** menú, título de la página (y pestaña del navegador), "Nueva lista" / "Nueva lista de canciones" / "Crear lista", Inicio ("Ver listas", "Próxima lista"), avisos ("Solo líderes pueden crear listas de canciones", "…modificar esta lista", "Volver a listas de canciones"), al eliminar una canción ("se saca de 2 listas de canciones"), etiqueta del permiso en Roles y Permisos, descripciones. **No se tocaron** la ruta `/setlists`, los endpoints ni los nombres internos (links y datos siguen igual).
+
+**Verificado en el navegador:** menú, página y modal con los textos nuevos; ninguna aparición de "setlist" en el texto de la página. 151 tests, tsc.
+---
+
 ## 2026-10-03 — Nuevo setlist: título por defecto con la fecha (frontend)
 
 **Pedido de Pablo:** que el título predeterminado sea la fecha elegida ("Domingo 04/10"), editable; si primero escribió un nombre y después cambia la fecha, que no se lo pise.
