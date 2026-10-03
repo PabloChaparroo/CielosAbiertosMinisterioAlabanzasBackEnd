@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-03 — Instrumentos: qué toca cada miembro y qué toca en cada lista (backend + frontend)
+
+**Pedido de Pablo:** asignar a cada usuario los instrumentos que toca (puede ser más de uno), al crearlo o editarlo, para después decir en cada lista de canciones qué toca cada uno (ej. Sofía, guitarra). Valores fijos: Guitarra eléctrica, Guitarra acústica, Teclado, Voz, Percusión, Batería, Bajo, Sonido, Multimedia.
+
+**Backend:** `modules/users/instruments.ts` (`INSTRUMENTS`). `users.instruments` (`text[]`, default `{}`), en `CreateUserDto`/`UpdateUserDto` (`/equipo`) con `@IsIn(INSTRUMENTS, { each })`, opcional. `setlists.team_instruments` (`jsonb`, default `{}`, `{ [userId]: instrumentos }`), en `CreateSetlistDto`/`UpdateSetlistDto`; `cleanTeamInstruments` (en `setlists/team-instruments.ts`) valida en el servicio: instrumento desconocido o formato inválido → 400; descarta a quien no está en el equipo (si se lo saca del equipo, se va su instrumento), repetidos y listas vacías. Migración `AddInstruments` (sin CHECK: los valores se validan en la API para poder sumar instrumentos sin migración).
+
+**Frontend:** `InstrumentPicker` (chips, varios). Alta y edición de miembro: "Instrumentos que toca"; el detalle del miembro los muestra. Nueva lista: por cada miembro del equipo, "X toca:" con sus instrumentos (todos si no tiene cargados); si toca uno solo se marca solo. Detalle de la lista: "Equipo asignado" muestra lo que toca cada uno en esa lista (si no tiene nada, su rol) y quien puede editar lo cambia con el lápiz.
+
+**Verificado:** back 98 tests (nuevos: DTO de usuario con instrumentos, `cleanTeamInstruments`), tsc, oxlint; front 151 tests, tsc, lint. Migración corrida en local. En el navegador contra la base local: Sofía guardada con Guitarra eléctrica + Voz (su detalle los muestra); nueva lista con Sofía → solo le ofrece esos dos, se guarda `{ Sofía: [Guitarra eléctrica] }`; en el detalle se ve y con el lápiz se agrega Voz (queda guardado). Lista de prueba borrada y Sofía devuelta sin instrumentos. **En producción:** deploy del backend (la migración corre sola en Render) antes del front.
+---
+
 ## 2026-10-03 — "Setlists" pasa a llamarse "Listas de canciones" (frontend)
 
 **Pedido de Pablo:** en vez de "Setlists", "Listas de canciones".
