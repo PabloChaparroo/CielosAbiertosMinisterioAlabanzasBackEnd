@@ -4,6 +4,17 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-05 — Fix: el lint del CI fallaba por formato en chords (frontend)
+
+**Reportado por Pablo:** no podía hacer el PR: "tsc + lint + build" fallaba en Lint con 4 errores de Prettier en `src/lib/chords.ts` y `chords.spec.ts` (de los cambios de compases).
+
+**Causa:** al verificar el lint en local se filtraban las líneas con `␍` (ruido del checkout CRLF de Windows) y esos errores reales también contenían saltos de línea en el mensaje, así que quedaban ocultos; además `npx prettier` suelto formateaba distinto que el Prettier que corre dentro de eslint.
+
+**Cambio:** `eslint --fix` sobre esos dos archivos. **Forma de verificar de acá en adelante:** correr `tsc`, `npm run lint`, tests y build sobre un checkout limpio con LF (`git -c core.autocrlf=false worktree add`), igual que el CI.
+
+**Verificado así:** tsc OK, lint 0 errores (las 11 advertencias de siempre), 152 tests, build OK.
+---
+
 ## 2026-10-03 — Instrumentos: qué toca cada miembro y qué toca en cada lista (backend + frontend)
 
 **Pedido de Pablo:** asignar a cada usuario los instrumentos que toca (puede ser más de uno), al crearlo o editarlo, para después decir en cada lista de canciones qué toca cada uno (ej. Sofía, guitarra). Valores fijos: Guitarra eléctrica, Guitarra acústica, Teclado, Voz, Percusión, Batería, Bajo, Sonido, Multimedia.
