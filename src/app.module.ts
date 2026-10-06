@@ -11,6 +11,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { PermissionsGuard } from "./common/guards/permissions.guard";
 import { StorageModule } from "./common/storage/storage.module";
 import { HealthController } from "./health.controller";
+import { PingController } from "./ping.controller";
 import { AnnotationsModule } from "./modules/annotations/annotations.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { FavoritesModule } from "./modules/favorites/favorites.module";
@@ -58,7 +59,7 @@ import { UsersModule } from "./modules/users/users.module";
     AnnotationsModule,
     FavoritesModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, PingController],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: PermissionsGuard },

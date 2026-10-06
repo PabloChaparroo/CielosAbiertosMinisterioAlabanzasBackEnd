@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — `GET /api/ping` para mantener despierto el backend (backend)
+
+**Pedido de Pablo:** Render (plan gratis) duerme el backend tras 15 min sin tráfico. Un cron de cron-job.org va a pegarle cada 10 min en los horarios de uso del equipo. No puede usar `/api/health` porque ese hace `SELECT 1` y despertaría Neon (free, 100 CU-horas por mes).
+
+**Cambio:** `src/ping.controller.ts`: `@Public() GET /api/ping` → `{ "status": "ok" }`, sin inyectar nada (ni TypeORM ni Terminus). Registrado en `AppModule`. `/api/health` sin cambios.
+
+**Guards / rate limit / logs:** los dos guards globales (`JwtAuthGuard`, `PermissionsGuard`) devuelven `true` de entrada con `@Public()`. No hay rate limit. **Si algún día se agrega un throttler, `/api/ping` necesita `@SkipThrottle()`.** No hay logging de requests, así que el ping no suma líneas en los logs de Render. No hace falta excluirlo.
+
+**Verificado:** 2 tests nuevos (respuesta y metadata pública), 100 tests en total, tsc, oxlint y build. En local, con `logging: true` puesto en TypeORM solo para la prueba (revertido antes del commit): `/api/ping` → 200 sin ninguna línea `query:`; `/api/health` → 200 con `query: SELECT 1`. **Pendiente (Pablo):** deploy; Health Check Path de Render → `/api/ping`; los 3 jobs de cron-job.org (mar/mié/dom, 9:50 y de 10:00 a 21:30 cada 10 min, hora de Buenos Aires) con alertas recién tras varios fallos seguidos.
+
+---
+
 ## 2026-10-05 — Fix: el lint del CI fallaba por formato en chords (frontend)
 
 **Reportado por Pablo:** no podía hacer el PR: "tsc + lint + build" fallaba en Lint con 4 errores de Prettier en `src/lib/chords.ts` y `chords.spec.ts` (de los cambios de compases).
