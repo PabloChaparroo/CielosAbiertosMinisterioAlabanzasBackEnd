@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Fix: las comillas de arriba del acorde no se veían en Solo acordes (frontend)
+
+**Reportado por Pablo:** en Letra + acordes las comillas (`['''Bm]`) salían arriba del acorde, pero en Solo acordes no aparecían.
+
+**Causa (`ChordSheet.tsx`):** las filas de compases (`| Bm - A/C# | D |`) se dibujan como texto y no miraban lo de arriba del acorde. Pasaba en todo Solo acordes y en las líneas sin letra de Letra + acordes (ej. la INTRO).
+
+**Cambio:** lo de arriba del acorde va en el renglón chico de arriba de los compases (el mismo de las notas "(…)"), sin flecha, justo sobre la columna donde empieza su acorde. Al encolumnar los compases con los de los otros renglones, se corre junto con su acorde. Solo acordes dibuja siempre como compases (antes, una fila con algo arriba se dibujaba como letra).
+
+**Verificado:** tsc, eslint, 155 tests y build. Además se renderizó la hoja a HTML con la intro de Pablo: `'''` en la columna de Bm y `'` en la de A/C#, encolumnado con el coro. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Solo acordes: las notas "(…)" no cortan la repetición (frontend)
 
 **Pedido de Pablo:** al detectar vueltas repetidas (`:]`, `x3`), ignorar lo que está entre paréntesis: si los acordes son iguales, es repetición aunque una línea tenga una nota. Y la nota tiene que verse justo arriba del acorde al que se refiere.
