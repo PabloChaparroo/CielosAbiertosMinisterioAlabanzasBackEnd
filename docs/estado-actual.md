@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Acordes en celular: reproducir y pistas relacionadas al lado del título (frontend)
+
+**Pedido de Pablo:** en el celular la lista de canciones de Acordes queda plegada, así que el botón de reproducir solo aparecía al abrir el buscador, medio escondido.
+
+**Cambio:** debajo de `lg`, al lado del nombre (junto al corazón) hay un botón redondo de reproducir/pausar y, si la canción tiene pistas (`trackCount > 0`), un botón de pistas relacionadas. Ese botón reproduce la canción si no es la actual y abre el desplegable "Pistas relacionadas" del mini reproductor, que es el que ya existía: no se duplica la lógica de cambiar de pista. El desplegable se abre con un evento de ventana (`OPEN_RELATED_TRACKS_EVENT`, exportado por `MiniPlayer.tsx`). En compu no cambia nada.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** en el navegador o en el celular (acá no hay navegador para probar); lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Fix: en celular, insertar una sección o acorde bajaba la página (frontend)
 
 **Reportado por Pablo:** al editar acordes en el celular, cada vez que tocaba un atajo de sección o de acorde la página bajaba hasta la vista previa y había que volver a subir.
