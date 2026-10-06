@@ -4,6 +4,64 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Solo acordes: las notas "(…)" no cortan la repetición (frontend)
+
+**Pedido de Pablo:** al detectar vueltas repetidas (`:]`, `x3`), ignorar lo que está entre paréntesis: si los acordes son iguales, es repetición aunque una línea tenga una nota. Y la nota tiene que verse justo arriba del acorde al que se refiere.
+
+**Antes:** una línea con una nota "(…)" cortaba el tramo de `packChartRows`: se mostraba suelta y el patrón no se detectaba.
+
+**Cambio (`lib/chords.ts`):** los compases se arman como `{ key, pairs }`: las repeticiones se buscan solo por `key` (los acordes). Las notas viajan con su compás: van con el acorde de antes (`[Bm](interludio)` → arriba de Bm; si está antes del primer acorde de la línea, con ese). Al escribir una vuelta una sola vez, se juntan las notas de todas sus repeticiones, sin repetir. De paso, lo de arriba del acorde (`['''Bm]`, `[-|||-G]`) ya no se pierde al armar las filas. Siguen cortando el tramo las líneas con `:]` escrito a mano o con marcas (`x3`, `Sube Tono`).
+
+**A tener en cuenta:** una fila con nota no se encolumna con las demás (ya pasaba antes con las notas).
+
+**Verificado:** 2 tests nuevos (el coro de Pablo con `(interludio)` y las comillas al armar filas). Se ajustó el test que esperaba que una nota cortara el tramo. 155 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Comillas arriba del acorde y atajo de comilla (frontend)
+
+**Pedido de Pablo:** escribir comillas al lado de un acorde (`['''Bm]`) y que se vean arriba del acorde. Y un atajo para la comilla en el editor.
+
+**Cambio (`lib/chords.ts`):** las comillas pegadas al acorde, antes o después (`[''Bm]` o `[Bm'']`), se interpretan como la marca de arriba que ya existía con guiones (`[-''-Bm]`): el acorde se transpone y las comillas quedan arriba, en Letra + acordes y en Solo acordes. Acepta comillas rectas y las curvas que pone el teclado del celular. Atajo nuevo `'` en el editor, después de `:]`.
+
+**Verificado:** test nuevo (antes, después, comilla curva, transposición), 153 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Fix: el BPM no se podía borrar al cargar o editar una canción (frontend)
+
+**Reportado por Pablo:** en el celular, al borrar el BPM para poner por ejemplo 85, quedaba un 1 que no se iba.
+
+**Causa:** `UploadModal.tsx` guardaba el BPM como número con `Number(valor) || 1`: el campo vacío volvía a 1 en cada tecla.
+
+**Cambio:** el BPM se guarda como texto mientras se escribe y se convierte a número (redondeado) al guardar. Guardar queda deshabilitado si el BPM está vacío o en 0.
+
+**Verificado:** tsc, eslint y 152 tests. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Acordes en celular: reproducir y pistas relacionadas al lado del título (frontend)
+
+**Pedido de Pablo:** en el celular la lista de canciones de Acordes queda plegada, así que el botón de reproducir solo aparecía al abrir el buscador, medio escondido.
+
+**Cambio:** debajo de `lg`, al lado del nombre (junto al corazón) hay un botón redondo de reproducir/pausar y, si la canción tiene pistas (`trackCount > 0`), un botón de pistas relacionadas. Ese botón reproduce la canción si no es la actual y abre el desplegable "Pistas relacionadas" del mini reproductor, que es el que ya existía: no se duplica la lógica de cambiar de pista. El desplegable se abre con un evento de ventana (`OPEN_RELATED_TRACKS_EVENT`, exportado por `MiniPlayer.tsx`). En compu no cambia nada.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** en el navegador o en el celular (acá no hay navegador para probar); lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Fix: en celular, insertar una sección o acorde bajaba la página (frontend)
+
+**Reportado por Pablo:** al editar acordes en el celular, cada vez que tocaba un atajo de sección o de acorde la página bajaba hasta la vista previa y había que volver a subir.
+
+**Causa:** `insertAtCursor` (`AcordesPage.tsx`) vuelve a enfocar el textarea con `focus()`, y en celular eso desplaza toda la página para mostrar el campo. Se restauraba el scroll interno del textarea, pero no el de la página.
+
+**Cambio:** `focus({ preventScroll: true })` y se vuelve a la posición de la página que había antes de insertar (`window.scrollTo`).
+
+**Verificado:** tsc, eslint, 152 tests y build. **Sin verificar:** en un celular real (el teclado virtual no se puede simular acá); lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — `GET /api/ping` para mantener despierto el backend (backend)
 
 **Pedido de Pablo:** Render (plan gratis) duerme el backend tras 15 min sin tráfico. Un cron de cron-job.org va a pegarle cada 10 min en los horarios de uso del equipo. No puede usar `/api/health` porque ese hace `SELECT 1` y despertaría Neon (free, 100 CU-horas por mes).
