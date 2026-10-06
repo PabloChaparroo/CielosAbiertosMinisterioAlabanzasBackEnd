@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Editor de acordes más alto (frontend)
+
+**Pedido de Pablo:** agrandar hacia abajo el cuadro de edición de Acordes (quedaba en 420px y la vista previa al lado era mucho más alta).
+
+**Cambio (`AcordesPage.tsx`):** en compu (`xl`) el editor tiene como mínimo el alto de la pantalla menos el encabezado (`100vh - 8rem`, igual que la vista previa). En celular y tablet, al menos 60% del alto de la pantalla (nunca menos de 420px). Sigue creciendo con el texto como antes.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Fix: las comillas de arriba del acorde no se veían en Solo acordes (frontend)
 
 **Reportado por Pablo:** en Letra + acordes las comillas (`['''Bm]`) salían arriba del acorde, pero en Solo acordes no aparecían.
