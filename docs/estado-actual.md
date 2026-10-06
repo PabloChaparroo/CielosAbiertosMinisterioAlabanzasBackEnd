@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Comillas arriba del acorde y atajo de comilla (frontend)
+
+**Pedido de Pablo:** escribir comillas al lado de un acorde (`['''Bm]`) y que se vean arriba del acorde. Y un atajo para la comilla en el editor.
+
+**Cambio (`lib/chords.ts`):** las comillas pegadas al acorde, antes o después (`[''Bm]` o `[Bm'']`), se interpretan como la marca de arriba que ya existía con guiones (`[-''-Bm]`): el acorde se transpone y las comillas quedan arriba, en Letra + acordes y en Solo acordes. Acepta comillas rectas y las curvas que pone el teclado del celular. Atajo nuevo `'` en el editor, después de `:]`.
+
+**Verificado:** test nuevo (antes, después, comilla curva, transposición), 153 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Fix: el BPM no se podía borrar al cargar o editar una canción (frontend)
 
 **Reportado por Pablo:** en el celular, al borrar el BPM para poner por ejemplo 85, quedaba un 1 que no se iba.
