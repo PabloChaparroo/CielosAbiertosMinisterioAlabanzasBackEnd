@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Fix: en celular, insertar una sección o acorde bajaba la página (frontend)
+
+**Reportado por Pablo:** al editar acordes en el celular, cada vez que tocaba un atajo de sección o de acorde la página bajaba hasta la vista previa y había que volver a subir.
+
+**Causa:** `insertAtCursor` (`AcordesPage.tsx`) vuelve a enfocar el textarea con `focus()`, y en celular eso desplaza toda la página para mostrar el campo. Se restauraba el scroll interno del textarea, pero no el de la página.
+
+**Cambio:** `focus({ preventScroll: true })` y se vuelve a la posición de la página que había antes de insertar (`window.scrollTo`).
+
+**Verificado:** tsc, eslint, 152 tests y build. **Sin verificar:** en un celular real (el teclado virtual no se puede simular acá); lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — `GET /api/ping` para mantener despierto el backend (backend)
 
 **Pedido de Pablo:** Render (plan gratis) duerme el backend tras 15 min sin tráfico. Un cron de cron-job.org va a pegarle cada 10 min en los horarios de uso del equipo. No puede usar `/api/health` porque ese hace `SELECT 1` y despertaría Neon (free, 100 CU-horas por mes).
