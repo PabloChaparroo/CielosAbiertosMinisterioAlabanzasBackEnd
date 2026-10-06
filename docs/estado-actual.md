@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Play y pausa con fundido del volumen (frontend)
+
+**Pedido de Pablo:** que al dar play o pausa el sonido no se corte ni arranque de golpe, sino que baje o suba bien rápido.
+
+**Cambio:** `lib/fade.ts` (`fadeVolume`, `FADE_MS = 250`) lleva el volumen de un valor a otro cuadro a cuadro. Audio (`MiniPlayer.tsx`): play arranca en 0 y sube hasta el volumen elegido. Pausa baja a 0 y recién ahí pausa (y deja el volumen como estaba). YouTube (`YoutubeStage.tsx`): lo mismo con `setVolume`/`pauseVideo`. Si se toca play mientras está bajando, se da vuelta desde donde quedó, sin cortes. Mover el volumen durante un fundido no lo pisa. Pasa con el botón de cualquier lado (mini reproductor, pantalla completa, listas), porque todos cambian `isPlaying`.
+
+**Verificado:** 2 tests de `fadeVolume`, 157 tests, tsc, eslint y build. **Sin verificar:** a oído en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Editor de acordes más alto (frontend)
 
 **Pedido de Pablo:** agrandar hacia abajo el cuadro de edición de Acordes (quedaba en 420px y la vista previa al lado era mucho más alta).
