@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Solo acordes: las notas "(…)" no cortan la repetición (frontend)
+
+**Pedido de Pablo:** al detectar vueltas repetidas (`:]`, `x3`), ignorar lo que está entre paréntesis: si los acordes son iguales, es repetición aunque una línea tenga una nota. Y la nota tiene que verse justo arriba del acorde al que se refiere.
+
+**Antes:** una línea con una nota "(…)" cortaba el tramo de `packChartRows`: se mostraba suelta y el patrón no se detectaba.
+
+**Cambio (`lib/chords.ts`):** los compases se arman como `{ key, pairs }`: las repeticiones se buscan solo por `key` (los acordes). Las notas viajan con su compás: van con el acorde de antes (`[Bm](interludio)` → arriba de Bm; si está antes del primer acorde de la línea, con ese). Al escribir una vuelta una sola vez, se juntan las notas de todas sus repeticiones, sin repetir. De paso, lo de arriba del acorde (`['''Bm]`, `[-|||-G]`) ya no se pierde al armar las filas. Siguen cortando el tramo las líneas con `:]` escrito a mano o con marcas (`x3`, `Sube Tono`).
+
+**A tener en cuenta:** una fila con nota no se encolumna con las demás (ya pasaba antes con las notas).
+
+**Verificado:** 2 tests nuevos (el coro de Pablo con `(interludio)` y las comillas al armar filas). Se ajustó el test que esperaba que una nota cortara el tramo. 155 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Comillas arriba del acorde y atajo de comilla (frontend)
 
 **Pedido de Pablo:** escribir comillas al lado de un acorde (`['''Bm]`) y que se vean arriba del acorde. Y un atajo para la comilla en el editor.
