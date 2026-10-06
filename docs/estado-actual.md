@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Fix: el BPM no se podía borrar al cargar o editar una canción (frontend)
+
+**Reportado por Pablo:** en el celular, al borrar el BPM para poner por ejemplo 85, quedaba un 1 que no se iba.
+
+**Causa:** `UploadModal.tsx` guardaba el BPM como número con `Number(valor) || 1`: el campo vacío volvía a 1 en cada tecla.
+
+**Cambio:** el BPM se guarda como texto mientras se escribe y se convierte a número (redondeado) al guardar. Guardar queda deshabilitado si el BPM está vacío o en 0.
+
+**Verificado:** tsc, eslint y 152 tests. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Acordes en celular: reproducir y pistas relacionadas al lado del título (frontend)
 
 **Pedido de Pablo:** en el celular la lista de canciones de Acordes queda plegada, así que el botón de reproducir solo aparecía al abrir el buscador, medio escondido.
