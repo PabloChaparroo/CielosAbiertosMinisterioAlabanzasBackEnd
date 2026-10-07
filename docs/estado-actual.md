@@ -4,6 +4,38 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-06 — Play y pausa con fundido del volumen (frontend)
+
+**Pedido de Pablo:** que al dar play o pausa el sonido no se corte ni arranque de golpe, sino que baje o suba bien rápido.
+
+**Cambio:** `lib/fade.ts` (`fadeVolume`, `FADE_MS = 250`) lleva el volumen de un valor a otro cuadro a cuadro. Audio (`MiniPlayer.tsx`): play arranca en 0 y sube hasta el volumen elegido. Pausa baja a 0 y recién ahí pausa (y deja el volumen como estaba). YouTube (`YoutubeStage.tsx`): lo mismo con `setVolume`/`pauseVideo`. Si se toca play mientras está bajando, se da vuelta desde donde quedó, sin cortes. Mover el volumen durante un fundido no lo pisa. Pasa con el botón de cualquier lado (mini reproductor, pantalla completa, listas), porque todos cambian `isPlaying`.
+
+**Verificado:** 2 tests de `fadeVolume`, 157 tests, tsc, eslint y build. **Sin verificar:** a oído en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Editor de acordes más alto (frontend)
+
+**Pedido de Pablo:** agrandar hacia abajo el cuadro de edición de Acordes (quedaba en 420px y la vista previa al lado era mucho más alta).
+
+**Cambio (`AcordesPage.tsx`):** en compu (`xl`) el editor tiene como mínimo el alto de la pantalla menos el encabezado (`100vh - 8rem`, igual que la vista previa). En celular y tablet, al menos 60% del alto de la pantalla (nunca menos de 420px). Sigue creciendo con el texto como antes.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-06 — Fix: las comillas de arriba del acorde no se veían en Solo acordes (frontend)
+
+**Reportado por Pablo:** en Letra + acordes las comillas (`['''Bm]`) salían arriba del acorde, pero en Solo acordes no aparecían.
+
+**Causa (`ChordSheet.tsx`):** las filas de compases (`| Bm - A/C# | D |`) se dibujan como texto y no miraban lo de arriba del acorde. Pasaba en todo Solo acordes y en las líneas sin letra de Letra + acordes (ej. la INTRO).
+
+**Cambio:** lo de arriba del acorde va en el renglón chico de arriba de los compases (el mismo de las notas "(…)"), sin flecha, justo sobre la columna donde empieza su acorde. Al encolumnar los compases con los de los otros renglones, se corre junto con su acorde. Solo acordes dibuja siempre como compases (antes, una fila con algo arriba se dibujaba como letra).
+
+**Verificado:** tsc, eslint, 155 tests y build. Además se renderizó la hoja a HTML con la intro de Pablo: `'''` en la columna de Bm y `'` en la de A/C#, encolumnado con el coro. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-06 — Solo acordes: las notas "(…)" no cortan la repetición (frontend)
 
 **Pedido de Pablo:** al detectar vueltas repetidas (`:]`, `x3`), ignorar lo que está entre paréntesis: si los acordes son iguales, es repetición aunque una línea tenga una nota. Y la nota tiene que verse justo arriba del acorde al que se refiere.
