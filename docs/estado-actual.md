@@ -4,6 +4,23 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Próximas a sacar como un post (frontend)
+
+**Pedido de Pablo:** la tarjeta compacta con paneles no le gustó. La quiere como un post, llamativa: la portada grande pero no tanto, de acordes solo la tonalidad, de letra una animación que muestre un poco como si se estuviera cantando, y un apartado para la nota del equipo si la hay.
+
+**Cambio (`ProximasSection.tsx` + `styles.css`):** cada canción es un post.
+- **Encabezado:** logo, "Cielos Abiertos", "Próxima a sacar · desde el 8 de octubre" y un punto dorado que late.
+- **Portada** 16:10 con degradé. Encima van el título, el artista, el chip "Tono D" y un play redondo dorado.
+- **Letra cantándose** (`SingingLyrics`): de las primeras 8 líneas, una por vez cada 2,8 s. La actual se pinta de dorado de izquierda a derecha (`karaoke-fill`, clip-path animado), con la anterior arriba y la siguiente asomando abajo, tenues. Con "reducir movimiento" del sistema no hay pintado.
+- **Nota del equipo:** la más reciente, con su autor, solo si hay.
+- Abajo, los botones Escuchar y Acordes.
+- Se sacaron los paneles de acordes, links y pistas.
+- **Disposición:** en celular, carrusel (86% de ancho) o una sola. En compu, 2 por fila (3 en `2xl`), así un post solo no ocupa toda la pantalla.
+
+**Verificado:** tsc, eslint, 168 tests y build. **Sin verificar:** la animación a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Secuencia = audio cargado; solo esas canciones en estadísticas y listas (frontend)
 
 **Pedido de Pablo:**
