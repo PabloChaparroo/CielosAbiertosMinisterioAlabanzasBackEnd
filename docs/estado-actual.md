@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Temas en una línea con burbuja (frontend)
+
+**Pedido de Pablo:** en Canciones, una canción con muchos temas agrandaba la fila. Mostrar dos temas y "…". Los demás, en una burbuja animada al pasar el mouse (compu) o al tocar (celular).
+
+**Cambio:** `components/common/TagList.tsx` (nuevo):
+- Muestra los 2 primeros temas y un "+N" con los que faltan, siempre en una sola línea.
+- "+N" abre una burbuja (Popover de Radix) con todos los temas. Con mouse, se abre al pasar y se cierra al salir (con 150ms de respiro para llegar a la burbuja). En celular se abre y cierra tocando. No dispara la reproducción de la fila.
+- Animación: la burbuja nace desde el "+N" (zoom + fade), y los temas aparecen de a uno con un pequeño rebote (40ms entre cada uno).
+- Se usa en la columna Temas (pantallas muy anchas) y, donde esa columna no se ve (celular y pantallas medianas), debajo del artista.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** la animación a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Fix: "crack" al cambiar de canción; fuera el botón Duraciones de YouTube (frontend)
 
 **Reportado por Pablo:** al pasar de un audio a otro mientras se escucha, el sonido "crashea" un poco. Además pidió sacar el botón "Duraciones de YouTube" (no se usa más).
