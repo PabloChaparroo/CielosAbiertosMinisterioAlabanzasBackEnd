@@ -4,6 +4,26 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Los admins solo los ven los admins (backend + frontend)
+
+**Pedido de Pablo:** el Líder (y cualquiera con permiso de ver Equipo que no sea admin) no tiene que ver a los usuarios admin, ni en la pantalla Equipo ni al asignar gente a una lista.
+
+**Criterio de "admin":** tener un rol con permiso `rol:write` (administrar roles), no el nombre del rol (criterio ya establecido). En la base local: Ana Ferrari y Martín Álvarez.
+
+**Backend (`UsersService.findAll`):** `GET /equipo` agrega `isAdmin` a cada usuario (no es columna). Sale de una consulta a `user_roles` + `role_permissions`.
+
+**Frontend:** `equipo/lib/visible-team.ts` (`visibleTeam`). Si quien mira no tiene `rol:write`, se sacan los admins:
+- en Equipo (lista, contador y filtros de rol);
+- en el equipo para elegir de Nueva lista de canciones (el líder es siempre quien la crea).
+
+Los nombres que ya figuran (líder de una lista, equipo, autor de una nota) se siguen mostrando. Si no, esas listas y notas quedarían sin nombre.
+
+**A tener en cuenta:** es un ocultamiento de pantalla. `GET /equipo` igual devuelve a los admins (con `isAdmin`), porque se necesitan para mostrar esos nombres. Si hace falta que no lleguen los datos (ej. el email), hay que recortarlos en el backend para quien no es admin.
+
+**Verificado:** back: 107 tests, tsc y build; la consulta de admins probada contra la base local. Front: 2 tests de `visibleTeam`, 171 tests, tsc, eslint y build. **Sin verificar:** entrando como Líder; lo prueba Pablo. **Deploy:** backend primero.
+
+---
+
 ## 2026-10-09 — Letras: favoritos en vez de últimas subidas (frontend)
 
 **Pedido de Pablo:** en Letras, sin canción elegida, se mostraban las últimas canciones subidas, que no aportan. Mostrar la lista de favoritos, con el mismo formato de lista.

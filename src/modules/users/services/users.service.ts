@@ -14,12 +14,22 @@ export class UsersService {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  findAll(incluirBajas = false): Promise<User[]> {
-    return this.userRepo.find({
+  async findAll(incluirBajas = false): Promise<User[]> {
+    const users = await this.userRepo.find({
       relations: { roles: true },
       order: { fechaHoraAlta: "ASC" },
       withDeleted: incluirBajas,
     });
+    // admin = tiene un rol que administra roles (rol:write): el frontend se lo oculta a quien no
+    // es admin en Equipo y al armar listas. Por permiso, no por el nombre del rol.
+    const admins: Array<{ user_id: string }> = await this.userRepo.query(
+      `SELECT DISTINCT ur.user_id FROM "user_roles" ur
+       JOIN "role_permissions" rp ON rp.role_id = ur.role_id
+       WHERE rp.permission = 'rol:write'`,
+    );
+    const adminIds = new Set(admins.map((row) => row.user_id));
+    users.forEach((user) => (user.isAdmin = adminIds.has(user.id)));
+    return users;
   }
 
   /** true si existe y no está dado de baja (las bajas lógicas quedan excluidas por defecto) */
