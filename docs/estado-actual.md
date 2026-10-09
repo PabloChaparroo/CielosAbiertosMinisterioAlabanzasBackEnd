@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Letras en vivo: dos columnas sin apretar la letra (frontend)
+
+**Pedido de Pablo:** en celular, en dos columnas la letra se apretaba para entrar en la pantalla (renglones cortados en pedacitos). Las columnas tienen que ir lado a lado con la letra a su tamaño, y desplazarse con el dedo o alejarse pellizcando para ver la de al lado.
+
+**Cambio (`LetrasPage.tsx`):** en dos columnas ya no se usan columnas CSS (que se adaptan al ancho). Las secciones se reparten en dos columnas lado a lado, sin partir ninguna sección, con una cantidad de renglones parecida (los títulos cuentan 2). Los renglones no se cortan (`whitespace-pre`) y el bloque mide lo que mida la letra (`w-max`). La pantalla completa se desplaza en los dos sentidos (`overflow-auto`), y con `items-center-safe` el bloque queda centrado si entra o arranca desde el borde izquierdo si es más ancho, sin quedar cortado. El pellizco (que ya existía) cambia el tamaño de la letra. Una columna no cambia.
+
+**Verificado:** tsc, eslint, 163 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Próximas a sacar: tarjeta compacta con lo necesario para prepararla (frontend)
 
 **Pedido de Pablo:** la tarjeta ocupaba mucho de la pantalla (portada gigante). Achicarla y sumar parte de la letra, los acordes, las anotaciones del equipo (puede que se acorte o se toque en otro tono), los links y las pistas.
