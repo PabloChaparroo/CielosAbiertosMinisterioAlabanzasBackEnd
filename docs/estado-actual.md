@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Fix: en celular los temas se metían debajo de los íconos (frontend)
+
+**Reportado por Pablo:** en Canciones, en celular, los temas debajo del artista se superponían con los íconos de la derecha (cohete, corazón).
+
+**Causa:** dos temas no entraban en el ancho. `TagList` no recortaba, y un tema largo ("Espíritu Santo") se partía en dos renglones y se agrandaba.
+
+**Cambio:**
+- `TagChip` nunca se corta en dos renglones ni se achica (`whitespace-nowrap`, `shrink-0`).
+- `TagList` no se pasa de su lugar (`overflow-hidden`).
+- En Canciones, en celular (menos de `sm`), debajo del artista va 1 tema y "+N" con la burbuja. En pantallas medianas, 2, como antes.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Duración total de cada lista de canciones (frontend)
 
 **Pedido de Pablo:** mostrar cuánto dura tocar toda la lista, en las tarjetas de Listas y al crear una. No con la duración de YouTube sino con la de la secuencia de cada canción (muchas se acortan respecto del original: la secuencia subida es la duración real).
