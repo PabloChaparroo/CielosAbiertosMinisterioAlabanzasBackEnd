@@ -4,6 +4,19 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Filtros de Canciones ordenados en celular (frontend)
+
+**Pedido de Pablo:** en celular el buscador, los 3 filtros y el botón de vista quedaban desparramados en 3 renglones. Ordenarlo para que se vea mejor.
+
+**Cambio (`EscucharPage.tsx`):**
+- **Celular**, en dos filas: el buscador con el botón de vista (lista/tarjetas) a la derecha, y debajo los 3 filtros en una sola fila que se desliza de costado si no entran.
+- Los textos de los filtros se acortaron ("Tipo: todos", "Secuencia: todas", "Tema: todos"). Al elegir uno se ve el valor elegido, en dorado como antes.
+- **Compu:** todo en una fila, con el botón de vista al final.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Fix: en celular los temas se metían debajo de los íconos (frontend)
 
 **Reportado por Pablo:** en Canciones, en celular, los temas debajo del artista se superponían con los íconos de la derecha (cohete, corazón).
