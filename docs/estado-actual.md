@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Lista de canciones más alta en Acordes y Letras (frontend)
+
+**Pedido de Pablo:** en compu, la lista de canciones de la izquierda quedaba corta y dejaba un espacio negro debajo. Que llegue más abajo, en Acordes y en Letras.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** desde `lg`, la lista mide como máximo el alto de la pantalla menos el encabezado (`100vh - 7.5rem`, con `sticky top-24`). Antes medía 70% del alto (y el listado de adentro 65%). El listado de adentro ocupa todo ese alto y se desplaza ahí. En celular no cambia (55% del alto, plegable).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Los invitados no ven las próximas a sacar (frontend)
 
 **Pedido de Pablo:** quienes entran como invitados no tienen que ver la próxima canción a sacar. Antes la veían: cargan las mismas canciones que el resto, con `esProxima`.
