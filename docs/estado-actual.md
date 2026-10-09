@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Búsqueda sin acentos (frontend)
+
+**Pedido de Pablo:** que el buscador encuentre una canción aunque se escriba sin acento ("quien podra" → "¿Quién Podrá?").
+
+**Cambio:** `lib/search.ts` (`normalizeSearch`, `matchesSearch`): compara sin acentos ni mayúsculas (la ñ cuenta como n). Se usa en los 7 buscadores, que filtraban con `toLowerCase().includes`: Escuchar, Acordes, Letras (título y temas), Favoritos, listas de canciones (página y armado de una lista nueva). Todos buscan sobre las canciones ya cargadas, así que el backend no cambia.
+
+**Verificado:** 3 tests nuevos, 160 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Logo nuevo de la app (frontend)
 
 **Pedido de Pablo:** usar `public/logo2.jpeg` (clave de sol dorada con paloma, 1254×1254, fondo casi negro) como logo del sistema en todos lados, en lugar del anterior (`icono.jpeg`).
