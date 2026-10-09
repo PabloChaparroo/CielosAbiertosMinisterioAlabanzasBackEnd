@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Más tocadas: el play abajo (frontend)
+
+**Pedido de Pablo:** en "Más tocadas este mes" (Inicio), el botón de play no tiene que ir sobre la portada sino abajo.
+
+**Cambio (`InicioPage.tsx`):** el play pasa a la fila de abajo de cada tarjeta, al lado del corazón (32px, dorado), y siempre visible. Antes aparecía solo al pasar el mouse, así que en celular casi no se veía.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Fix: íconos de Acciones pisados; confirmación de "próxima a sacar" (frontend)
 
 **Reportado por Pablo:** en Canciones, los íconos de Acciones se pisaban con la duración. Pidió además un modal de confirmación al tocar "próxima a sacar".
