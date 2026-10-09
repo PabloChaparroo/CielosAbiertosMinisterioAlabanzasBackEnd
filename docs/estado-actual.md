@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Acciones de la canción: se cierran tocando afuera (frontend)
+
+**Pedido de Pablo:** el panel de acciones ("⋯") tiene que cerrarse solo al tocar en cualquier lado que no sea el panel.
+
+**Cambio (`EscucharPage.tsx`):** con un panel abierto, un `pointerdown` fuera de él (`data-actions-panel`) lo cierra. Ese mismo toque no reproduce la canción si cae sobre otra fila: `playRow` ignora el click de la fila durante 600 ms después de cerrar, para no hacer sonar una canción sin querer. Tocar el "⋯" de otra canción cierra el panel abierto y abre el nuevo.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Canciones en celular: acciones detrás de un botón "⋯" (frontend)
 
 **Pedido de Pablo:** en celular, los 6 íconos de cada canción (cohete, corazón, pistas, links, editar, reproducir) ocupaban media fila y achicaban el título. Que haya un solo ícono y, al tocarlo, que los demás entren con una animación hacia la izquierda.
