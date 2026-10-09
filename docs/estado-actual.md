@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Portada: en celular el logo va al lado del título (frontend)
+
+**Pedido de Pablo:** en celular, el logo arriba de "Cielos Abiertos" ocupaba mucho alto. Lo quiere a la derecha del título.
+
+**Cambio (`InicioPage.tsx`):** debajo de `lg` el logo va a la derecha de "Cielos / Abiertos", en la misma fila (96px; 128px en `sm`, `icon-192.png`). En compu sigue grande a la derecha del bloque (`icon-512.png`, solo desde `lg`).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Pistas muestra también el audio principal (frontend)
 
 **Reportado por Pablo:** en "Pistas adicionales" decía "Sin pistas adicionales todavía" aunque la canción tenía audio subido.
