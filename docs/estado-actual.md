@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Canciones en celular: acciones detrás de un botón "⋯" (frontend)
+
+**Pedido de Pablo:** en celular, los 6 íconos de cada canción (cohete, corazón, pistas, links, editar, reproducir) ocupaban media fila y achicaban el título. Que haya un solo ícono y, al tocarlo, que los demás entren con una animación hacia la izquierda.
+
+**Cambio (`EscucharPage.tsx`, vista lista):**
+- Debajo de `md`, cada fila muestra solo "⋯".
+- Al tocarlo, las acciones aparecen sobre la fila, pegadas a la derecha, entrando desde la derecha (deslizan + fade, 300 ms), con fondo de tarjeta, sombra hacia la izquierda y una ✕ para cerrar.
+- Una fila abierta por vez: abrir otra cierra la anterior.
+- Los toques en las acciones no reproducen la canción. Tocar la fila sigue reproduciéndola.
+- En compu no cambia (acciones siempre a la vista).
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** la animación en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Filtros de Canciones ordenados en celular (frontend)
 
 **Pedido de Pablo:** en celular el buscador, los 3 filtros y el botón de vista quedaban desparramados en 3 renglones. Ordenarlo para que se vea mejor.
