@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Fix: "crack" al cambiar de canción; fuera el botón Duraciones de YouTube (frontend)
+
+**Reportado por Pablo:** al pasar de un audio a otro mientras se escucha, el sonido "crashea" un poco. Además pidió sacar el botón "Duraciones de YouTube" (no se usa más).
+
+**Causa (`MiniPlayer.tsx`):** al cambiar de canción, la URL del audio se ponía en null de inmediato. El `<audio>` perdía el `src` de golpe, sin pasar por el fundido de play/pausa.
+
+**Cambio:** la URL resuelta se guarda junto con su key (`resolved: { key, url }`). Al cambiar de canción, el `<audio>` conserva la anterior. Como todavía no está lista la de la canción actual, el efecto de play/pausa la baja con el fundido y la pausa. Cuando llega la URL nueva, el `src` cambia con el audio ya en silencio y arranca con fundido de subida. Mientras la anterior baja, no mueve la barra de progreso de la nueva. En Canciones se quitó el botón "Duraciones de YouTube" (`syncYoutubeDurations`). Queda la actualización automática de la duración al agregar un link de YouTube en Links relacionados.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** a oído; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — "Próximas a sacar" en Inicio (backend + frontend)
 
 **Pedido de Pablo:** marcar canciones como "próxima a sacar" (pueden ser varias) y destacarlas en Inicio. Dejan de ser próximas solas cuando una lista de canciones que las tiene llega a su fecha y pasa al historial. Inicio lindo y pensado para celular (lo usan casi todos ahí).
