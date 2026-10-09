@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { IsArray, IsInt, IsOptional, IsString, IsUUID, Min } from "class-validator";
+import { IsArray, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from "class-validator";
 
 export class CreateSongDto {
   @IsString()
@@ -28,6 +28,12 @@ export class CreateSongDto {
   @IsOptional()
   @IsString()
   audioKey?: string;
+
+  /** Nombre del audio principal; vacío lo quita (se muestra el título de la canción) */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  audioName?: string;
 
   @IsString()
   chordpro!: string;

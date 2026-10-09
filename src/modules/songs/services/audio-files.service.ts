@@ -26,7 +26,7 @@ export class AudioFilesService {
     if (!song) throw new NotFoundException("Canción no encontrada");
     const key = song.audioKey;
     if (!key) return;
-    await this.songRepo.update(songId, { audioKey: null });
+    await this.songRepo.update(songId, { audioKey: null, audioName: null });
     await this.deleteIfUnused(key);
   }
 

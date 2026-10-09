@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Nombre propio del audio principal (backend + frontend)
+
+**Pedido de Pablo:** poder editar el nombre del audio que se sube en Editar canción (no solo el de las pistas). Y sacar el aviso "¿Más audios de la canción…? Subilos en Pistas".
+
+**Backend:** columna `songs.audio_name` (varchar, null), migración `AddSongAudioName`. `audioName` en el DTO (opcional, hasta 120 caracteres; vacío → null). Al eliminar el audio principal se borra también su nombre.
+
+**Frontend:** en Editar canción, debajo del archivo de audio (cuando hay uno cargado o elegido), un campo "Nombre del audio". Al elegir un archivo se completa con su nombre (`trackNameFromFile`), y se puede cambiar. Vacío = se muestra el título de la canción, como antes. Se usa en la fila "Audio principal" de Pistas y en el reproductor (Pistas relacionadas y el nombre del audio que suena). Se quitó el aviso de Pistas que se había agregado en la entrada anterior.
+
+**Verificado:** back: 104 tests, tsc, oxlint y build. Front: tsc, eslint, 161 tests y build. **Sin verificar:** la migración no se corrió en local (Docker apagado), ni el flujo en el navegador. **Deploy:** backend primero (la migración corre sola en el build de Render), después el front.
+
+---
+
 ## 2026-10-08 — Portada: en celular el logo va al lado del título (frontend)
 
 **Pedido de Pablo:** en celular, el logo arriba de "Cielos Abiertos" ocupaba mucho alto. Lo quiere a la derecha del título.

@@ -50,6 +50,10 @@ export class Song extends BaseAuditEntity {
   @Column({ type: "varchar", nullable: true })
   audioKey!: string | null;
 
+  /** Nombre propio del audio principal (ej. "Audio Quién podrá"); null = el título de la canción */
+  @Column({ type: "varchar", nullable: true })
+  audioName!: string | null;
+
   /** Estilo ChordPro: acordes entre [] antes de la sílaba, {sección} entre llaves */
   @Column({ type: "text" })
   chordpro!: string;

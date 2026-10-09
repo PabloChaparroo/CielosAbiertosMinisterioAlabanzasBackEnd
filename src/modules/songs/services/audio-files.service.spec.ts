@@ -30,7 +30,7 @@ describe("AudioFilesService — borrar audios con su archivo", () => {
   it("saca el audio principal y borra el archivo si nadie más lo usa", async () => {
     const { service, songRepo, storage } = setup();
     await service.removeSongAudio("s1");
-    expect(songRepo.update).toHaveBeenCalledWith("s1", { audioKey: null });
+    expect(songRepo.update).toHaveBeenCalledWith("s1", { audioKey: null, audioName: null });
     expect(storage.deleteObjects).toHaveBeenCalledWith(["audios/a.mp3"]);
   });
 
