@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Fix: íconos de Acciones pisados; confirmación de "próxima a sacar" (frontend)
+
+**Reportado por Pablo:** en Canciones, los íconos de Acciones se pisaban con la duración. Pidió además un modal de confirmación al tocar "próxima a sacar".
+
+**Causa:** el botón del cohete se sumó a la columna Acciones, que seguía en 140px.
+
+**Cambio:** la columna Acciones pasa a 176px (encabezado y filas, en las dos grillas: `md` y `2xl`). `ProximaButton` ahora abre un modal para confirmar, tanto al marcar como al quitar, con la canción y qué va a pasar. Se dibuja con un portal en `body`: las tarjetas de celular tienen `transform`, y un `fixed` adentro quedaba encerrado en la tarjeta. Los toques dentro del modal no llegan a la fila (que reproduce).
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Temas en una línea con burbuja (frontend)
 
 **Pedido de Pablo:** en Canciones, una canción con muchos temas agrandaba la fila. Mostrar dos temas y "…". Los demás, en una burbuja animada al pasar el mouse (compu) o al tocar (celular).
