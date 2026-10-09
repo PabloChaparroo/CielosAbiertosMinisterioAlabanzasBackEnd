@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Duración total de cada lista de canciones (frontend)
+
+**Pedido de Pablo:** mostrar cuánto dura tocar toda la lista, en las tarjetas de Listas y al crear una. No con la duración de YouTube sino con la de la secuencia de cada canción (muchas se acortan respecto del original: la secuencia subida es la duración real).
+
+**Cambio:** `canciones/lib/sequence-duration.ts`.
+- **Secuencia de una canción:** el audio principal o, si no hay, la primera pista (por `order`).
+- **Duración:** se lee de los metadatos del archivo (`readAudioDuration`, sin bajarlo entero) y se recuerda por key, en memoria y en `localStorage`. El archivo de una key no cambia. Si falla no se guarda y se reintenta. Los pedidos simultáneos de la misma key se juntan en uno.
+- `useListDuration` suma la lista y cuenta las canciones de las que no se pudo saber.
+- `ListDuration` muestra "≈ 24 min" (o "1 h 07 min") con un reloj, "(sin N)" si faltan algunas, y "Calculando…" mientras lee.
+- Va en `SetlistCard` (Próximos e Historial, debajo de la cantidad de canciones) y en Nueva lista de canciones, al lado de la cantidad.
+- No se usa `song.duration`, que puede venir de YouTube.
+
+**Verificado:** test de `formatListDuration`, 169 tests, tsc, eslint y build. **Sin verificar:** con los audios reales en el navegador; lo prueba Pablo. La primera vez que se abre Listas tarda un poco por canción (lee los metadatos); después queda guardado.
+
+---
+
 ## 2026-10-09 — Fix: Acordes/Letras desordenaban la lista de canciones (frontend)
 
 **Reportado por Pablo:** al abrir una lista de canciones en Acordes (o Letras) y tocar la segunda, esa canción pasaba arriba y la lista quedaba desordenada. El equipo sigue el orden de la lista mientras toca y se puede perder.
