@@ -13,6 +13,7 @@ import { crudPermission } from "../../../common/authorization/permission.catalog
 import { Permissions } from "../../../common/decorators/permissions.decorator";
 import { PaginationQueryDto } from "../../../common/dto/pagination-query.dto";
 import { CreateSongDto, UpdateSongDto } from "../dto/song.dto";
+import { AudioFilesService } from "../services/audio-files.service";
 import { SongPurgeService } from "../services/song-purge.service";
 import { SongsService } from "../services/songs.service";
 
@@ -21,6 +22,7 @@ export class SongsController {
   constructor(
     private readonly songsService: SongsService,
     private readonly songPurgeService: SongPurgeService,
+    private readonly audioFilesService: AudioFilesService,
   ) {}
 
   /**
@@ -31,6 +33,16 @@ export class SongsController {
   @Permissions(crudPermission("cancion-definitiva", "delete"))
   purge(@Param("id", ParseUUIDPipe) id: string) {
     return this.songPurgeService.purge(id);
+  }
+
+  /**
+   * Saca el audio principal de la canción y borra su archivo del bucket (si ninguna pista lo usa).
+   * Mismo permiso que borrar una pista.
+   */
+  @Delete(":id/audio")
+  @Permissions(crudPermission("cancion", "delete"))
+  removeAudio(@Param("id", ParseUUIDPipe) id: string) {
+    return this.audioFilesService.removeSongAudio(id);
   }
 
   @Get()

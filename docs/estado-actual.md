@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Eliminar audios definitivamente y renombrar pistas (backend + frontend)
+
+**Pedido de Pablo:** poder eliminar definitivamente los audios subidos, confirmando como al eliminar una canción (escribiendo el nombre), y cambiar el nombre del audio.
+
+**Antes:** el audio principal no se podía sacar (solo reemplazar). Borrar una pista sacaba la fila pero dejaba el archivo en el bucket. El audio principal no tiene nombre propio: se guarda con una key automática y se muestra con el título de la canción.
+
+**Backend:** `AudioFilesService` (nuevo). `DELETE /canciones/:id/audio` (`cancion:delete`, el mismo permiso que borrar pistas y links; no hizo falta un permiso nuevo) deja `audioKey` en null y borra el archivo. `DELETE /pistas/:id` ahora también borra el archivo. En los dos casos el archivo se borra solo si ninguna canción (incluidas las dadas de baja) ni pista lo usa, porque "Usar como principal" copia la key de una pista a la canción.
+
+**Frontend:** `ConfirmTypedDeleteModal` (nuevo; mismo diseño que `DeleteSongModal`). En Editar canción, "Eliminar audio" al lado de "Ya tiene audio cargado": se confirma escribiendo el título de la canción. El formulario recuerda que se eliminó, así Guardar no vuelve a poner la key vieja. En Pistas: el tacho pide escribir el nombre de la pista (antes borraba directo), y un lápiz permite renombrarla (Enter guarda, Escape cancela; `PATCH /pistas/:id`, ya existía).
+
+**A tener en cuenta:** reemplazar el audio (subir otro) sigue dejando el archivo viejo en el bucket. Sin cambios en eso.
+
+**Verificado:** back: 4 tests nuevos de `AudioFilesService` (borra si nadie lo usa, no borra si lo usa una pista o una canción, sin audio y 404); 104 tests, tsc, oxlint y build. Front: tsc, eslint, 157 tests y build. **Sin verificar:** contra la API en el navegador; lo prueba Pablo. **Deploy:** backend antes que frontend (endpoint nuevo).
+
+---
+
 ## 2026-10-06 — Play y pausa con fundido del volumen (frontend)
 
 **Pedido de Pablo:** que al dar play o pausa el sonido no se corte ni arranque de golpe, sino que baje o suba bien rápido.
