@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Próximas a sacar: tarjeta compacta con lo necesario para prepararla (frontend)
+
+**Pedido de Pablo:** la tarjeta ocupaba mucho de la pantalla (portada gigante). Achicarla y sumar parte de la letra, los acordes, las anotaciones del equipo (puede que se acorte o se toque en otro tono), los links y las pistas.
+
+**Cambio (`ProximasSection.tsx`):**
+- **Encabezado compacto:** portada chica (80px; 96px en `sm`), etiqueta "Próxima a sacar", título, artista y tono · compás · BPM · desde cuándo. Los botones Escuchar y Acordes van a la derecha en compu, y debajo a ancho completo en celular.
+- **Debajo, paneles** (uno por fila en celular, 2 en `sm`, 4 en `xl`). Solo aparecen los que tienen contenido:
+  - Letra: las primeras 4 líneas.
+  - Acordes en el tono: los de la canción, sin repetir, hasta 12.
+  - Notas del equipo: las 2 últimas, con su autor.
+  - Links y pistas: los links abren en otra pestaña, con el ícono de YouTube si corresponde.
+- Las notas, los links y las pistas se piden al mostrar la tarjeta. Si el usuario no tiene permiso, ese panel no aparece.
+- Si son varias canciones: carrusel en celular (88% del ancho) y una debajo de otra en compu.
+
+**Verificado:** tsc, eslint, 163 tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Nombre de las listas predefinidas (frontend)
 
 **Pedido de Pablo:** al guardar una lista como predefinida, que no quede con el nombre de la lista original ("Domingo 04/10"). Poder ponerle otro nombre, o que se cree uno automático incremental.
