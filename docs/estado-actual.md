@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — "Próximas a sacar" en Inicio (backend + frontend)
+
+**Pedido de Pablo:** marcar canciones como "próxima a sacar" (pueden ser varias) y destacarlas en Inicio. Dejan de ser próximas solas cuando una lista de canciones que las tiene llega a su fecha y pasa al historial. Inicio lindo y pensado para celular (lo usan casi todos ahí).
+
+**Backend:** columna `songs.proxima_desde` (timestamptz, null), migración `AddSongProximaDesde`. `proximaASacar: boolean` en el DTO (marcar toma la fecha de hoy; desmarcar la deja en null; mismo permiso que editar una canción). `esProxima` se calcula al leer (`SongsService.withEsProxima`, en `findAll` y `findById`): marcada y sin ninguna lista (no borrada) que la tenga, con fecha desde el día de la marca, que ya haya pasado al historial. Historial = igual que la pantalla de listas: pasada a mano (`is_upcoming = false`) o desde el día después de su fecha, en hora de Argentina. Calculado y no con un proceso programado porque en Render gratis el backend se duerme. Las listas viejas (de antes de la marca) no cuentan. Las plantillas están en otra tabla y no cuentan.
+
+**Frontend:** botón de cohete (`ProximaButton`) en cada canción de Escuchar (lista de compu y tarjetas de celular), y switch "Próxima a sacar" en Editar canción (solo se manda si cambió, para no renovar la fecha). En Inicio, `ProximasSection`, justo debajo de la portada:
+- En celular, tarjetas grandes que se pasan deslizando de costado (snap; la siguiente asoma), o una sola de ancho completo.
+- En compu, una grilla.
+- Cada tarjeta: portada grande fundida con la tarjeta, la etiqueta "Próxima a sacar" con un punto que late, título, artista, tono/compás/BPM, "desde el 8 de octubre", y los botones Escuchar/Pausar y Acordes.
+- Si no hay ninguna, la sección no aparece. Las más recientes van primero.
+
+**Verificado:** back: 3 tests nuevos de `esProxima` (sin marca no consulta, marcada sin tocar, marcada y tocada), 107 tests, tsc, oxlint y build. Front: tsc, eslint, 161 tests y build. **Sin verificar:** la consulta SQL contra una base real y la migración (Docker apagado), y el diseño a ojo. **Deploy:** backend primero (migración), después el front.
+
+---
+
 ## 2026-10-08 — Nombre propio del audio principal (backend + frontend)
 
 **Pedido de Pablo:** poder editar el nombre del audio que se sube en Editar canción (no solo el de las pistas). Y sacar el aviso "¿Más audios de la canción…? Subilos en Pistas".

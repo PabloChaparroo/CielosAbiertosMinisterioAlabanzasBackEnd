@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { IsArray, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min } from "class-validator";
 
 export class CreateSongDto {
   @IsString()
@@ -28,6 +28,11 @@ export class CreateSongDto {
   @IsOptional()
   @IsString()
   audioKey?: string;
+
+  /** Marca o desmarca la canción como "próxima a sacar" (marcar de nuevo toma la fecha de hoy) */
+  @IsOptional()
+  @IsBoolean()
+  proximaASacar?: boolean;
 
   /** Nombre del audio principal; vacío lo quita (se muestra el título de la canción) */
   @IsOptional()
