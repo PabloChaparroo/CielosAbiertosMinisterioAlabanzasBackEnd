@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Pistas muestra también el audio principal (frontend)
+
+**Reportado por Pablo:** en "Pistas adicionales" decía "Sin pistas adicionales todavía" aunque la canción tenía audio subido.
+
+**Causa:** la ventana solo listaba las pistas adicionales. El audio principal (el que se sube en Editar canción) no aparecía.
+
+**Cambio (`AudioTracksModal.tsx`):** si la canción tiene audio principal y no es ya una de las pistas, va primero, marcado "Audio principal", con el título de la canción y su botón de escuchar. Se elimina desde Editar canción (es otra confirmación). Si el principal es además una pista ("Usar como principal"), no se repite: ya se ve en la lista con su check.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Nombre de cada audio al subirlo (frontend)
 
 **Pedido de Pablo:** al subir un audio, poder ponerle su propio nombre: sube varios por canción ("Audio Quién podrá", "Secuencia Batería Quién podrá", "Guitarra Quién podrá"…).
