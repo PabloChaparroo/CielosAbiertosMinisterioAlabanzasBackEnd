@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Inicio: las tarjetas al lado del post cuando hay una sola próxima (frontend)
+
+**Pedido de Pablo:** con una sola próxima a sacar, en compu quedaba vacía la mitad derecha. Propuesta aceptada: subir ahí las 4 tarjetas (Próxima lista, Canción del mes, Últimas subidas, Tus favoritos). Sin próximas, las 4 a lo largo como siempre.
+
+**Cambio (`InicioPage.tsx`, `ProximasSection.tsx`):**
+- **1 próxima:** desde `lg`, una grilla de 2 columnas. A la izquierda va el post (con una sola columna adentro) y a la derecha las 4 tarjetas en 2×2, alineadas con el post, debajo del título.
+- **Varias:** los posts llenan la fila (2, o 3 en `2xl`) y las tarjetas van abajo, de a 4.
+- **Ninguna:** las 4 tarjetas a lo largo, como antes.
+- **Celular:** todo en una columna, sin cambios.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Próximas a sacar como un post (frontend)
 
 **Pedido de Pablo:** la tarjeta compacta con paneles no le gustó. La quiere como un post, llamativa: la portada grande pero no tanto, de acordes solo la tonalidad, de letra una animación que muestre un poco como si se estuviera cantando, y un apartado para la nota del equipo si la hay.
