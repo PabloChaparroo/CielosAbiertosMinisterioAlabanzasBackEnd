@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Letras: favoritos en vez de últimas subidas (frontend)
+
+**Pedido de Pablo:** en Letras, sin canción elegida, se mostraban las últimas canciones subidas, que no aportan. Mostrar la lista de favoritos, con el mismo formato de lista.
+
+**Cambio (`LetrasPage.tsx`):** el bloque pasa a ser "Tus favoritos" (corazón), con todas las canciones marcadas como favoritas en el orden en que se marcaron. Tocar una abre su letra. Sin favoritos, explica cómo agregarlos.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Fix: Listas de canciones se rompía en celular (frontend)
 
 **Reportado por Pablo:** en celular, la pantalla de Listas se desbordaba hacia el costado: las tarjetas quedaban corridas y cortadas.
