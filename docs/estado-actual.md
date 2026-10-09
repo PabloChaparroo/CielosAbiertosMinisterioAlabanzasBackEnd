@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Secuencia = audio cargado; solo esas canciones en estadísticas y listas (frontend)
+
+**Pedido de Pablo:**
+- Al lado de "Más tocadas" del mes, otra igual con las de los últimos 3 meses.
+- Muy importante: todas las estadísticas son solo de canciones con **secuencia**. Las listas de canciones se arman con canciones con secuencia, y las sugerencias (cuando se hagan) también tienen que tenerla.
+- "Secuencia" = al menos un audio cargado. Un link no cuenta.
+
+**Cambio:**
+- `canciones/lib/sequence.ts`: `hasSequence(song)` = audio principal cargado o al menos una pista. Es la única regla para todo.
+- **Estadísticas:**
+  - Los cálculos, el historial por canción y los rankings usan solo canciones con secuencia.
+  - "Más tocadas" pasa a ser un componente (`TopCard`). Al lado va "Más tocadas · últimos 3 meses" (fijo, sin importar el mes elegido). El historial por canción queda abajo, a todo el ancho.
+- **Canciones:** la columna y el filtro "Secuencia" usan `hasSequence`. Antes miraban solo las pistas: una canción con solo audio principal aparecía con "-" (lo que había reportado Pablo).
+- **Nueva lista de canciones:** el buscador ofrece solo canciones con secuencia. Las listas que ya existen no cambian.
+
+**Verificado:** test nuevo de `hasSequence`, 168 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Estadísticas: veces que se tocó cada canción, por mes o rango (frontend)
 
 **Contexto:** Estadísticas estaba todo en 0. Sumaba con `song_play_stats` (`POST /canciones/:id/reproducir`), pero el frontend nunca llamaba a ese endpoint. **Pedido de Pablo:** no le sirven las escuchas en la app. Quiere las canciones más tocadas en un mes o en un rango de meses. Más adelante, que la app use eso para sugerir canciones (pendiente de definir).
