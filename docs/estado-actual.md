@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Fix: Listas de canciones se rompía en celular (frontend)
+
+**Reportado por Pablo:** en celular, la pantalla de Listas se desbordaba hacia el costado: las tarjetas quedaban corridas y cortadas.
+
+**Causa (`SetlistCard.tsx`):** la duración total ("≈ 13 min (sin 1)"), agregada en la columna de la derecha junto a la cantidad de canciones y los botones, no entraba. Se partía en renglones y empujaba la tarjeta más allá del ancho de la pantalla. La columna izquierda tampoco podía achicarse.
+
+**Cambio:** la duración pasa a la columna izquierda, debajo de la fecha, en un solo renglón (`whitespace-nowrap` en `ListDuration`). La columna izquierda se puede achicar (`min-w-0 flex-1`) y la derecha (cantidad y botones) no (`shrink-0`).
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Acciones de la canción: se cierran tocando afuera (frontend)
 
 **Pedido de Pablo:** el panel de acciones ("⋯") tiene que cerrarse solo al tocar en cualquier lado que no sea el panel.
