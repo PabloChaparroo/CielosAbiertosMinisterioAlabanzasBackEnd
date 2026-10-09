@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Acordes: favoritos primero al entrar (frontend)
+
+**Pedido de Pablo:** igual que en Letras, que al entrar a Acordes aparezcan primero los favoritos. Antes se abría directamente la primera canción.
+
+**Cambio (`AcordesPage.tsx`):** si se entra sin canción pedida (`songId`), sin venir de una lista (`songIds`) y el usuario tiene favoritos, se ve "Tus favoritos": portada, título, artista y tono. Tocar una abre sus acordes. Mientras tanto, ninguna canción del listado de la izquierda queda resaltada. Sin favoritos (ej. invitados), se abre la primera canción como antes.
+
+**Verificado:** tsc, eslint, 171 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Los admins solo los ven los admins (backend + frontend)
 
 **Pedido de Pablo:** el Líder (y cualquiera con permiso de ver Equipo que no sea admin) no tiene que ver a los usuarios admin, ni en la pantalla Equipo ni al asignar gente a una lista.
