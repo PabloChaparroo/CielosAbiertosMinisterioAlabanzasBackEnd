@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Nombre de cada audio al subirlo (frontend)
+
+**Pedido de Pablo:** al subir un audio, poder ponerle su propio nombre: sube varios por canción ("Audio Quién podrá", "Secuencia Batería Quién podrá", "Guitarra Quién podrá"…).
+
+**Criterio:** eso ya es lo que hacen las **Pistas** (cada una con su nombre). El audio principal es uno por canción y se muestra con el título de la canción, así que no se le agregó nombre propio (no hubo migración).
+
+**Cambio:** en Pistas, al elegir el archivo, el nombre se completa con el del archivo si está vacío (`trackNameFromFile`: sin extensión, los `_` como espacios; "¿Quién podrá_.mp3" → "¿Quién podrá"). Se puede editar antes de subir. Ejemplo del placeholder: "Batería, Guitarra, Click y guía". En Editar canción, debajo de Archivo de audio, un aviso explica que los otros audios con nombre se suben en Pistas. Para renombrar después, está el lápiz de cada pista (entrada anterior).
+
+**Verificado:** test nuevo (3 casos), 161 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Logo en la portada de Inicio (frontend)
 
 **Pedido de Pablo:** que el logo aparezca en la portada (el bloque "Cielos Abiertos" de Inicio).
