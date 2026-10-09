@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Estadísticas: veces que se tocó cada canción, por mes o rango (frontend)
+
+**Contexto:** Estadísticas estaba todo en 0. Sumaba con `song_play_stats` (`POST /canciones/:id/reproducir`), pero el frontend nunca llamaba a ese endpoint. **Pedido de Pablo:** no le sirven las escuchas en la app. Quiere las canciones más tocadas en un mes o en un rango de meses. Más adelante, que la app use eso para sugerir canciones (pendiente de definir).
+
+**Cambio (`lib/stats.ts` + `EstadisticasPage.tsx`):**
+- `playsFromSetlists` arma `playsByMonth` de cada canción con las listas que ya pasaron al historial (`isPlayedSetlist`: pasada a mano o desde el día después de su fecha). Cuenta una vez por lista, en el mes de su fecha. Así los cálculos que ya había siguen sirviendo.
+- Arriba, "Mes" (un mes) o "Rango" (desde y hasta). Los meses van desde la lista pasada más vieja (o un año atrás) hasta el actual. Antes estaban fijos en el código (2025-09 a 2026-09).
+- **Más tocadas** del período: lista con barras, en lugar del gráfico de barras con nombres inclinados que no se leía en celular.
+- **Por tema** del período.
+- **Canciones tocadas por mes** (último año).
+- **Más tocadas de siempre.**
+- Se sacó la comparativa fija 2025 vs 2026.
+
+`song_play_stats` y `/reproducir` quedan sin uso (no se borraron).
+
+**Verificado:** 4 tests nuevos (cuenta por lista pasada y no las futuras, el día después de la fecha, meses de un rango, más tocadas en un rango), 167 tests, tsc, eslint y build. **Sin verificar:** con las listas reales en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Letras en vivo: dos columnas sin apretar la letra (frontend)
 
 **Pedido de Pablo:** en celular, en dos columnas la letra se apretaba para entrar en la pantalla (renglones cortados en pedacitos). Las columnas tienen que ir lado a lado con la letra a su tamaño, y desplazarse con el dedo o alejarse pellizcando para ver la de al lado.
