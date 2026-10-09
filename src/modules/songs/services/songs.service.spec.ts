@@ -149,3 +149,33 @@ describe("SongsService — tipo de canción (Alabanza / Adoración)", () => {
     expect((await service.update("s1", { title: "Otro" })).tipoId).toBe(ALABANZA);
   });
 });
+
+describe("SongsService — próxima a sacar (esProxima)", () => {
+  function withSong(song: Partial<Song>, playedIds: string[] = []) {
+    const query = vi.fn().mockResolvedValue(playedIds.map((id) => ({ id })));
+    const songRepo = { createQueryBuilder: qbReturning(song), query };
+    const service = new SongsService(
+      songRepo as unknown as Repository<Song>,
+      {} as Repository<SongPlayStat>,
+      {} as TagsService,
+      {} as Repository<TipoCancion>,
+    );
+    return { service, query };
+  }
+
+  it("sin marca: no es próxima y no consulta las listas", async () => {
+    const { service, query } = withSong({ id: "s1", proximaDesde: null });
+    expect((await service.findById("s1")).esProxima).toBe(false);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it("marcada y todavía no tocada en una lista que pasó al historial: es próxima", async () => {
+    const { service } = withSong({ id: "s1", proximaDesde: new Date() });
+    expect((await service.findById("s1")).esProxima).toBe(true);
+  });
+
+  it("marcada pero ya tocada (su lista pasó al historial): deja de ser próxima", async () => {
+    const { service } = withSong({ id: "s1", proximaDesde: new Date() }, ["s1"]);
+    expect((await service.findById("s1")).esProxima).toBe(false);
+  });
+});

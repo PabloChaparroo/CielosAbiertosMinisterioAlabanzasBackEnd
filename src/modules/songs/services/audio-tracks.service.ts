@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateAudioTrackDto, UpdateAudioTrackDto } from "../dto/audio-track.dto";
 import { AudioTrack } from "../entities/audio-track.entity";
+import { AudioFilesService } from "./audio-files.service";
 import { SongsService } from "./songs.service";
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AudioTracksService {
     @InjectRepository(AudioTrack)
     private readonly audioTrackRepo: Repository<AudioTrack>,
     private readonly songsService: SongsService,
+    private readonly audioFiles: AudioFilesService,
   ) {}
 
   findBySong(songId: string): Promise<AudioTrack[]> {
@@ -49,6 +51,9 @@ export class AudioTracksService {
 
   async remove(id: string): Promise<void> {
     const track = await this.findByIdOrFail(id);
+    const key = track.audioKey;
     await this.audioTrackRepo.remove(track);
+    // definitivo: también el archivo, si no es además el audio principal u otra pista
+    await this.audioFiles.deleteIfUnused(key);
   }
 }

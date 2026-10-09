@@ -50,6 +50,20 @@ export class Song extends BaseAuditEntity {
   @Column({ type: "varchar", nullable: true })
   audioKey!: string | null;
 
+  /** Nombre propio del audio principal (ej. "Audio Quién podrá"); null = el título de la canción */
+  @Column({ type: "varchar", nullable: true })
+  audioName!: string | null;
+
+  /** Desde cuándo está marcada como "próxima a sacar"; null = no marcada */
+  @Column({ type: "timestamptz", nullable: true })
+  proximaDesde!: Date | null;
+
+  /**
+   * Calculado al leer (no es columna): marcada y todavía no tocada, es decir, sin ninguna lista
+   * de canciones con fecha desde la marca que ya haya pasado al historial
+   */
+  esProxima?: boolean;
+
   /** Estilo ChordPro: acordes entre [] antes de la sílaba, {sección} entre llaves */
   @Column({ type: "text" })
   chordpro!: string;

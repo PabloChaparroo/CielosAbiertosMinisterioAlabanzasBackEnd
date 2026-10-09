@@ -4,6 +4,434 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Acordes: favoritos primero al entrar (frontend)
+
+**Pedido de Pablo:** igual que en Letras, que al entrar a Acordes aparezcan primero los favoritos. Antes se abría directamente la primera canción.
+
+**Cambio (`AcordesPage.tsx`):** si se entra sin canción pedida (`songId`), sin venir de una lista (`songIds`) y el usuario tiene favoritos, se ve "Tus favoritos": portada, título, artista y tono. Tocar una abre sus acordes. Mientras tanto, ninguna canción del listado de la izquierda queda resaltada. Sin favoritos (ej. invitados), se abre la primera canción como antes.
+
+**Verificado:** tsc, eslint, 171 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Los admins solo los ven los admins (backend + frontend)
+
+**Pedido de Pablo:** el Líder (y cualquiera con permiso de ver Equipo que no sea admin) no tiene que ver a los usuarios admin, ni en la pantalla Equipo ni al asignar gente a una lista.
+
+**Criterio de "admin":** tener un rol con permiso `rol:write` (administrar roles), no el nombre del rol (criterio ya establecido). En la base local: Ana Ferrari y Martín Álvarez.
+
+**Backend (`UsersService.findAll`):** `GET /equipo` agrega `isAdmin` a cada usuario (no es columna). Sale de una consulta a `user_roles` + `role_permissions`.
+
+**Frontend:** `equipo/lib/visible-team.ts` (`visibleTeam`). Si quien mira no tiene `rol:write`, se sacan los admins:
+- en Equipo (lista, contador y filtros de rol);
+- en el equipo para elegir de Nueva lista de canciones (el líder es siempre quien la crea).
+
+Los nombres que ya figuran (líder de una lista, equipo, autor de una nota) se siguen mostrando. Si no, esas listas y notas quedarían sin nombre.
+
+**A tener en cuenta:** es un ocultamiento de pantalla. `GET /equipo` igual devuelve a los admins (con `isAdmin`), porque se necesitan para mostrar esos nombres. Si hace falta que no lleguen los datos (ej. el email), hay que recortarlos en el backend para quien no es admin.
+
+**Verificado:** back: 107 tests, tsc y build; la consulta de admins probada contra la base local. Front: 2 tests de `visibleTeam`, 171 tests, tsc, eslint y build. **Sin verificar:** entrando como Líder; lo prueba Pablo. **Deploy:** backend primero.
+
+---
+
+## 2026-10-09 — Letras: favoritos en vez de últimas subidas (frontend)
+
+**Pedido de Pablo:** en Letras, sin canción elegida, se mostraban las últimas canciones subidas, que no aportan. Mostrar la lista de favoritos, con el mismo formato de lista.
+
+**Cambio (`LetrasPage.tsx`):** el bloque pasa a ser "Tus favoritos" (corazón), con todas las canciones marcadas como favoritas en el orden en que se marcaron. Tocar una abre su letra. Sin favoritos, explica cómo agregarlos.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Fix: Listas de canciones se rompía en celular (frontend)
+
+**Reportado por Pablo:** en celular, la pantalla de Listas se desbordaba hacia el costado: las tarjetas quedaban corridas y cortadas.
+
+**Causa (`SetlistCard.tsx`):** la duración total ("≈ 13 min (sin 1)"), agregada en la columna de la derecha junto a la cantidad de canciones y los botones, no entraba. Se partía en renglones y empujaba la tarjeta más allá del ancho de la pantalla. La columna izquierda tampoco podía achicarse.
+
+**Cambio:** la duración pasa a la columna izquierda, debajo de la fecha, en un solo renglón (`whitespace-nowrap` en `ListDuration`). La columna izquierda se puede achicar (`min-w-0 flex-1`) y la derecha (cantidad y botones) no (`shrink-0`).
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Acciones de la canción: se cierran tocando afuera (frontend)
+
+**Pedido de Pablo:** el panel de acciones ("⋯") tiene que cerrarse solo al tocar en cualquier lado que no sea el panel.
+
+**Cambio (`EscucharPage.tsx`):** con un panel abierto, un `pointerdown` fuera de él (`data-actions-panel`) lo cierra. Ese mismo toque no reproduce la canción si cae sobre otra fila: `playRow` ignora el click de la fila durante 600 ms después de cerrar, para no hacer sonar una canción sin querer. Tocar el "⋯" de otra canción cierra el panel abierto y abre el nuevo.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Canciones en celular: acciones detrás de un botón "⋯" (frontend)
+
+**Pedido de Pablo:** en celular, los 6 íconos de cada canción (cohete, corazón, pistas, links, editar, reproducir) ocupaban media fila y achicaban el título. Que haya un solo ícono y, al tocarlo, que los demás entren con una animación hacia la izquierda.
+
+**Cambio (`EscucharPage.tsx`, vista lista):**
+- Debajo de `md`, cada fila muestra solo "⋯".
+- Al tocarlo, las acciones aparecen sobre la fila, pegadas a la derecha, entrando desde la derecha (deslizan + fade, 300 ms), con fondo de tarjeta, sombra hacia la izquierda y una ✕ para cerrar.
+- Una fila abierta por vez: abrir otra cierra la anterior.
+- Los toques en las acciones no reproducen la canción. Tocar la fila sigue reproduciéndola.
+- En compu no cambia (acciones siempre a la vista).
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** la animación en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Filtros de Canciones ordenados en celular (frontend)
+
+**Pedido de Pablo:** en celular el buscador, los 3 filtros y el botón de vista quedaban desparramados en 3 renglones. Ordenarlo para que se vea mejor.
+
+**Cambio (`EscucharPage.tsx`):**
+- **Celular**, en dos filas: el buscador con el botón de vista (lista/tarjetas) a la derecha, y debajo los 3 filtros en una sola fila que se desliza de costado si no entran.
+- Los textos de los filtros se acortaron ("Tipo: todos", "Secuencia: todas", "Tema: todos"). Al elegir uno se ve el valor elegido, en dorado como antes.
+- **Compu:** todo en una fila, con el botón de vista al final.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Fix: en celular los temas se metían debajo de los íconos (frontend)
+
+**Reportado por Pablo:** en Canciones, en celular, los temas debajo del artista se superponían con los íconos de la derecha (cohete, corazón).
+
+**Causa:** dos temas no entraban en el ancho. `TagList` no recortaba, y un tema largo ("Espíritu Santo") se partía en dos renglones y se agrandaba.
+
+**Cambio:**
+- `TagChip` nunca se corta en dos renglones ni se achica (`whitespace-nowrap`, `shrink-0`).
+- `TagList` no se pasa de su lugar (`overflow-hidden`).
+- En Canciones, en celular (menos de `sm`), debajo del artista va 1 tema y "+N" con la burbuja. En pantallas medianas, 2, como antes.
+
+**Verificado:** tsc, eslint, 169 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Duración total de cada lista de canciones (frontend)
+
+**Pedido de Pablo:** mostrar cuánto dura tocar toda la lista, en las tarjetas de Listas y al crear una. No con la duración de YouTube sino con la de la secuencia de cada canción (muchas se acortan respecto del original: la secuencia subida es la duración real).
+
+**Cambio:** `canciones/lib/sequence-duration.ts`.
+- **Secuencia de una canción:** el audio principal o, si no hay, la primera pista (por `order`).
+- **Duración:** se lee de los metadatos del archivo (`readAudioDuration`, sin bajarlo entero) y se recuerda por key, en memoria y en `localStorage`. El archivo de una key no cambia. Si falla no se guarda y se reintenta. Los pedidos simultáneos de la misma key se juntan en uno.
+- `useListDuration` suma la lista y cuenta las canciones de las que no se pudo saber.
+- `ListDuration` muestra "≈ 24 min" (o "1 h 07 min") con un reloj, "(sin N)" si faltan algunas, y "Calculando…" mientras lee.
+- Va en `SetlistCard` (Próximos e Historial, debajo de la cantidad de canciones) y en Nueva lista de canciones, al lado de la cantidad.
+- No se usa `song.duration`, que puede venir de YouTube.
+
+**Verificado:** test de `formatListDuration`, 169 tests, tsc, eslint y build. **Sin verificar:** con los audios reales en el navegador; lo prueba Pablo. La primera vez que se abre Listas tarda un poco por canción (lee los metadatos); después queda guardado.
+
+---
+
+## 2026-10-09 — Fix: Acordes/Letras desordenaban la lista de canciones (frontend)
+
+**Reportado por Pablo:** al abrir una lista de canciones en Acordes (o Letras) y tocar la segunda, esa canción pasaba arriba y la lista quedaba desordenada. El equipo sigue el orden de la lista mientras toca y se puede perder.
+
+**Causa (`AcordesPage.tsx`, `LetrasPage.tsx`):** con `songIds` (venir desde una lista) se filtraban las canciones pero en el orden general del repertorio, no en el de la lista. Además la canción abierta siempre se movía primera (pensado para "Recientes").
+
+**Cambio:** con `songIds`, las canciones van en el orden de la lista (el de `songIds`, que arma `SetlistDetail` desde `items`), y la abierta no se mueve. El título del listado dice "Orden de la lista" en vez de "Recientes". Sin lista no cambia nada.
+
+**Verificado:** tsc, eslint, 168 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Lista de canciones más alta en Acordes y Letras (frontend)
+
+**Pedido de Pablo:** en compu, la lista de canciones de la izquierda quedaba corta y dejaba un espacio negro debajo. Que llegue más abajo, en Acordes y en Letras.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** desde `lg`, la lista mide como máximo el alto de la pantalla menos el encabezado (`100vh - 7.5rem`, con `sticky top-24`). Antes medía 70% del alto (y el listado de adentro 65%). El listado de adentro ocupa todo ese alto y se desplaza ahí. En celular no cambia (55% del alto, plegable).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Los invitados no ven las próximas a sacar (frontend)
+
+**Pedido de Pablo:** quienes entran como invitados no tienen que ver la próxima canción a sacar. Antes la veían: cargan las mismas canciones que el resto, con `esProxima`.
+
+**Cambio (`InicioPage.tsx`):** para invitados, la lista de próximas queda vacía, así que no aparece la sección y las tarjetas van a lo largo como siempre. El botón del cohete en Canciones ya era solo para quien edita canciones.
+
+**A tener en cuenta:** la API igual devuelve `esProxima` y `proximaDesde` en las canciones para un invitado. Solo se ocultan en la pantalla. Si hace falta que no lleguen, hay que filtrarlos en el backend.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** entrando como invitado; lo prueba Pablo.
+
+---
+
+## 2026-10-09 — Inicio: últimas subidas al lado del post (frontend)
+
+**Pedido de Pablo:** con una sola próxima a sacar, debajo de las 4 tarjetas de la derecha quedaba un hueco al lado del post. Que ahí vayan las últimas canciones subidas.
+
+**Cambio (`InicioPage.tsx`):** con 1 próxima, la lista "Últimas canciones subidas" pasa a la columna de la derecha, debajo de las tarjetas. Con varias o ninguna, queda abajo como antes. Sus temas ahora usan `TagList` (2 y "+N" con burbuja), así no se desborda en la columna angosta.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Inicio: las tarjetas al lado del post cuando hay una sola próxima (frontend)
+
+**Pedido de Pablo:** con una sola próxima a sacar, en compu quedaba vacía la mitad derecha. Propuesta aceptada: subir ahí las 4 tarjetas (Próxima lista, Canción del mes, Últimas subidas, Tus favoritos). Sin próximas, las 4 a lo largo como siempre.
+
+**Cambio (`InicioPage.tsx`, `ProximasSection.tsx`):**
+- **1 próxima:** desde `lg`, una grilla de 2 columnas. A la izquierda va el post (con una sola columna adentro) y a la derecha las 4 tarjetas en 2×2, alineadas con el post, debajo del título.
+- **Varias:** los posts llenan la fila (2, o 3 en `2xl`) y las tarjetas van abajo, de a 4.
+- **Ninguna:** las 4 tarjetas a lo largo, como antes.
+- **Celular:** todo en una columna, sin cambios.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Próximas a sacar como un post (frontend)
+
+**Pedido de Pablo:** la tarjeta compacta con paneles no le gustó. La quiere como un post, llamativa: la portada grande pero no tanto, de acordes solo la tonalidad, de letra una animación que muestre un poco como si se estuviera cantando, y un apartado para la nota del equipo si la hay.
+
+**Cambio (`ProximasSection.tsx` + `styles.css`):** cada canción es un post.
+- **Encabezado:** logo, "Cielos Abiertos", "Próxima a sacar · desde el 8 de octubre" y un punto dorado que late.
+- **Portada** 16:10 con degradé. Encima van el título, el artista, el chip "Tono D" y un play redondo dorado.
+- **Letra cantándose** (`SingingLyrics`): de las primeras 8 líneas, una por vez cada 2,8 s. La actual se pinta de dorado de izquierda a derecha (`karaoke-fill`, clip-path animado), con la anterior arriba y la siguiente asomando abajo, tenues. Con "reducir movimiento" del sistema no hay pintado.
+- **Nota del equipo:** la más reciente, con su autor, solo si hay.
+- Abajo, los botones Escuchar y Acordes.
+- Se sacaron los paneles de acordes, links y pistas.
+- **Disposición:** en celular, carrusel (86% de ancho) o una sola. En compu, 2 por fila (3 en `2xl`), así un post solo no ocupa toda la pantalla.
+
+**Verificado:** tsc, eslint, 168 tests y build. **Sin verificar:** la animación a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Secuencia = audio cargado; solo esas canciones en estadísticas y listas (frontend)
+
+**Pedido de Pablo:**
+- Al lado de "Más tocadas" del mes, otra igual con las de los últimos 3 meses.
+- Muy importante: todas las estadísticas son solo de canciones con **secuencia**. Las listas de canciones se arman con canciones con secuencia, y las sugerencias (cuando se hagan) también tienen que tenerla.
+- "Secuencia" = al menos un audio cargado. Un link no cuenta.
+
+**Cambio:**
+- `canciones/lib/sequence.ts`: `hasSequence(song)` = audio principal cargado o al menos una pista. Es la única regla para todo.
+- **Estadísticas:**
+  - Los cálculos, el historial por canción y los rankings usan solo canciones con secuencia.
+  - "Más tocadas" pasa a ser un componente (`TopCard`). Al lado va "Más tocadas · últimos 3 meses" (fijo, sin importar el mes elegido). El historial por canción queda abajo, a todo el ancho.
+- **Canciones:** la columna y el filtro "Secuencia" usan `hasSequence`. Antes miraban solo las pistas: una canción con solo audio principal aparecía con "-" (lo que había reportado Pablo).
+- **Nueva lista de canciones:** el buscador ofrece solo canciones con secuencia. Las listas que ya existen no cambian.
+
+**Verificado:** test nuevo de `hasSequence`, 168 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Estadísticas: veces que se tocó cada canción, por mes o rango (frontend)
+
+**Contexto:** Estadísticas estaba todo en 0. Sumaba con `song_play_stats` (`POST /canciones/:id/reproducir`), pero el frontend nunca llamaba a ese endpoint. **Pedido de Pablo:** no le sirven las escuchas en la app. Quiere las canciones más tocadas en un mes o en un rango de meses. Más adelante, que la app use eso para sugerir canciones (pendiente de definir).
+
+**Cambio (`lib/stats.ts` + `EstadisticasPage.tsx`):**
+- `playsFromSetlists` arma `playsByMonth` de cada canción con las listas que ya pasaron al historial (`isPlayedSetlist`: pasada a mano o desde el día después de su fecha). Cuenta una vez por lista, en el mes de su fecha. Así los cálculos que ya había siguen sirviendo.
+- Arriba, "Mes" (un mes) o "Rango" (desde y hasta). Los meses van desde la lista pasada más vieja (o un año atrás) hasta el actual. Antes estaban fijos en el código (2025-09 a 2026-09).
+- **Más tocadas** del período: lista con barras, en lugar del gráfico de barras con nombres inclinados que no se leía en celular.
+- **Por tema** del período.
+- **Canciones tocadas por mes** (último año).
+- **Más tocadas de siempre.**
+- Se sacó la comparativa fija 2025 vs 2026.
+
+`song_play_stats` y `/reproducir` quedan sin uso (no se borraron).
+
+**Verificado:** 4 tests nuevos (cuenta por lista pasada y no las futuras, el día después de la fecha, meses de un rango, más tocadas en un rango), 167 tests, tsc, eslint y build. **Sin verificar:** con las listas reales en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Letras en vivo: dos columnas sin apretar la letra (frontend)
+
+**Pedido de Pablo:** en celular, en dos columnas la letra se apretaba para entrar en la pantalla (renglones cortados en pedacitos). Las columnas tienen que ir lado a lado con la letra a su tamaño, y desplazarse con el dedo o alejarse pellizcando para ver la de al lado.
+
+**Cambio (`LetrasPage.tsx`):** en dos columnas ya no se usan columnas CSS (que se adaptan al ancho). Las secciones se reparten en dos columnas lado a lado, sin partir ninguna sección, con una cantidad de renglones parecida (los títulos cuentan 2). Los renglones no se cortan (`whitespace-pre`) y el bloque mide lo que mida la letra (`w-max`). La pantalla completa se desplaza en los dos sentidos (`overflow-auto`), y con `items-center-safe` el bloque queda centrado si entra o arranca desde el borde izquierdo si es más ancho, sin quedar cortado. El pellizco (que ya existía) cambia el tamaño de la letra. Una columna no cambia.
+
+**Verificado:** tsc, eslint, 163 tests y build. **Sin verificar:** en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Próximas a sacar: tarjeta compacta con lo necesario para prepararla (frontend)
+
+**Pedido de Pablo:** la tarjeta ocupaba mucho de la pantalla (portada gigante). Achicarla y sumar parte de la letra, los acordes, las anotaciones del equipo (puede que se acorte o se toque en otro tono), los links y las pistas.
+
+**Cambio (`ProximasSection.tsx`):**
+- **Encabezado compacto:** portada chica (80px; 96px en `sm`), etiqueta "Próxima a sacar", título, artista y tono · compás · BPM · desde cuándo. Los botones Escuchar y Acordes van a la derecha en compu, y debajo a ancho completo en celular.
+- **Debajo, paneles** (uno por fila en celular, 2 en `sm`, 4 en `xl`). Solo aparecen los que tienen contenido:
+  - Letra: las primeras 4 líneas.
+  - Acordes en el tono: los de la canción, sin repetir, hasta 12.
+  - Notas del equipo: las 2 últimas, con su autor.
+  - Links y pistas: los links abren en otra pestaña, con el ícono de YouTube si corresponde.
+- Las notas, los links y las pistas se piden al mostrar la tarjeta. Si el usuario no tiene permiso, ese panel no aparece.
+- Si son varias canciones: carrusel en celular (88% del ancho) y una debajo de otra en compu.
+
+**Verificado:** tsc, eslint, 163 tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Nombre de las listas predefinidas (frontend)
+
+**Pedido de Pablo:** al guardar una lista como predefinida, que no quede con el nombre de la lista original ("Domingo 04/10"). Poder ponerle otro nombre, o que se cree uno automático incremental.
+
+**Cambio (`SetlistsPage.tsx`):** el botón de guardar como predefinida abre un modal con el nombre. Viene completo con uno automático (`nextTemplateName`: "Lista 1", "Lista 2"…, el siguiente al número más alto ya usado) y seleccionado, para escribir encima. Enter guarda y Escape cancela. Las predefinidas que ya existían no cambian de nombre.
+
+**Verificado:** 2 tests nuevos, 163 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Más tocadas: el play abajo (frontend)
+
+**Pedido de Pablo:** en "Más tocadas este mes" (Inicio), el botón de play no tiene que ir sobre la portada sino abajo.
+
+**Cambio (`InicioPage.tsx`):** el play pasa a la fila de abajo de cada tarjeta, al lado del corazón (32px, dorado), y siempre visible. Antes aparecía solo al pasar el mouse, así que en celular casi no se veía.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Fix: íconos de Acciones pisados; confirmación de "próxima a sacar" (frontend)
+
+**Reportado por Pablo:** en Canciones, los íconos de Acciones se pisaban con la duración. Pidió además un modal de confirmación al tocar "próxima a sacar".
+
+**Causa:** el botón del cohete se sumó a la columna Acciones, que seguía en 140px.
+
+**Cambio:** la columna Acciones pasa a 176px (encabezado y filas, en las dos grillas: `md` y `2xl`). `ProximaButton` ahora abre un modal para confirmar, tanto al marcar como al quitar, con la canción y qué va a pasar. Se dibuja con un portal en `body`: las tarjetas de celular tienen `transform`, y un `fixed` adentro quedaba encerrado en la tarjeta. Los toques dentro del modal no llegan a la fila (que reproduce).
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Temas en una línea con burbuja (frontend)
+
+**Pedido de Pablo:** en Canciones, una canción con muchos temas agrandaba la fila. Mostrar dos temas y "…". Los demás, en una burbuja animada al pasar el mouse (compu) o al tocar (celular).
+
+**Cambio:** `components/common/TagList.tsx` (nuevo):
+- Muestra los 2 primeros temas y un "+N" con los que faltan, siempre en una sola línea.
+- "+N" abre una burbuja (Popover de Radix) con todos los temas. Con mouse, se abre al pasar y se cierra al salir (con 150ms de respiro para llegar a la burbuja). En celular se abre y cierra tocando. No dispara la reproducción de la fila.
+- Animación: la burbuja nace desde el "+N" (zoom + fade), y los temas aparecen de a uno con un pequeño rebote (40ms entre cada uno).
+- Se usa en la columna Temas (pantallas muy anchas) y, donde esa columna no se ve (celular y pantallas medianas), debajo del artista.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** la animación a ojo; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Fix: "crack" al cambiar de canción; fuera el botón Duraciones de YouTube (frontend)
+
+**Reportado por Pablo:** al pasar de un audio a otro mientras se escucha, el sonido "crashea" un poco. Además pidió sacar el botón "Duraciones de YouTube" (no se usa más).
+
+**Causa (`MiniPlayer.tsx`):** al cambiar de canción, la URL del audio se ponía en null de inmediato. El `<audio>` perdía el `src` de golpe, sin pasar por el fundido de play/pausa.
+
+**Cambio:** la URL resuelta se guarda junto con su key (`resolved: { key, url }`). Al cambiar de canción, el `<audio>` conserva la anterior. Como todavía no está lista la de la canción actual, el efecto de play/pausa la baja con el fundido y la pausa. Cuando llega la URL nueva, el `src` cambia con el audio ya en silencio y arranca con fundido de subida. Mientras la anterior baja, no mueve la barra de progreso de la nueva. En Canciones se quitó el botón "Duraciones de YouTube" (`syncYoutubeDurations`). Queda la actualización automática de la duración al agregar un link de YouTube en Links relacionados.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** a oído; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — "Próximas a sacar" en Inicio (backend + frontend)
+
+**Pedido de Pablo:** marcar canciones como "próxima a sacar" (pueden ser varias) y destacarlas en Inicio. Dejan de ser próximas solas cuando una lista de canciones que las tiene llega a su fecha y pasa al historial. Inicio lindo y pensado para celular (lo usan casi todos ahí).
+
+**Backend:** columna `songs.proxima_desde` (timestamptz, null), migración `AddSongProximaDesde`. `proximaASacar: boolean` en el DTO (marcar toma la fecha de hoy; desmarcar la deja en null; mismo permiso que editar una canción). `esProxima` se calcula al leer (`SongsService.withEsProxima`, en `findAll` y `findById`): marcada y sin ninguna lista (no borrada) que la tenga, con fecha desde el día de la marca, que ya haya pasado al historial. Historial = igual que la pantalla de listas: pasada a mano (`is_upcoming = false`) o desde el día después de su fecha, en hora de Argentina. Calculado y no con un proceso programado porque en Render gratis el backend se duerme. Las listas viejas (de antes de la marca) no cuentan. Las plantillas están en otra tabla y no cuentan.
+
+**Frontend:** botón de cohete (`ProximaButton`) en cada canción de Escuchar (lista de compu y tarjetas de celular), y switch "Próxima a sacar" en Editar canción (solo se manda si cambió, para no renovar la fecha). En Inicio, `ProximasSection`, justo debajo de la portada:
+- En celular, tarjetas grandes que se pasan deslizando de costado (snap; la siguiente asoma), o una sola de ancho completo.
+- En compu, una grilla.
+- Cada tarjeta: portada grande fundida con la tarjeta, la etiqueta "Próxima a sacar" con un punto que late, título, artista, tono/compás/BPM, "desde el 8 de octubre", y los botones Escuchar/Pausar y Acordes.
+- Si no hay ninguna, la sección no aparece. Las más recientes van primero.
+
+**Verificado:** back: 3 tests nuevos de `esProxima` (sin marca no consulta, marcada sin tocar, marcada y tocada), 107 tests, tsc, oxlint y build. Front: tsc, eslint, 161 tests y build. **Sin verificar:** la consulta SQL contra una base real y la migración (Docker apagado), y el diseño a ojo. **Deploy:** backend primero (migración), después el front.
+
+---
+
+## 2026-10-08 — Nombre propio del audio principal (backend + frontend)
+
+**Pedido de Pablo:** poder editar el nombre del audio que se sube en Editar canción (no solo el de las pistas). Y sacar el aviso "¿Más audios de la canción…? Subilos en Pistas".
+
+**Backend:** columna `songs.audio_name` (varchar, null), migración `AddSongAudioName`. `audioName` en el DTO (opcional, hasta 120 caracteres; vacío → null). Al eliminar el audio principal se borra también su nombre.
+
+**Frontend:** en Editar canción, debajo del archivo de audio (cuando hay uno cargado o elegido), un campo "Nombre del audio". Al elegir un archivo se completa con su nombre (`trackNameFromFile`), y se puede cambiar. Vacío = se muestra el título de la canción, como antes. Se usa en la fila "Audio principal" de Pistas y en el reproductor (Pistas relacionadas y el nombre del audio que suena). Se quitó el aviso de Pistas que se había agregado en la entrada anterior.
+
+**Verificado:** back: 104 tests, tsc, oxlint y build. Front: tsc, eslint, 161 tests y build. **Sin verificar:** la migración no se corrió en local (Docker apagado), ni el flujo en el navegador. **Deploy:** backend primero (la migración corre sola en el build de Render), después el front.
+
+---
+
+## 2026-10-08 — Portada: en celular el logo va al lado del título (frontend)
+
+**Pedido de Pablo:** en celular, el logo arriba de "Cielos Abiertos" ocupaba mucho alto. Lo quiere a la derecha del título.
+
+**Cambio (`InicioPage.tsx`):** debajo de `lg` el logo va a la derecha de "Cielos / Abiertos", en la misma fila, centrado en el espacio libre que queda a la derecha del título (ajuste pedido después) (96px; 128px en `sm`, `icon-192.png`). En compu sigue grande a la derecha del bloque (`icon-512.png`, solo desde `lg`).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el celular; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Pistas muestra también el audio principal (frontend)
+
+**Reportado por Pablo:** en "Pistas adicionales" decía "Sin pistas adicionales todavía" aunque la canción tenía audio subido.
+
+**Causa:** la ventana solo listaba las pistas adicionales. El audio principal (el que se sube en Editar canción) no aparecía.
+
+**Cambio (`AudioTracksModal.tsx`):** si la canción tiene audio principal y no es ya una de las pistas, va primero, marcado "Audio principal", con el título de la canción y su botón de escuchar. Se elimina desde Editar canción (es otra confirmación). Si el principal es además una pista ("Usar como principal"), no se repite: ya se ve en la lista con su check.
+
+**Verificado:** tsc, eslint, 161 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Nombre de cada audio al subirlo (frontend)
+
+**Pedido de Pablo:** al subir un audio, poder ponerle su propio nombre: sube varios por canción ("Audio Quién podrá", "Secuencia Batería Quién podrá", "Guitarra Quién podrá"…).
+
+**Criterio:** eso ya es lo que hacen las **Pistas** (cada una con su nombre). El audio principal es uno por canción y se muestra con el título de la canción, así que no se le agregó nombre propio (no hubo migración).
+
+**Cambio:** en Pistas, al elegir el archivo, el nombre se completa con el del archivo si está vacío (`trackNameFromFile`: sin extensión, los `_` como espacios; "¿Quién podrá_.mp3" → "¿Quién podrá"). Se puede editar antes de subir. Ejemplo del placeholder: "Batería, Guitarra, Click y guía". En Editar canción, debajo de Archivo de audio, un aviso explica que los otros audios con nombre se suben en Pistas. Para renombrar después, está el lápiz de cada pista (entrada anterior).
+
+**Verificado:** test nuevo (3 casos), 161 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Logo en la portada de Inicio (frontend)
+
+**Pedido de Pablo:** que el logo aparezca en la portada (el bloque "Cielos Abiertos" de Inicio).
+
+**Cambio (`InicioPage.tsx`):** `icon-512.png` redondo con el brillo dorado (`glow`, igual que en el login). En compu (`lg`) va grande a la derecha del texto (288px; 320px en `xl`), donde antes quedaba vacío. En celular y tablet va arriba del título (96px; 128px en `sm`).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Búsqueda sin acentos (frontend)
+
+**Pedido de Pablo:** que el buscador encuentre una canción aunque se escriba sin acento ("quien podra" → "¿Quién Podrá?").
+
+**Cambio:** `lib/search.ts` (`normalizeSearch`, `matchesSearch`): compara sin acentos ni mayúsculas (la ñ cuenta como n). Se usa en los 7 buscadores, que filtraban con `toLowerCase().includes`: Escuchar, Acordes, Letras (título y temas), Favoritos, listas de canciones (página y armado de una lista nueva). Todos buscan sobre las canciones ya cargadas, así que el backend no cambia.
+
+**Verificado:** 3 tests nuevos, 160 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
+## 2026-10-08 — Logo nuevo de la app (frontend)
+
+**Pedido de Pablo:** usar `public/logo2.jpeg` (clave de sol dorada con paloma, 1254×1254, fondo casi negro) como logo del sistema en todos lados, en lugar del anterior (`icono.jpeg`).
+
+**Cambio:** se regeneraron desde `logo2.jpeg` todos los íconos que salían del logo anterior, con los mismos nombres: `icon-192/512.png` (manifest, sidebar, login, pantalla de carga), `icon-maskable-512.png` (logo al 80% sobre su mismo fondo), `apple-touch-icon.png`, `favicon-96.png` y `favicon.ico` (16/32/48). Como los nombres no cambian, no hubo que tocar el código (solo el comentario de `__root.tsx`). `icono.jpeg` quedó en `public/` sin usar.
+
+**Verificado:** tamaños de cada archivo, el ícono maskable a ojo, y build. **A tener en cuenta:** quien tiene la app instalada ve el ícono nuevo cuando el navegador refresca el manifest (puede tardar hasta un día).
+
+---
+
+## 2026-10-08 — Eliminar audios definitivamente y renombrar pistas (backend + frontend)
+
+**Pedido de Pablo:** poder eliminar definitivamente los audios subidos, confirmando como al eliminar una canción (escribiendo el nombre), y cambiar el nombre del audio.
+
+**Antes:** el audio principal no se podía sacar (solo reemplazar). Borrar una pista sacaba la fila pero dejaba el archivo en el bucket. El audio principal no tiene nombre propio: se guarda con una key automática y se muestra con el título de la canción.
+
+**Backend:** `AudioFilesService` (nuevo). `DELETE /canciones/:id/audio` (`cancion:delete`, el mismo permiso que borrar pistas y links; no hizo falta un permiso nuevo) deja `audioKey` en null y borra el archivo. `DELETE /pistas/:id` ahora también borra el archivo. En los dos casos el archivo se borra solo si ninguna canción (incluidas las dadas de baja) ni pista lo usa, porque "Usar como principal" copia la key de una pista a la canción.
+
+**Frontend:** `ConfirmTypedDeleteModal` (nuevo; mismo diseño que `DeleteSongModal`). En Editar canción, "Eliminar audio" al lado de "Ya tiene audio cargado": se confirma escribiendo el título de la canción. El formulario recuerda que se eliminó, así Guardar no vuelve a poner la key vieja. En Pistas: el tacho pide escribir el nombre de la pista (antes borraba directo), y un lápiz permite renombrarla (Enter guarda, Escape cancela; `PATCH /pistas/:id`, ya existía).
+
+**A tener en cuenta:** reemplazar el audio (subir otro) sigue dejando el archivo viejo en el bucket. Sin cambios en eso.
+
+**Verificado:** back: 4 tests nuevos de `AudioFilesService` (borra si nadie lo usa, no borra si lo usa una pista o una canción, sin audio y 404); 104 tests, tsc, oxlint y build. Front: tsc, eslint, 157 tests y build. **Sin verificar:** contra la API en el navegador; lo prueba Pablo. **Deploy:** backend antes que frontend (endpoint nuevo).
+
+---
+
 ## 2026-10-06 — Play y pausa con fundido del volumen (frontend)
 
 **Pedido de Pablo:** que al dar play o pausa el sonido no se corte ni arranque de golpe, sino que baje o suba bien rápido.

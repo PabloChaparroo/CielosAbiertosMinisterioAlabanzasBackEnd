@@ -37,4 +37,7 @@ export class User extends BaseAuditEntity {
     inverseJoinColumn: { name: "role_id" },
   })
   roles!: Relation<Role>[];
+
+  /** Calculado en GET /equipo (no es columna): tiene un rol con permiso rol:write */
+  isAdmin?: boolean;
 }

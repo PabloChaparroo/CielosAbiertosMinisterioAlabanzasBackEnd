@@ -17,6 +17,7 @@ import { SongLink } from "./entities/song-link.entity";
 import { SongPlayStat } from "./entities/song-play-stat.entity";
 import { Song } from "./entities/song.entity";
 import { TipoCancion } from "./entities/tipo-cancion.entity";
+import { AudioFilesService } from "./services/audio-files.service";
 import { AudioTracksService } from "./services/audio-tracks.service";
 import { SongLinksService } from "./services/song-links.service";
 import { SongPurgeService } from "./services/song-purge.service";
@@ -46,6 +47,7 @@ import { SongsService } from "./services/songs.service";
     SongsService,
     SongPurgeService,
     AudioTracksService,
+    AudioFilesService,
     SongLinksService,
   ],
   exports: [SongsService],

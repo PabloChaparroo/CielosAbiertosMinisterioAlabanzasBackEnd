@@ -55,7 +55,7 @@ export class SongsService {
       .take(query.limit)
       .getManyAndCount();
 
-    return { data, total, page: query.page, limit: query.limit };
+    return { data: await this.withEsProxima(data), total, page: query.page, limit: query.limit };
   }
 
   async findById(id: string): Promise<Song> {
@@ -69,7 +69,35 @@ export class SongsService {
       .where("song.id = :id", { id })
       .getOne();
     if (!song) throw new NotFoundException("Canción no encontrada");
-    return song;
+    const [withFlag] = await this.withEsProxima([song]);
+    return withFlag!;
+  }
+
+  /**
+   * Completa `esProxima`: la canción marcada deja de ser "próxima a sacar" cuando está en una
+   * lista de canciones (no borrada) con fecha desde la marca que ya pasó al historial: la pasaron
+   * a mano (is_upcoming = false) o ya pasó su día (como en la pantalla de listas, el día después
+   * de la fecha, en hora de Argentina). Se calcula al leer: no hace falta un proceso programado.
+   */
+  private async withEsProxima(songs: Song[]): Promise<Song[]> {
+    const marked = songs.filter((s) => s.proximaDesde);
+    songs.forEach((s) => (s.esProxima = false));
+    if (marked.length === 0) return songs;
+    const tz = "America/Argentina/Buenos_Aires";
+    const played: Array<{ id: string }> = await this.songRepo.query(
+      `SELECT s.id FROM "songs" s
+       WHERE s.id = ANY($1) AND EXISTS (
+         SELECT 1 FROM "setlist_items" i JOIN "setlists" l ON l.id = i.setlist_id
+         WHERE i.song_id = s.id
+           AND l.fecha_hora_baja IS NULL
+           AND (l.date AT TIME ZONE $2)::date >= (s.proxima_desde AT TIME ZONE $2)::date
+           AND (l.is_upcoming = false OR (l.date AT TIME ZONE $2)::date < (now() AT TIME ZONE $2)::date)
+       )`,
+      [marked.map((s) => s.id), tz],
+    );
+    const playedIds = new Set(played.map((row) => row.id));
+    marked.forEach((s) => (s.esProxima = !playedIds.has(s.id)));
+    return songs;
   }
 
   async create(dto: CreateSongDto): Promise<Song> {
@@ -84,6 +112,8 @@ export class SongsService {
       duration: dto.duration,
       cover: dto.cover,
       audioKey: dto.audioKey ?? null,
+      audioName: dto.audioName?.trim() || null,
+      proximaDesde: dto.proximaASacar ? new Date() : null,
       chordpro: dto.chordpro,
       lyricsImageKey: dto.lyricsImageKey ?? null,
       tags,
@@ -113,6 +143,10 @@ export class SongsService {
       ...(dto.duration !== undefined && { duration: dto.duration }),
       ...(dto.cover !== undefined && { cover: dto.cover }),
       ...(dto.audioKey !== undefined && { audioKey: dto.audioKey }),
+      ...(dto.audioName !== undefined && { audioName: dto.audioName.trim() || null }),
+      ...(dto.proximaASacar !== undefined && {
+        proximaDesde: dto.proximaASacar ? new Date() : null,
+      }),
       ...(dto.chordpro !== undefined && { chordpro: dto.chordpro }),
       ...(dto.lyricsImageKey !== undefined && { lyricsImageKey: dto.lyricsImageKey }),
       ...(dto.coverKey !== undefined && { coverKey: dto.coverKey }),
