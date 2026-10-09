@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Nombre de las listas predefinidas (frontend)
+
+**Pedido de Pablo:** al guardar una lista como predefinida, que no quede con el nombre de la lista original ("Domingo 04/10"). Poder ponerle otro nombre, o que se cree uno automático incremental.
+
+**Cambio (`SetlistsPage.tsx`):** el botón de guardar como predefinida abre un modal con el nombre. Viene completo con uno automático (`nextTemplateName`: "Lista 1", "Lista 2"…, el siguiente al número más alto ya usado) y seleccionado, para escribir encima. Enter guarda y Escape cancela. Las predefinidas que ya existían no cambian de nombre.
+
+**Verificado:** 2 tests nuevos, 163 tests, tsc, eslint y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Más tocadas: el play abajo (frontend)
 
 **Pedido de Pablo:** en "Más tocadas este mes" (Inicio), el botón de play no tiene que ir sobre la portada sino abajo.
