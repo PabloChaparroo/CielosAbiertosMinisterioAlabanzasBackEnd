@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Logo en la portada de Inicio (frontend)
+
+**Pedido de Pablo:** que el logo aparezca en la portada (el bloque "Cielos Abiertos" de Inicio).
+
+**Cambio (`InicioPage.tsx`):** `icon-512.png` redondo con el brillo dorado (`glow`, igual que en el login). En compu (`lg`) va grande a la derecha del texto (288px; 320px en `xl`), donde antes quedaba vacío. En celular y tablet va arriba del título (96px; 128px en `sm`).
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** a ojo en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Búsqueda sin acentos (frontend)
 
 **Pedido de Pablo:** que el buscador encuentre una canción aunque se escriba sin acento ("quien podra" → "¿Quién Podrá?").
