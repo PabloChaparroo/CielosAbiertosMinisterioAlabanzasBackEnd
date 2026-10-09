@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Fix: Acordes/Letras desordenaban la lista de canciones (frontend)
+
+**Reportado por Pablo:** al abrir una lista de canciones en Acordes (o Letras) y tocar la segunda, esa canción pasaba arriba y la lista quedaba desordenada. El equipo sigue el orden de la lista mientras toca y se puede perder.
+
+**Causa (`AcordesPage.tsx`, `LetrasPage.tsx`):** con `songIds` (venir desde una lista) se filtraban las canciones pero en el orden general del repertorio, no en el de la lista. Además la canción abierta siempre se movía primera (pensado para "Recientes").
+
+**Cambio:** con `songIds`, las canciones van en el orden de la lista (el de `songIds`, que arma `SetlistDetail` desde `items`), y la abierta no se mueve. El título del listado dice "Orden de la lista" en vez de "Recientes". Sin lista no cambia nada.
+
+**Verificado:** tsc, eslint, 168 tests y build. **Sin verificar:** en el navegador; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Lista de canciones más alta en Acordes y Letras (frontend)
 
 **Pedido de Pablo:** en compu, la lista de canciones de la izquierda quedaba corta y dejaba un espacio negro debajo. Que llegue más abajo, en Acordes y en Letras.
