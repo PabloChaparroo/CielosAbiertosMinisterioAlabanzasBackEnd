@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-08 — Logo nuevo de la app (frontend)
+
+**Pedido de Pablo:** usar `public/logo2.jpeg` (clave de sol dorada con paloma, 1254×1254, fondo casi negro) como logo del sistema en todos lados, en lugar del anterior (`icono.jpeg`).
+
+**Cambio:** se regeneraron desde `logo2.jpeg` todos los íconos que salían del logo anterior, con los mismos nombres: `icon-192/512.png` (manifest, sidebar, login, pantalla de carga), `icon-maskable-512.png` (logo al 80% sobre su mismo fondo), `apple-touch-icon.png`, `favicon-96.png` y `favicon.ico` (16/32/48). Como los nombres no cambian, no hubo que tocar el código (solo el comentario de `__root.tsx`). `icono.jpeg` quedó en `public/` sin usar.
+
+**Verificado:** tamaños de cada archivo, el ícono maskable a ojo, y build. **A tener en cuenta:** quien tiene la app instalada ve el ícono nuevo cuando el navegador refresca el manifest (puede tardar hasta un día).
+
+---
+
 ## 2026-10-08 — Eliminar audios definitivamente y renombrar pistas (backend + frontend)
 
 **Pedido de Pablo:** poder eliminar definitivamente los audios subidos, confirmando como al eliminar una canción (escribiendo el nombre), y cambiar el nombre del audio.
