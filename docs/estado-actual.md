@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Inicio: últimas subidas al lado del post (frontend)
+
+**Pedido de Pablo:** con una sola próxima a sacar, debajo de las 4 tarjetas de la derecha quedaba un hueco al lado del post. Que ahí vayan las últimas canciones subidas.
+
+**Cambio (`InicioPage.tsx`):** con 1 próxima, la lista "Últimas canciones subidas" pasa a la columna de la derecha, debajo de las tarjetas. Con varias o ninguna, queda abajo como antes. Sus temas ahora usan `TagList` (2 y "+N" con burbuja), así no se desborda en la columna angosta.
+
+**Verificado:** tsc, eslint, tests y build. **Sin verificar:** a ojo; lo prueba Pablo.
+
+---
+
 ## 2026-10-08 — Inicio: las tarjetas al lado del post cuando hay una sola próxima (frontend)
 
 **Pedido de Pablo:** con una sola próxima a sacar, en compu quedaba vacía la mitad derecha. Propuesta aceptada: subir ahí las 4 tarjetas (Próxima lista, Canción del mes, Últimas subidas, Tus favoritos). Sin próximas, las 4 a lo largo como siempre.
