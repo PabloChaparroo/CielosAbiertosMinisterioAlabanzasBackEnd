@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Los invitados no ven las próximas a sacar (frontend)
+
+**Pedido de Pablo:** quienes entran como invitados no tienen que ver la próxima canción a sacar. Antes la veían: cargan las mismas canciones que el resto, con `esProxima`.
+
+**Cambio (`InicioPage.tsx`):** para invitados, la lista de próximas queda vacía, así que no aparece la sección y las tarjetas van a lo largo como siempre. El botón del cohete en Canciones ya era solo para quien edita canciones.
+
+**A tener en cuenta:** la API igual devuelve `esProxima` y `proximaDesde` en las canciones para un invitado. Solo se ocultan en la pantalla. Si hace falta que no lleguen, hay que filtrarlos en el backend.
+
+**Verificado:** tsc, eslint y build. **Sin verificar:** entrando como invitado; lo prueba Pablo.
+
+---
+
 ## 2026-10-09 — Inicio: últimas subidas al lado del post (frontend)
 
 **Pedido de Pablo:** con una sola próxima a sacar, debajo de las 4 tarjetas de la derecha quedaba un hueco al lado del post. Que ahí vayan las últimas canciones subidas.
