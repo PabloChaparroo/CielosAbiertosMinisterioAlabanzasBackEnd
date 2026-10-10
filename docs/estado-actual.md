@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-09 — Workflow de GitHub Actions que despierta Render a la mañana (backend)
+
+**Pedido de Pablo:** el backend está en Render free y se duerme tras ~15 min sin tráfico. El primer ping de cron-job.org a la mañana recibe la página de carga de Render (HTML largo): cron-job.org la aborta por tamaño (`output too large`; con HEAD, 502) y el servicio nunca termina de arrancar. Hacía falta un arranque externo que espere la carga completa.
+
+**Cambio:** `.github/workflows/wake-render.yml`. Se dispara todos los días a las 10:30 UTC (7:30 hora Argentina) y a mano con `workflow_dispatch`. Tiene un solo paso con curl contra `/api/ping`: hasta 9 intentos de máximo 30 s cada uno, con 20 s de espera entre intentos (unos 3 min en total). Solo cuenta como éxito si el cuerpo trae `"status":"ok"`. La página de carga, un 502/503 o un timeout se reintentan. Si se agotan los intentos, el job falla y GitHub avisa por mail. Tiene `permissions: {}` y `timeout-minutes: 5`, y no usa secretos, checkout ni base de datos. **cron-job.org sigue haciendo el mantenimiento durante el día.** Este workflow solo cubre el arranque.
+
+**Qué tener en cuenta:** los `schedule` solo corren desde `main` (no se activa hasta mergear) y GitHub puede demorar unos minutos en dispararlos, por eso se eligieron las 7:30. GitHub desactiva los workflows programados tras **60 días sin actividad en el repo**. Si pasa eso, se reactiva desde la pestaña Actions o con cualquier commit. No interfiere con el CI: no corre en push ni en PR, así que no agrega checks a la protección de `main`. El repo es público, así que no consume minutos pagos.
+
+**Verificado:** el YAML parsea con js-yaml (no hay actionlint). El script extraído del YAML termina con exit 1 contra una URL que no devuelve `"status":"ok"` y con exit 0 contra el backend real (estaba dormido: timeout en el intento 1, respondió en el 2). **Pendiente (Pablo):** mergear y probarlo con Run workflow en Actions.
+
+---
+
 ## 2026-10-09 — Acordes: favoritos primero al entrar (frontend)
 
 **Pedido de Pablo:** igual que en Letras, que al entrar a Acordes aparezcan primero los favoritos. Antes se abría directamente la primera canción.
