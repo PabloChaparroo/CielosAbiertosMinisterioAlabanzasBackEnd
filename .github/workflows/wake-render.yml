@@ -1,0 +1,39 @@
+# Arranque de la mañana del backend en Render (plan free, se duerme tras ~15 min sin tráfico).
+# cron-job.org no sirve para el primer ping: recibe la página de carga de Render, la aborta
+# por tamaño y el servicio nunca termina de arrancar. Este job espera la carga completa.
+# Durante el día el mantenimiento sigue a cargo de cron-job.org. Ver docs/estado-actual.md.
+# Ojo: los schedule solo corren desde main, y GitHub los desactiva tras 60 días sin actividad en el repo.
+name: Despertar Render
+
+on:
+  schedule:
+    # 10:30 UTC = 7:30 hora Argentina; GitHub puede demorar unos minutos en dispararlo
+    - cron: "30 10 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  despertar:
+    name: ping a /api/ping
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Esperar a que el backend responda
+        env:
+          URL: https://cielosabiertosministerioalabanzasbackend.onrender.com/api/ping
+          INTENTOS: "9"
+          ESPERA: "20"
+        run: |
+          # éxito solo si el cuerpo trae "status":"ok"; HTML de carga, 502/503 o timeout = reintentar
+          for i in $(seq 1 "$INTENTOS"); do
+            cuerpo=$(curl -sS --max-time 30 "$URL" 2>&1 || true)
+            if printf '%s' "$cuerpo" | grep -q '"status":"ok"'; then
+              echo "Intento $i: backend despierto"
+              exit 0
+            fi
+            echo "Intento $i: todavía no ($(printf '%s' "$cuerpo" | head -c 120 | tr '\n' ' '))"
+            if [ "$i" -lt "$INTENTOS" ]; then sleep "$ESPERA"; fi
+          done
+          echo "::error::El backend no respondió \"status\":\"ok\" tras $INTENTOS intentos"
+          exit 1
