@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-10 — El reproductor ya no tapa el final de las páginas (frontend)
+
+**Pedido de Pablo:** en Acordes, el reproductor de abajo tapaba la caja de "Anotaciones del equipo".
+
+**Causa y cambio (`AppLayout.tsx`):** el contenido tenía `py-6 sm:py-8` y además `pb-32` cuando hay reproductor. Desde el breakpoint `sm`, `sm:py-8` pisaba el `pb-32` (las variantes responsive van después en el CSS), así que el final de cualquier página quedaba debajo del reproductor. Ahora el padding de arriba es `pt-6 sm:pt-8` y el de abajo lo maneja solo `pb-32` / `pb-16`, en todos los tamaños.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-10 — Solo acordes: un "-" al final del renglón une con el renglón siguiente (frontend)
 
 **Pedido de Pablo:** con "Tú[A/C#],-" y "[C] Y cada día…" en el renglón siguiente, se mostraba "| A/C# | C |". Lo correcto es "| A/C# - C |": el "-" une los acordes aunque haya un salto de línea entre ellos.
