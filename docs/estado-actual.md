@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-10 — Solo acordes: un "-" al final del renglón une con el renglón siguiente (frontend)
+
+**Pedido de Pablo:** con "Tú[A/C#],-" y "[C] Y cada día…" en el renglón siguiente, se mostraba "| A/C# | C |". Lo correcto es "| A/C# - C |": el "-" une los acordes aunque haya un salto de línea entre ellos.
+
+**Cambio (`lib/chords.ts`):** `lineBars` ahora avisa si el renglón termina con "-" después de su último acorde. Cuando es así, `packChartRows` une ese compás con el primero del renglón siguiente (los renglones vacíos en el medio no cortan). Solo pasa en "Solo acordes" y en los tramos que se acomodan en filas de 4.
+
+**Efecto en canciones existentes:** en el coro de "Al estar ante ti", "en la cru[Bm]z -" ahora queda "Bm - A" (antes eran "Bm" y "A" en compases separados). Se actualizó ese test. Si ese "-" no era de acordes, hay que sacarlo de la letra.
+
+**Verificado:** test nuevo con el caso del pedido, 172 tests y tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-10 — Reproductor: "Pistas relacionadas" aparece con animación (frontend)
 
 **Pedido de Pablo:** que el desplegable de audios del reproductor de abajo aparezca animado.
