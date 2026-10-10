@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-10 — Acordes: una marca arriba del acorde ya no baja la línea (frontend)
+
+**Pedido de Pablo:** con `['A/C#]` en la letra, en "Letra + acordes" ese acorde y su letra bajaban un renglón y se rompía la línea.
+
+**Causa y cambio (`ChordSheet.tsx`):** lo de arriba del acorde (comillas o `[-…-X]`) ocupaba una fila extra solo en su columna. Ahora se dibuja en posición absoluta sobre el acorde y el renglón entero reserva ese alto (`paddingTop`), así todo queda alineado. "Solo acordes" no cambia.
+
+**Verificado:** tsc y 171 tests. Lint sin errores nuevos en el archivo. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-09 — Workflow de GitHub Actions que despierta Render a la mañana (backend)
 
 **Pedido de Pablo:** el backend está en Render free y se duerme tras ~15 min sin tráfico. El primer ping de cron-job.org a la mañana recibe la página de carga de Render (HTML largo): cron-job.org la aborta por tamaño (`output too large`; con HEAD, 502) y el servicio nunca termina de arrancar. Hacía falta un arranque externo que espere la carga completa.
