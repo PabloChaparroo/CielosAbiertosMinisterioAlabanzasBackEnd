@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-10 — Reproductor: "Pistas relacionadas" aparece con animación (frontend)
+
+**Pedido de Pablo:** que el desplegable de audios del reproductor de abajo aparezca animado.
+
+**Cambio (`MiniPlayer.tsx`):** el panel entra con fundido, un leve zoom y un pequeño desplazamiento hacia arriba (200 ms), desde la esquina inferior derecha, cerca del botón que lo abre. Usa las clases `animate-in` que ya usa el resto de la app. El cierre sigue siendo inmediato.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-10 — Acordes: una marca arriba del acorde ya no baja la línea (frontend)
 
 **Pedido de Pablo:** con `['A/C#]` en la letra, en "Letra + acordes" ese acorde y su letra bajaban un renglón y se rompía la línea.
