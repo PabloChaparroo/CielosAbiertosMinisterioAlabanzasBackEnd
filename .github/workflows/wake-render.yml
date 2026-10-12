@@ -7,8 +7,10 @@ name: Despertar Render
 
 on:
   schedule:
-    # 10:30 UTC = 7:30 hora Argentina; GitHub puede demorar unos minutos en dispararlo
-    - cron: "30 10 * * *"
+    # 10:50 UTC = 7:50 hora Argentina. El primer ping de cron-job.org es a las 8:00 y Render se
+    # duerme a los ~15 min sin tráfico: entre el despertar y ese ping tiene que haber menos de 15 min.
+    # GitHub puede demorar unos minutos en dispararlo; si se pasa de las 8:00, igual lo despierta.
+    - cron: "50 10 * * *"
   workflow_dispatch:
 
 permissions: {}

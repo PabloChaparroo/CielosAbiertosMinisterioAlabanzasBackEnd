@@ -4,13 +4,55 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-10 — El reproductor ya no tapa el final de las páginas (frontend)
+
+**Pedido de Pablo:** en Acordes, el reproductor de abajo tapaba la caja de "Anotaciones del equipo".
+
+**Causa y cambio (`AppLayout.tsx`):** el contenido tenía `py-6 sm:py-8` y además `pb-32` cuando hay reproductor. Desde el breakpoint `sm`, `sm:py-8` pisaba el `pb-32` (las variantes responsive van después en el CSS), así que el final de cualquier página quedaba debajo del reproductor. Ahora el padding de arriba es `pt-6 sm:pt-8` y el de abajo lo maneja solo `pb-32` / `pb-16`, en todos los tamaños.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-10 — Solo acordes: un "-" al final del renglón une con el renglón siguiente (frontend)
+
+**Pedido de Pablo:** con "Tú[A/C#],-" y "[C] Y cada día…" en el renglón siguiente, se mostraba "| A/C# | C |". Lo correcto es "| A/C# - C |": el "-" une los acordes aunque haya un salto de línea entre ellos.
+
+**Cambio (`lib/chords.ts`):** `lineBars` ahora avisa si el renglón termina con "-" después de su último acorde. Cuando es así, `packChartRows` une ese compás con el primero del renglón siguiente (los renglones vacíos en el medio no cortan). Solo pasa en "Solo acordes" y en los tramos que se acomodan en filas de 4.
+
+**Efecto en canciones existentes:** en el coro de "Al estar ante ti", "en la cru[Bm]z -" ahora queda "Bm - A" (antes eran "Bm" y "A" en compases separados). Se actualizó ese test. Si ese "-" no era de acordes, hay que sacarlo de la letra.
+
+**Verificado:** test nuevo con el caso del pedido, 172 tests y tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-10 — Reproductor: "Pistas relacionadas" aparece con animación (frontend)
+
+**Pedido de Pablo:** que el desplegable de audios del reproductor de abajo aparezca animado.
+
+**Cambio (`MiniPlayer.tsx`):** el panel entra con fundido, un leve zoom y un pequeño desplazamiento hacia arriba (200 ms), desde la esquina inferior derecha, cerca del botón que lo abre. Usa las clases `animate-in` que ya usa el resto de la app. El cierre sigue siendo inmediato.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-10 — Acordes: una marca arriba del acorde ya no baja la línea (frontend)
+
+**Pedido de Pablo:** con `['A/C#]` en la letra, en "Letra + acordes" ese acorde y su letra bajaban un renglón y se rompía la línea.
+
+**Causa y cambio (`ChordSheet.tsx`):** lo de arriba del acorde (comillas o `[-…-X]`) ocupaba una fila extra solo en su columna. Ahora se dibuja en posición absoluta sobre el acorde y el renglón entero reserva ese alto (`paddingTop`), así todo queda alineado. "Solo acordes" no cambia.
+
+**Verificado:** tsc y 171 tests. Lint sin errores nuevos en el archivo. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-09 — Workflow de GitHub Actions que despierta Render a la mañana (backend)
 
 **Pedido de Pablo:** el backend está en Render free y se duerme tras ~15 min sin tráfico. El primer ping de cron-job.org a la mañana recibe la página de carga de Render (HTML largo): cron-job.org la aborta por tamaño (`output too large`; con HEAD, 502) y el servicio nunca termina de arrancar. Hacía falta un arranque externo que espere la carga completa.
 
-**Cambio:** `.github/workflows/wake-render.yml`. Se dispara todos los días a las 10:30 UTC (7:30 hora Argentina) y a mano con `workflow_dispatch`. Tiene un solo paso con curl contra `/api/ping`: hasta 9 intentos de máximo 30 s cada uno, con 20 s de espera entre intentos (unos 3 min en total). Solo cuenta como éxito si el cuerpo trae `"status":"ok"`. La página de carga, un 502/503 o un timeout se reintentan. Si se agotan los intentos, el job falla y GitHub avisa por mail. Tiene `permissions: {}` y `timeout-minutes: 5`, y no usa secretos, checkout ni base de datos. **cron-job.org sigue haciendo el mantenimiento durante el día.** Este workflow solo cubre el arranque.
+**Cambio:** `.github/workflows/wake-render.yml`. Se dispara todos los días a las 10:50 UTC (7:50 hora Argentina; hasta el 12/10 era 10:30 UTC) y a mano con `workflow_dispatch`. Tiene un solo paso con curl contra `/api/ping`: hasta 9 intentos de máximo 30 s cada uno, con 20 s de espera entre intentos (unos 3 min en total). Solo cuenta como éxito si el cuerpo trae `"status":"ok"`. La página de carga, un 502/503 o un timeout se reintentan. Si se agotan los intentos, el job falla y GitHub avisa por mail. Tiene `permissions: {}` y `timeout-minutes: 5`, y no usa secretos, checkout ni base de datos. **cron-job.org sigue haciendo el mantenimiento durante el día.** Este workflow solo cubre el arranque.
 
-**Qué tener en cuenta:** los `schedule` solo corren desde `main` (no se activa hasta mergear) y GitHub puede demorar unos minutos en dispararlos, por eso se eligieron las 7:30. GitHub desactiva los workflows programados tras **60 días sin actividad en el repo**. Si pasa eso, se reactiva desde la pestaña Actions o con cualquier commit. No interfiere con el CI: no corre en push ni en PR, así que no agrega checks a la protección de `main`. El repo es público, así que no consume minutos pagos.
+**Qué tener en cuenta:** los `schedule` solo corren desde `main` (no se activa hasta mergear) y GitHub puede demorar unos minutos en dispararlos. **Por qué 7:50 y no 7:30:** Render se duerme a los ~15 min sin tráfico y el primer ping de cron-job.org es a las 8:00. Con 7:30 quedaban 30 min de hueco y el backend volvía a dormirse antes de ese ping. La ventana entre el despertar y el primer ping tiene que ser menor a 15 min. Si GitHub lo dispara tarde y se pasa de las 8:00, el workflow igual lo despierta. GitHub desactiva los workflows programados tras **60 días sin actividad en el repo**. Si pasa eso, se reactiva desde la pestaña Actions o con cualquier commit. No interfiere con el CI: no corre en push ni en PR, así que no agrega checks a la protección de `main`. El repo es público, así que no consume minutos pagos.
 
 **Verificado:** el YAML parsea con js-yaml (no hay actionlint). El script extraído del YAML termina con exit 1 contra una URL que no devuelve `"status":"ok"` y con exit 0 contra el backend real (estaba dormido: timeout en el intento 1, respondió en el 2). **Pendiente (Pablo):** mergear y probarlo con Run workflow en Actions.
 
