@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Pantalla completa de Letras y Acordes: anterior/siguiente y girar (frontend)
+
+**Pedido de Pablo:** al entrar a la pantalla completa desde una lista, pasar a la canción anterior o siguiente sin salir, buscarla y volver a entrar. También un botón para girar la pantalla. Además pidió sacar el cartel "Para salir de la pantalla completa, arrastrá".
+
+**Cambio:**
+- `components/common/ListNav.tsx` (nuevo): botones ‹ › arriba a la izquierda, solo si se entró desde una lista (`songIds`). Se desactivan en la primera y la última canción. `listNeighbors` arma los callbacks a partir del orden de la lista.
+- `LetrasPage.tsx`: ya no sale de la pantalla completa al cambiar de canción.
+- En las dos pantallas, el contenedor lleva `key={song.id}`, así cada canción arranca desde arriba.
+- Botón girar (`lib/screen-orientation.ts`): alterna vertical ↔ horizontal con `screen.orientation.lock`. Solo aparece en pantallas táctiles con soporte (Chrome en Android, con la pantalla completa del navegador activa). En iPhone no existe y no se muestra. Al salir de la pantalla completa se suelta el bloqueo (`exitBrowserFullscreen`).
+
+**No se hizo:** el cartel "Para salir de la pantalla completa…" lo muestra Chrome cada vez que una página pide pantalla completa, y ninguna página web lo puede ocultar.
+
+**Verificado:** tsc, 172 tests y lint sin errores en los archivos tocados. **Sin verificar en pantalla** (girar solo se puede probar en un celular Android).
+
+---
+
 ## 2026-10-13 — Reproductor de abajo con estilo vidrio (frontend)
 
 **Pedido de Pablo:** un reproductor tipo "glass" como el de una maqueta que le gustó: una píldora flotante translúcida.
