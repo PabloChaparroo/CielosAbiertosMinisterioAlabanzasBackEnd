@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Portadas de YouTube en mejor calidad (frontend)
+
+**Pedido de Pablo:** mejorar la calidad de las portadas.
+
+**Causa:** las canciones con video usan la miniatura de YouTube. En los listados era `mqdefault` (320×180). Recortada en cuadrado quedaban 180×180, y en celulares de alta densidad se veía borrosa.
+
+**Cambio (`ui-bits.tsx`, `FullPlayer.tsx`):** en los listados ahora se usa `hqdefault` (480×360, la tienen todos los videos). En las portadas grandes se usa `maxresdefault` (1280×720), con `hqdefault` de respaldo: `Cover` tiene una prop nueva, `hd`, que por defecto vale `true` con `size="lg"`, y el reproductor completo la activa. Las portadas subidas a mano no cambian: se muestran tal cual se subieron.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Nueva lista: se pueden agregar canciones sin secuencia (frontend)
 
 **Pedido de Pablo:** en el celular no encontraba una canción al armar una lista. La causa no era el celular: el buscador solo mostraba canciones con secuencia (al menos un audio). Si hay que tocar una canción sin audio, se tiene que poder agregar igual.
