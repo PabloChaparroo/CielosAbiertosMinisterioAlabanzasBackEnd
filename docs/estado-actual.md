@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Video flotante chico sin franjas negras (frontend)
+
+**Pedido de Pablo:** la ventanita flotante del video se veía con un contorno negro, como si el video no la llenara.
+
+**Causa:** la ventana chica es un cuadrado de 200×200 (el mínimo que exige YouTube para el reproductor embebido), y un video 16:9 adentro queda con franjas negras arriba y abajo. Algunos videos además traen franjas negras propias en la imagen; esas no se pueden quitar.
+
+**Cambio (`FloatingVideoFrame.tsx`):** en la ventana chica, el video se agranda hasta cubrir el cuadrado y se recortan los costados. El iframe mide 356×200, así que sigue cumpliendo el mínimo de YouTube. La ventana grande (16:9) y la pantalla completa no cambian. El div que envuelve al video es siempre el mismo y solo cambian sus clases, para que el iframe no se vuelva a crear (ni se corte el video) al agrandar o achicar.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Portadas de YouTube en mejor calidad (frontend)
 
 **Pedido de Pablo:** mejorar la calidad de las portadas.
