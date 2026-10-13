@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Nueva lista: se pueden agregar canciones sin secuencia (frontend)
+
+**Pedido de Pablo:** en el celular no encontraba una canción al armar una lista. La causa no era el celular: el buscador solo mostraba canciones con secuencia (al menos un audio). Si hay que tocar una canción sin audio, se tiene que poder agregar igual.
+
+**Cambio (`NewSetlistModal.tsx`):** el buscador muestra todas las canciones. Las que no tienen secuencia llevan "· Sin secuencia" al lado del artista. Las "Sugeridas para rotar" ahora sí filtran por secuencia, que era la intención y no se estaba aplicando. El filtro "Menos tocadas" sigue ordenando sobre el resultado de la búsqueda.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-10 — El reproductor ya no tapa el final de las páginas (frontend)
 
 **Pedido de Pablo:** en Acordes, el reproductor de abajo tapaba la caja de "Anotaciones del equipo".
