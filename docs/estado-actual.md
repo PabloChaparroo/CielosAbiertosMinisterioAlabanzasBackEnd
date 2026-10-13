@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Reproductor de abajo con estilo vidrio (frontend)
+
+**Pedido de Pablo:** un reproductor tipo "glass" como el de una maqueta que le gustó: una píldora flotante translúcida.
+
+**Cambio (`MiniPlayer.tsx`):** el reproductor deja de ser una barra pegada al borde y pasa a flotar, separado de los costados y de abajo (respeta el área segura del celular). Es translúcido (`bg-card/55`), con desenfoque fuerte, borde claro sutil y sombra.
+- **En celular:** píldora redondeada con portada circular, título y artista ocupando el espacio libre, favorito, pistas relacionadas (si hay), un botón nuevo para abrir el reproductor completo y el play dorado más grande.
+- **Desde `sm`:** barra flotante con esquinas redondeadas y los mismos controles de antes.
+
+El padding inferior de las páginas (`pb-32`) sigue alcanzando.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Video flotante chico sin franjas negras (frontend)
 
 **Pedido de Pablo:** la ventanita flotante del video se veía con un contorno negro, como si el video no la llenara.
