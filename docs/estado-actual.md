@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Listas en celular: la página ya no se ensancha (frontend)
+
+**Pedido de Pablo:** la pantalla de Listas no se adaptaba al celular: la página quedaba más ancha que la pantalla y se desplazaba de costado.
+
+**Causa:** la última línea de cada tarjeta (los títulos de las canciones unidos por "·") usa `truncate`, pero la tarjeta estaba en una grilla sin columnas definidas en celular. La columna crecía al ancho de esa línea entera, así que una lista con muchas canciones estiraba toda la página.
+
+**Cambio:** `SetlistsPage.tsx`: las tres grillas (predefinidas, próximas, historial) usan `grid-cols-[minmax(0,1fr)]` en celular. `SetlistCard.tsx`: la tarjeta lleva `min-w-0`, el título hace salto de línea si es largo y "Lidera …" se corta con "…".
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Canciones: filtros rediseñados (frontend)
 
 **Pedido de Pablo:** los filtros (desplegables nativos "Tipo: todos", "Secuencia: todas", "Tema: todos") se veían muy básicos, y en el celular el de Tema se cortaba.
