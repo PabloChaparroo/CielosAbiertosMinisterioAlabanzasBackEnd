@@ -14,6 +14,7 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 - **Título:** centrado en una línea ("Cielos *Abiertos*", dorado), "Ministerio de Adoración" y la frase "Adorando en espíritu y en verdad" en cursiva. Se sacó la segunda oración.
 - **Próxima lista:** una tarjeta de vidrio dentro de la portada, con nombre, fecha, cantidad de canciones y cuenta regresiva ("hoy", "mañana", "en N días"). Lleva a Listas. Solo aparece si el usuario puede ver listas y hay una de hoy en adelante. Reemplaza a los botones "Ir a Acordes" y "Ver listas", que ya están en el menú. La tarjeta "Próxima lista" de abajo sigue igual.
 - **Animaciones:** `hero-halo` y `hero-particle` en `styles.css`. Con `prefers-reduced-motion` quedan quietas.
+- **Partículas que suben (pedido posterior de Pablo):** una capa fija detrás de todo el contenido de Inicio, con 12 partículas doradas que suben desde abajo de la pantalla hasta arriba en 16–23 s, balanceándose apenas. Pasan por detrás de la portada y las tarjetas, que van en `relative`. En compu la capa empieza después del menú lateral. Con `prefers-reduced-motion` no se muestran (`rising-particle` en `styles.css`).
 
 **Aviso (datos, no código):** la próxima lista del 11/10 se llama "Domingo 04/10". El nombre no se actualizó al cambiarle la fecha.
 
