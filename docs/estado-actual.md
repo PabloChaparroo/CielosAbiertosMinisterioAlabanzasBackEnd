@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Letras y Acordes: partículas detrás del buscador (frontend)
+
+**Pedido de Pablo:** partículas doradas detrás de la lista del buscador ("Saltar a canción…").
+
+**Cambio:** componente nuevo `components/common/GoldParticles.tsx` (9 partículas fijas, reusa `hero-particle`, quietas con "reducir movimiento"). Va de fondo en el panel del buscador de `AcordesPage.tsx` y de `LetrasPage.tsx`; el panel y su lista llevan `relative` para quedar encima de las partículas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Reproductor completo: brillo dorado, partículas y controles en vidrio (frontend)
 
 **Pedido de Pablo:** en el reproductor a pantalla completa, sumar un sombreado dorado y partículas arriba, y mejorar con vidrio la barra de controles de abajo.
