@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Encabezado: las acciones bajan de fila si no entran (frontend)
+
+**Pedido de Pablo:** en Estadísticas, en el celular, el título del encabezado quedaba cortado ("Estadí…") por los controles de Mes/Rango y el selector de mes.
+
+**Cambio (`AppLayout.tsx`):** la fila del encabezado hace `flex-wrap` y el título tiene un ancho mínimo (`min-w-40`). Si las acciones de la página no entran al lado, bajan a una segunda fila en vez de cortar el título. En las páginas con acciones chicas (el "+" de Canciones, por ejemplo) no cambia nada, porque entran al lado.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Listas en celular: la página ya no se ensancha (frontend)
 
 **Pedido de Pablo:** la pantalla de Listas no se adaptaba al celular: la página quedaba más ancha que la pantalla y se desplazaba de costado.
