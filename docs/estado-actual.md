@@ -4,6 +4,22 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Lista de Canciones con más estilo (frontend)
+
+**Pedido de Pablo:** la lista de Canciones se veía muy básica.
+
+**Cambio (`EscucharPage.tsx`, vista de lista):**
+- **Portada:** más grande en celular (56 px, esquinas redondeadas). Al pasar el mouse aparece ▶︎ encima.
+- **Canción que suena:** fondo de vidrio, una barra dorada con brillo a la izquierda y, sobre la portada, un ecualizador animado (reusa la animación `eq-bar` del reproductor). En pausa las barras quedan quietas.
+- **A la derecha (celular):** el tono en un circulito dorado y la duración, al lado del botón "⋯".
+- **Temas (celular):** texto chico "Fe · Restauración" (hasta 2) en vez de pastillas con "+N".
+- Las filas entran con una animación escalonada corta. Más espacio entre filas y el título en negrita.
+- La vista de computadora (columnas) solo cambia en el fondo de la fila activa y la barra dorada.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Menú lateral con estilo vidrio (frontend)
 
 **Pedido de Pablo:** llevar el estilo vidrio del reproductor también al menú lateral.
