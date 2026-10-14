@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Equipo: botón "Bajas" más compacto (frontend)
+
+**Pedido de Pablo:** acomodar el botón "Mostrar dados de baja", que en el celular quedaba solo en una segunda fila, a la derecha.
+
+**Cambio (`EquipoPage.tsx`):** el botón pasa a ser "Bajas" con un ícono (`UserX`) y entra en la misma fila que los filtros de rol. Se pone rojo cuando está activo. El texto completo ("Mostrar/Ocultar dados de baja") queda como `title`, y el estado se expone con `aria-pressed`.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Encabezado: las acciones bajan de fila si no entran (frontend)
 
 **Pedido de Pablo:** en Estadísticas, en el celular, el título del encabezado quedaba cortado ("Estadí…") por los controles de Mes/Rango y el selector de mes.
