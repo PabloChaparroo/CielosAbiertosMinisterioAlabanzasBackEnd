@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Canciones: filtros rediseñados (frontend)
+
+**Pedido de Pablo:** los filtros (desplegables nativos "Tipo: todos", "Secuencia: todas", "Tema: todos") se veían muy básicos, y en el celular el de Tema se cortaba.
+
+**Cambio (`EscucharPage.tsx`):**
+- Buscador y selector de vista en una fila, con estilo vidrio y 40 px de alto.
+- Abajo, un botón **"Filtros"** de vidrio con un contador dorado de filtros activos. Abre un panel de vidrio que sube desde abajo en el celular y aparece centrado en la computadora. Cada grupo (Tipo, Secuencia, Tema) se elige con pastillas, con "Todos" para no filtrar; tocar la pastilla elegida la desmarca. Abajo del panel están "Limpiar" y "Ver N canciones".
+- Los filtros activos se muestran como pastillas doradas al lado del botón, con ✕ para quitarlos de un toque.
+- `FilterGroup` reemplaza a `filterSelectClass`. La lógica de filtrado no cambió: sigue siendo un tema a la vez.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Encabezado con el brillo dorado del menú (frontend)
 
 **Pedido de Pablo:** sumar al encabezado de las páginas el brillo dorado sutil del menú lateral.
