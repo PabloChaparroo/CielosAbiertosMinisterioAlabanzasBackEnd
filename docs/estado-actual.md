@@ -4,6 +4,70 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Pantalla completa de Letras y Acordes: anterior/siguiente y girar (frontend)
+
+**Pedido de Pablo:** al entrar a la pantalla completa desde una lista, pasar a la canción anterior o siguiente sin salir, buscarla y volver a entrar. También un botón para girar la pantalla. Además pidió sacar el cartel "Para salir de la pantalla completa, arrastrá".
+
+**Cambio:**
+- `components/common/ListNav.tsx` (nuevo): botones ‹ › arriba a la izquierda, solo si se entró desde una lista (`songIds`). Se desactivan en la primera y la última canción. `listNeighbors` arma los callbacks a partir del orden de la lista.
+- `LetrasPage.tsx`: ya no sale de la pantalla completa al cambiar de canción.
+- En las dos pantallas, el contenedor lleva `key={song.id}`, así cada canción arranca desde arriba.
+- Botón girar (`lib/screen-orientation.ts`): alterna vertical ↔ horizontal con `screen.orientation.lock`. Solo aparece en pantallas táctiles con soporte (Chrome en Android, con la pantalla completa del navegador activa). En iPhone no existe y no se muestra. Al salir de la pantalla completa se suelta el bloqueo (`exitBrowserFullscreen`).
+
+**No se hizo:** el cartel "Para salir de la pantalla completa…" lo muestra Chrome cada vez que una página pide pantalla completa, y ninguna página web lo puede ocultar.
+
+**Verificado:** tsc, 172 tests y lint sin errores en los archivos tocados. **Sin verificar en pantalla** (girar solo se puede probar en un celular Android).
+
+---
+
+## 2026-10-13 — Reproductor de abajo con estilo vidrio (frontend)
+
+**Pedido de Pablo:** un reproductor tipo "glass" como el de una maqueta que le gustó: una píldora flotante translúcida.
+
+**Cambio (`MiniPlayer.tsx`):** el reproductor deja de ser una barra pegada al borde y pasa a flotar, separado de los costados y de abajo (respeta el área segura del celular). Es translúcido (`bg-card/55`), con desenfoque fuerte, borde claro sutil y sombra.
+- **En celular:** píldora redondeada con portada circular, título y artista ocupando el espacio libre, favorito, pistas relacionadas (si hay), un botón nuevo para abrir el reproductor completo y el play dorado más grande.
+- **Desde `sm`:** barra flotante con esquinas redondeadas y los mismos controles de antes.
+
+El padding inferior de las páginas (`pb-32`) sigue alcanzando.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Video flotante chico sin franjas negras (frontend)
+
+**Pedido de Pablo:** la ventanita flotante del video se veía con un contorno negro, como si el video no la llenara.
+
+**Causa:** la ventana chica es un cuadrado de 200×200 (el mínimo que exige YouTube para el reproductor embebido), y un video 16:9 adentro queda con franjas negras arriba y abajo. Algunos videos además traen franjas negras propias en la imagen; esas no se pueden quitar.
+
+**Cambio (`FloatingVideoFrame.tsx`):** en la ventana chica, el video se agranda hasta cubrir el cuadrado y se recortan los costados. El iframe mide 356×200, así que sigue cumpliendo el mínimo de YouTube. La ventana grande (16:9) y la pantalla completa no cambian. El div que envuelve al video es siempre el mismo y solo cambian sus clases, para que el iframe no se vuelva a crear (ni se corte el video) al agrandar o achicar.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Portadas de YouTube en mejor calidad (frontend)
+
+**Pedido de Pablo:** mejorar la calidad de las portadas.
+
+**Causa:** las canciones con video usan la miniatura de YouTube. En los listados era `mqdefault` (320×180). Recortada en cuadrado quedaban 180×180, y en celulares de alta densidad se veía borrosa.
+
+**Cambio (`ui-bits.tsx`, `FullPlayer.tsx`):** en los listados ahora se usa `hqdefault` (480×360, la tienen todos los videos). En las portadas grandes se usa `maxresdefault` (1280×720), con `hqdefault` de respaldo: `Cover` tiene una prop nueva, `hd`, que por defecto vale `true` con `size="lg"`, y el reproductor completo la activa. Las portadas subidas a mano no cambian: se muestran tal cual se subieron.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Nueva lista: se pueden agregar canciones sin secuencia (frontend)
+
+**Pedido de Pablo:** en el celular no encontraba una canción al armar una lista. La causa no era el celular: el buscador solo mostraba canciones con secuencia (al menos un audio). Si hay que tocar una canción sin audio, se tiene que poder agregar igual.
+
+**Cambio (`NewSetlistModal.tsx`):** el buscador muestra todas las canciones. Las que no tienen secuencia llevan "· Sin secuencia" al lado del artista. Las "Sugeridas para rotar" ahora sí filtran por secuencia, que era la intención y no se estaba aplicando. El filtro "Menos tocadas" sigue ordenando sobre el resultado de la búsqueda.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-10 — El reproductor ya no tapa el final de las páginas (frontend)
 
 **Pedido de Pablo:** en Acordes, el reproductor de abajo tapaba la caja de "Anotaciones del equipo".
