@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Menú lateral con estilo vidrio (frontend)
+
+**Pedido de Pablo:** llevar el estilo vidrio del reproductor también al menú lateral.
+
+**Cambio (`Sidebar.tsx`, `AppLayout.tsx`):**
+- Fondo translúcido (`bg-sidebar/65`) con desenfoque fuerte y un brillo dorado tenue arriba a la izquierda. El borde derecho pasa a ser una línea blanca sutil.
+- El ítem activo es una tarjeta de vidrio: fondo blanco al 6 %, aro sutil y reflejo arriba. Al pasar el mouse, un fondo blanco al 4 %.
+- El perfil y "Cerrar sesión" quedan en una tarjeta de vidrio redondeada en vez de separados por una línea.
+- En el celular, el fondo que oscurece la pantalla al abrir el menú pasa a ser más liviano (negro al 45 % + desenfoque), así se nota el vidrio del panel.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Acordes: controles de la canción reordenados (frontend)
 
 **Pedido de Pablo:** no le gustaba cómo se veían los íconos de la tarjeta de la canción. Estaban mezclados ("En vivo" y PDF al lado del tono, "Editar" solo en una fila) y cada uno tenía un estilo distinto.
