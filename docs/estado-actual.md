@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Canciones: tarjetas con detalles dorados (frontend)
+
+**Pedido de Pablo:** llevar el estilo dorado de Inicio a la vista de tarjetas de Canciones.
+
+**Cambio (`EscucharPage.tsx`, vista de tarjetas):**
+- **La que suena:** borde dorado, un degradado dorado tenue arriba, un brillo dorado alrededor, el título en degradado dorado y un ecualizador dorado sobre la portada (quieto en pausa).
+- **Al pasar el mouse:** la tarjeta sube con un brillo dorado suave, la portada se agranda apenas y aparece un botón ▶︎ dorado encima.
+- Las tarjetas entran con una animación escalonada y tienen esquinas más redondeadas.
+- **Abajo:** solo la duración, sin el tono, igual que en el listado. Antes "F# · 13:41" se partía en dos líneas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Inicio: portada rediseñada (frontend)
 
 **Pedido de Pablo:** mejorar la portada de Inicio, que le gustaba pero se sentía mejorable.
