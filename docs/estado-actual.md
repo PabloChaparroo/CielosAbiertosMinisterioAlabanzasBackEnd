@@ -8,7 +8,7 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 **Pedido de Pablo:** partículas doradas detrás de la lista del buscador ("Saltar a canción…").
 
-**Cambio:** componente nuevo `components/common/GoldParticles.tsx` (9 partículas fijas, reusa `hero-particle`, quietas con "reducir movimiento"). Va de fondo en el panel del buscador de `AcordesPage.tsx` y de `LetrasPage.tsx`; el panel y su lista llevan `relative` para quedar encima de las partículas.
+**Cambio:** componente nuevo `components/common/GoldParticles.tsx` (9 partículas fijas sobre un sombreado dorado radial tenue arriba a la izquierda y abajo a la derecha, agregado a pedido de Pablo porque las partículas solas se veían sueltas; reusa `hero-particle`, quietas con "reducir movimiento"). Va de fondo en el panel del buscador de `AcordesPage.tsx` y de `LetrasPage.tsx`; el panel y su lista llevan `relative` para quedar encima de las partículas.
 
 **Verificado:** tsc y lint. **Sin verificar en pantalla.**
 
