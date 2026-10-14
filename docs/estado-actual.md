@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Acordes: controles de la canción reordenados (frontend)
+
+**Pedido de Pablo:** no le gustaba cómo se veían los íconos de la tarjeta de la canción. Estaban mezclados ("En vivo" y PDF al lado del tono, "Editar" solo en una fila) y cada uno tenía un estilo distinto.
+
+**Cambio (`AcordesPage.tsx`):** la tarjeta queda en tres bloques separados por una línea:
+1. **La canción:** título y datos a la izquierda; favorito, pistas y play (estos dos, solo en celular) a la derecha.
+2. **Cómo se ve la hoja:** "Tono − G +" y "Letra − 12px +", con etiqueta, y el selector "Letra + acordes / Solo acordes" (a lo ancho en celular).
+3. **Acciones:** En vivo (dorado, la principal), PDF y Editar con el mismo estilo de ícono + texto. Mientras se edita, en este lugar aparecen "Pasar el texto a…", Cancelar y Guardar.
+
+Todos los controles miden lo mismo de alto (`h-10`) y tienen el mismo borde redondeado. No cambió ninguna funcionalidad.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Pantalla completa de Letras y Acordes: anterior/siguiente y girar (frontend)
 
 **Pedido de Pablo:** al entrar a la pantalla completa desde una lista, pasar a la canción anterior o siguiente sin salir, buscarla y volver a entrar. También un botón para girar la pantalla. Además pidió sacar el cartel "Para salir de la pantalla completa, arrastrá".
