@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Reproductor completo: brillo dorado, partículas y controles en vidrio (frontend)
+
+**Pedido de Pablo:** en el reproductor a pantalla completa, sumar un sombreado dorado y partículas arriba, y mejorar con vidrio la barra de controles de abajo.
+
+**Cambio (`FullPlayer.tsx`):**
+- **Encabezado de la canción:** un brillo dorado radial desde arriba a la izquierda y 7 partículas doradas que flotan (reusa `hero-particle` de Inicio, que se queda quieta con "reducir movimiento"). El círculo decorativo grande ahora tiene un borde dorado tenue.
+- **Barra de controles:** vidrio (`bg-card/55`, `backdrop-blur-2xl`, saturación), borde claro arriba, sombra hacia arriba y un brillo dorado tenue desde abajo.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Canciones: tarjetas con detalles dorados (frontend)
 
 **Pedido de Pablo:** llevar el estilo dorado de Inicio a la vista de tarjetas de Canciones.
