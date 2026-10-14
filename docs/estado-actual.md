@@ -4,6 +4,161 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Letras y Acordes: partículas detrás del buscador (frontend)
+
+**Pedido de Pablo:** partículas doradas detrás de la lista del buscador ("Saltar a canción…").
+
+**Cambio:** componente nuevo `components/common/GoldParticles.tsx` (9 partículas fijas sobre un sombreado dorado radial tenue arriba a la izquierda y abajo a la derecha, agregado a pedido de Pablo porque las partículas solas se veían sueltas; reusa `hero-particle`, quietas con "reducir movimiento"). Va de fondo en el panel del buscador de `AcordesPage.tsx` y de `LetrasPage.tsx`; el panel y su lista llevan `relative` para quedar encima de las partículas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Reproductor completo: brillo dorado, partículas y controles en vidrio (frontend)
+
+**Pedido de Pablo:** en el reproductor a pantalla completa, sumar un sombreado dorado y partículas arriba, y mejorar con vidrio la barra de controles de abajo.
+
+**Cambio (`FullPlayer.tsx`):**
+- **Encabezado de la canción:** un brillo dorado radial desde arriba a la izquierda y 7 partículas doradas que flotan (reusa `hero-particle` de Inicio, que se queda quieta con "reducir movimiento"). El círculo decorativo grande ahora tiene un borde dorado tenue.
+- **Barra de controles:** vidrio (`bg-card/55`, `backdrop-blur-2xl`, saturación), borde claro arriba, sombra hacia arriba y un brillo dorado tenue desde abajo.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Canciones: tarjetas con detalles dorados (frontend)
+
+**Pedido de Pablo:** llevar el estilo dorado de Inicio a la vista de tarjetas de Canciones.
+
+**Cambio (`EscucharPage.tsx`, vista de tarjetas):**
+- **La que suena:** borde dorado, un degradado dorado tenue arriba, un brillo dorado alrededor, el título en degradado dorado y un ecualizador dorado sobre la portada (quieto en pausa).
+- **Al pasar el mouse:** la tarjeta sube con un brillo dorado suave, la portada se agranda apenas y aparece un botón ▶︎ dorado encima.
+- Las tarjetas entran con una animación escalonada y tienen esquinas más redondeadas.
+- **Abajo:** solo la duración, sin el tono, igual que en el listado. Antes "F# · 13:41" se partía en dos líneas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Inicio: portada rediseñada (frontend)
+
+**Pedido de Pablo:** mejorar la portada de Inicio, que le gustaba pero se sentía mejorable.
+
+**Cambio (`InicioPage.tsx`, `styles.css`):**
+- **Fondo:** cielo oscuro con un resplandor dorado desde arriba ("cielos abiertos") y un toque violeta al centro, en vez del degradado anterior. Suma 10 partículas doradas fijas que suben y se desvanecen despacio.
+- **Logo:** grande y centrado (144–176 px), con un halo dorado que "respira" cada 5 s. Antes era chico al lado del título en celular.
+- **Título:** centrado en una línea ("Cielos *Abiertos*", dorado), "Ministerio de Adoración" y la frase "Adorando en espíritu y en verdad" en cursiva. Se sacó la segunda oración.
+- **Próxima lista:** una tarjeta de vidrio dentro de la portada, con nombre, fecha, cantidad de canciones y cuenta regresiva ("hoy", "mañana", "en N días"). Lleva a Listas. Solo aparece si el usuario puede ver listas y hay una de hoy en adelante. Reemplaza a los botones "Ir a Acordes" y "Ver listas", que ya están en el menú. La tarjeta "Próxima lista" de abajo sigue igual.
+- **Animaciones:** `hero-halo` y `hero-particle` en `styles.css`. Con `prefers-reduced-motion` quedan quietas.
+- **Partículas que suben (pedido posterior de Pablo):** una capa fija detrás de todo el contenido de Inicio, con 12 partículas doradas que suben desde abajo de la pantalla hasta arriba en 16–23 s, balanceándose apenas. Pasan por detrás de la portada y las tarjetas, que van en `relative`. En compu la capa empieza después del menú lateral. Con `prefers-reduced-motion` no se muestran (`rising-particle` en `styles.css`).
+
+**Aviso (datos, no código):** la próxima lista del 11/10 se llama "Domingo 04/10". El nombre no se actualizó al cambiarle la fecha.
+
+**Verificado:** tsc, lint y `vite build`. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Equipo: botón "Bajas" más compacto (frontend)
+
+**Pedido de Pablo:** acomodar el botón "Mostrar dados de baja", que en el celular quedaba solo en una segunda fila, a la derecha.
+
+**Cambio (`EquipoPage.tsx`):** el botón pasa a ser "Bajas" con un ícono (`UserX`) y entra en la misma fila que los filtros de rol. Se pone rojo cuando está activo. El texto completo ("Mostrar/Ocultar dados de baja") queda como `title`, y el estado se expone con `aria-pressed`.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Encabezado: las acciones bajan de fila si no entran (frontend)
+
+**Pedido de Pablo:** en Estadísticas, en el celular, el título del encabezado quedaba cortado ("Estadí…") por los controles de Mes/Rango y el selector de mes.
+
+**Cambio (`AppLayout.tsx`):** la fila del encabezado hace `flex-wrap` y el título tiene un ancho mínimo (`min-w-40`). Si las acciones de la página no entran al lado, bajan a una segunda fila en vez de cortar el título. En las páginas con acciones chicas (el "+" de Canciones, por ejemplo) no cambia nada, porque entran al lado.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Listas en celular: la página ya no se ensancha (frontend)
+
+**Pedido de Pablo:** la pantalla de Listas no se adaptaba al celular: la página quedaba más ancha que la pantalla y se desplazaba de costado.
+
+**Causa:** la última línea de cada tarjeta (los títulos de las canciones unidos por "·") usa `truncate`, pero la tarjeta estaba en una grilla sin columnas definidas en celular. La columna crecía al ancho de esa línea entera, así que una lista con muchas canciones estiraba toda la página.
+
+**Cambio:** `SetlistsPage.tsx`: las tres grillas (predefinidas, próximas, historial) usan `grid-cols-[minmax(0,1fr)]` en celular. `SetlistCard.tsx`: la tarjeta lleva `min-w-0`, el título hace salto de línea si es largo y "Lidera …" se corta con "…".
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Canciones: filtros rediseñados (frontend)
+
+**Pedido de Pablo:** los filtros (desplegables nativos "Tipo: todos", "Secuencia: todas", "Tema: todos") se veían muy básicos, y en el celular el de Tema se cortaba.
+
+**Cambio (`EscucharPage.tsx`):**
+- Buscador y selector de vista en una fila, con estilo vidrio y 40 px de alto.
+- Abajo, un botón **"Filtros"** de vidrio con un contador dorado de filtros activos. Abre un panel de vidrio que sube desde abajo en el celular y aparece centrado en la computadora. Cada grupo (Tipo, Secuencia, Tema) se elige con pastillas, con "Todos" para no filtrar; tocar la pastilla elegida la desmarca. Abajo del panel están "Limpiar" y "Ver N canciones".
+- Los filtros activos se muestran como pastillas doradas al lado del botón, con ✕ para quitarlos de un toque.
+- `FilterGroup` reemplaza a `filterSelectClass`. La lógica de filtrado no cambió: sigue siendo un tema a la vez.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Encabezado con el brillo dorado del menú (frontend)
+
+**Pedido de Pablo:** sumar al encabezado de las páginas el brillo dorado sutil del menú lateral.
+
+**Cambio (`AppLayout.tsx`):** el encabezado lleva el mismo círculo `bg-primary/10` con `blur-3xl` arriba a la izquierda, recortado por el borde del encabezado (`overflow-hidden`).
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Lista de Canciones con más estilo (frontend)
+
+**Pedido de Pablo:** la lista de Canciones se veía muy básica.
+
+**Cambio (`EscucharPage.tsx`, vista de lista):**
+- **Portada:** más grande en celular (56 px, esquinas redondeadas). Al pasar el mouse aparece ▶︎ encima.
+- **Canción que suena:** fondo de vidrio, una barra dorada con brillo a la izquierda y, sobre la portada, un ecualizador animado (reusa la animación `eq-bar` del reproductor). En pausa las barras quedan quietas.
+- **A la derecha (celular):** la duración, al lado del botón "⋯", como en un reproductor (el tono se sacó a pedido de Pablo).
+- **Temas (celular):** texto chico "Fe · Restauración" (hasta 2) en vez de pastillas con "+N".
+- Las filas entran con una animación escalonada corta. Más espacio entre filas y el título en negrita.
+- La vista de computadora (columnas) solo cambia en el fondo de la fila activa y la barra dorada.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Menú lateral con estilo vidrio (frontend)
+
+**Pedido de Pablo:** llevar el estilo vidrio del reproductor también al menú lateral.
+
+**Cambio (`Sidebar.tsx`, `AppLayout.tsx`):**
+- Fondo translúcido (`bg-sidebar/65`) con desenfoque fuerte y un brillo dorado tenue arriba a la izquierda. El borde derecho pasa a ser una línea blanca sutil.
+- El ítem activo es una tarjeta de vidrio: fondo blanco al 6 %, aro sutil y reflejo arriba. Al pasar el mouse, un fondo blanco al 4 %.
+- El perfil y "Cerrar sesión" quedan en una tarjeta de vidrio redondeada en vez de separados por una línea.
+- En el celular, el fondo que oscurece la pantalla al abrir el menú pasa a ser más liviano (negro al 45 % + desenfoque), así se nota el vidrio del panel.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-13 — Acordes: controles de la canción reordenados (frontend)
+
+**Pedido de Pablo:** no le gustaba cómo se veían los íconos de la tarjeta de la canción. Estaban mezclados ("En vivo" y PDF al lado del tono, "Editar" solo en una fila) y cada uno tenía un estilo distinto.
+
+**Cambio (`AcordesPage.tsx`):** la tarjeta queda en tres bloques separados por una línea:
+1. **La canción:** título y datos a la izquierda; favorito, pistas y play (estos dos, solo en celular) a la derecha.
+2. **Cómo se ve la hoja:** "Tono − G +" y "Letra − 12px +", con etiqueta, y el selector "Letra + acordes / Solo acordes" (a lo ancho en celular).
+3. **Acciones:** En vivo (dorado, la principal), PDF y Editar con el mismo estilo de ícono + texto. Mientras se edita, en este lugar aparecen "Pasar el texto a…", Cancelar y Guardar.
+
+Todos los controles miden lo mismo de alto (`h-10`) y tienen el mismo borde redondeado. No cambió ninguna funcionalidad.
+
+**Verificado:** tsc, 172 tests y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Pantalla completa de Letras y Acordes: anterior/siguiente y girar (frontend)
 
 **Pedido de Pablo:** al entrar a la pantalla completa desde una lista, pasar a la canción anterior o siguiente sin salir, buscarla y volver a entrar. También un botón para girar la pantalla. Además pidió sacar el cartel "Para salir de la pantalla completa, arrastrá".
