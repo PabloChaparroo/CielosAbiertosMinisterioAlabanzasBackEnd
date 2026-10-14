@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-13 — Encabezado con el brillo dorado del menú (frontend)
+
+**Pedido de Pablo:** sumar al encabezado de las páginas el brillo dorado sutil del menú lateral.
+
+**Cambio (`AppLayout.tsx`):** el encabezado lleva el mismo círculo `bg-primary/10` con `blur-3xl` arriba a la izquierda, recortado por el borde del encabezado (`overflow-hidden`).
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Lista de Canciones con más estilo (frontend)
 
 **Pedido de Pablo:** la lista de Canciones se veía muy básica.
