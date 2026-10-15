@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: buscador arriba al tocarlo y resultados justo debajo (frontend)
+
+**Pedido de Pablo:** en celular, al tocar el buscador el teclado tapa media pantalla. Quiere que el buscador quede primero y las canciones encontradas justo debajo, con las sugeridas en otro lado.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Al enfocar el buscador, a los 300 ms (cuando el teclado ya achicó la pantalla) el modal se desplaza hasta dejar el buscador arriba (`scrollIntoView` con `block: "start"`).
+- La lista de resultados va pegada debajo del buscador. "Menos tocadas (últimos 5 meses)" y "Sugeridas para rotar" pasan abajo de los resultados, antes de "Orden del servicio".
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla** (el desplazamiento con el teclado solo se puede probar en un celular).
+
+---
+
 ## 2026-10-15 — Nueva lista: en celular ocupa toda la pantalla (frontend)
 
 **Pedido de Pablo:** primer ajuste del modal "Nueva lista de canciones": que llegue hasta arriba.
