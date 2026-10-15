@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Letras/Acordes desde una lista: el buscador no abre el teclado (frontend)
+
+**Pedido de Pablo:** al entrar a Letras o Acordes desde una lista, el buscador muestra solo las 5 o 6 canciones de la lista. No hace falta escribir, así que no quiere que se abra el teclado del celular.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** con `songIds` (se entró desde una lista), el input queda `readOnly` con `inputMode="none"`: tocarlo despliega las canciones sin abrir el teclado. El placeholder pasa a "Canciones de la lista". Sin lista, el buscador sigue como siempre.
+
+**Verificado:** tsc. **Sin verificar en pantalla** (lo del teclado solo se puede probar en un celular).
+
+---
+
 ## 2026-10-15 — Detalle de lista sin selector de tono (frontend)
 
 **Pedido de Pablo:** sacar el selector de tonalidad de cada canción en el detalle de la lista.
