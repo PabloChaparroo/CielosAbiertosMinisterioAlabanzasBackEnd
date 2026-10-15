@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Duración de la lista: primer track, si no YouTube (frontend)
+
+**Pedido de Pablo:** la duración total de una lista se calcula con la duración del primer track subido de cada canción. Si la canción no tiene tracks, con la duración del video de YouTube.
+
+**Cambio (`canciones/lib/sequence-duration.ts`):** `sequenceDuration` sigue este orden: 1) el primer track (menor `order`); 2) si no hay o no se pudo leer, el audio principal; 3) si no, `song.duration`, solo si la canción tiene `youtubeVideoId` y la duración es mayor que 0 (`youtubeDuration`). Antes iba primero el audio principal y nunca usaba YouTube, así que esas canciones contaban como "sin duración". Se actualizaron los textos de ayuda de `ListDuration.tsx`.
+
+**Supuesto:** el pedido no mencionaba el audio principal; quedó como segunda opción, antes de YouTube. Supone que `song.duration` es la duración del video.
+
+**Verificado:** test nuevo de `youtubeDuration`, 173 tests y tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Nueva lista: equipo solo con líderes y músicos, y sus instrumentos (frontend)
 
 **Pedido de Pablo:** en "Equipo asignado" solo tienen que aparecer líderes y músicos, nunca los admins. Y para cada integrante, solo los instrumentos que tiene asignados.
