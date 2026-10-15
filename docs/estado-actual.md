@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Menú lateral angosto que se abre al pasar el mouse (frontend)
+
+**Pedido de Pablo:** que el menú lateral también se pliegue en tablet y en compu, y se abra al pasar el mouse.
+
+**Cambio:**
+- `AppLayout.tsx`: desde `lg` el menú fijo mide 76 px (solo íconos) y se abre a 272 px con `hover` o `focus-within`, con transición de ancho. Se abre por encima del contenido, sin empujarlo (`z-40`, sombra). El contenido pasa a `lg:pl-[76px]`.
+- `Sidebar.tsx`: `SidebarContent` tiene una prop nueva, `collapsible`. Con el menú angosto se ocultan los textos (nombre de la app, títulos de grupo, nombres de los módulos, nombre y rol del perfil, "Cerrar sesión") y aparecen al abrirse. El contenido mantiene 272 px por dentro, así no se reacomoda durante la animación. El menú del celular (☰) no cambia.
+- Corrimientos que dependían del ancho del menú: `MiniPlayer` (`lg:left-[92px]`) y las partículas de Inicio (`lg:left-[76px]`).
+
+**Táctil:** en una tablet sin mouse, tocar un ícono navega directo. El menú se abre entero solo si toma el foco (por ejemplo, al tocar el perfil).
+
+**Verificado:** tsc, 182 tests y `vite build`. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Letras/Acordes en tablet: la lista se pliega (frontend)
 
 **Pedido de Pablo:** en una tablet se veían el menú, la lista de canciones y la hoja en tres columnas, y la hoja quedaba muy angosta.
