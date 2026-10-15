@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Listas predefinidas solo para líderes y admins (backend + frontend)
+
+**Pedido de Pablo:** las listas predefinidas solo las pueden ver líderes y admins.
+
+**Cambio:**
+- **Backend** (`setlist-templates.controller.ts`): `GET /setlist-templates` pasa a pedir `setlist:write` (el mismo permiso que crear listas) en vez de `setlist:read`. Así un músico tampoco las obtiene llamando a la API.
+- **Frontend** (`SetlistsPage.tsx`): la sección "Listas predefinidas" y su carga solo están con `can("createSetlist")` (= `setlist:write`). Los demás no la ven ni la piden.
+
+Esto deja sin efecto, para quien no es líder ni admin, lo de "abrir una predefinida para ver sus canciones" de hoy. Los líderes la siguen pudiendo abrir.
+
+**Verificado:** backend: tsc y 107 tests. Frontend: tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Menú lateral: fijo solo en compu, ☰ en tablet (frontend)
 
 **Pedido de Pablo:** en tablet el menú lateral ocupaba lugar. Primero se probó un menú angosto de íconos que se abría al pasar el mouse. No le gustó cómo se veía y pidió que en tablet se use el ☰, como en el celular, y que en compu quede abierto y fijo.

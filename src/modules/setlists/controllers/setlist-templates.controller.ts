@@ -9,8 +9,9 @@ import { SetlistTemplatesService } from "../services/setlist-templates.service";
 export class SetlistTemplatesController {
   constructor(private readonly service: SetlistTemplatesService) {}
 
+  // ver las predefinidas: solo quien puede armar listas (líderes y admins), no todo el que las lee
   @Get()
-  @Permissions(crudPermission("setlist", "read"))
+  @Permissions(crudPermission("setlist", "write"))
   findAll() {
     return this.service.findAll();
   }
