@@ -4,6 +4,30 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Orden del servicio dividido en Alabanzas / Adoración / Ofrenda (backend + frontend)
+
+**Pedido de Pablo:** que las listas se armen como las arman sus líderes. En Cultos y Ensayos el orden del servicio se divide en Alabanzas, Adoración y Ofrenda. Al agregar una canción va sola a la sección de su tipo, pero se puede cambiar (por ejemplo, pasar una alabanza a la ofrenda). En Evento Especial, una canción detrás de otra, sin secciones. Las listas predefinidas también guardan la sección. Las canciones sin tipo van a Alabanzas.
+
+**Backend:**
+- `SetlistItem.section`: varchar nullable, con valor `alabanza`, `adoracion` u `ofrenda` (`SETLIST_SECTIONS`). Migración `1760800000000-AddSetlistItemSection`.
+- `SetlistItemDto.section`: opcional, validado con `@IsIn`.
+- `SetlistsService` (create/update) la guarda. Las predefinidas la guardan en su jsonb `items` (`toItems`).
+- null = sin sección: Evento Especial, o listas anteriores.
+
+**Frontend:**
+- `setlists/lib/sections.ts` (nuevo, con tests): `usesSections(type)` (todo menos Evento Especial), `defaultSection` (Adoración → adoracion; el resto, incluso sin tipo, → alabanza), `sectionOf` (la guardada o la del tipo), `groupBySection` e `itemsForType`. Este último, al guardar con secciones, ordena por sección y le pone la suya a cada ítem; en Evento Especial la quita.
+- `NewSetlistModal`: el orden del servicio muestra los tres títulos con sus canciones y numeración corrida. Cada canción tiene un desplegable para cambiar de sección (más fácil que arrastrar en el celular). Se puede arrastrar dentro de una sección, a otra canción (pasa a su sección) o al título de una sección. Una sección vacía muestra "Sin canciones…". Al guardar, `itemsForType`.
+- `SetlistDetail`: títulos de sección; las listas anteriores se muestran agrupadas por el tipo de cada canción. Con permiso de edición, cada canción tiene el desplegable de sección; mover, cambiar tono o quitar guardan ordenado por sección.
+- "Copiar" (`whatsapp.ts`): con secciones guardadas usa esas. Listas anteriores, la deducción de antes (la última canción es la ofrenda). Evento Especial, sin títulos.
+- PDF (`lib/pdf.ts`): títulos de sección en dorado y numeración corrida.
+- Tipos, servicios y `useApp.updateSetlist` mandan y leen `section`.
+
+**Deploy:** primero el backend (con la migración) y después el frontend. Un backend sin la columna rechazaría `section` en el DTO (whitelist) si el frontend nuevo llega antes.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 180 tests (5 nuevos de secciones y 2 de WhatsApp) y `vite build`. **Sin verificar en pantalla** ni contra la base real (la migración no se corrió en local).
+
+---
+
 ## 2026-10-15 — Listas predefinidas: explicación en una burbuja "?" (frontend)
 
 **Pedido de Pablo:** la explicación debajo de "Listas predefinidas" ocupaba mucho lugar. Quiere un "?" al lado del título que la muestre en una burbuja.

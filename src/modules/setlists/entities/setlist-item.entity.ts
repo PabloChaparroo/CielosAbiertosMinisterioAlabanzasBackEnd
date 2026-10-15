@@ -9,6 +9,13 @@ import {
 import { Song } from "../../songs/entities/song.entity";
 import { Setlist } from "./setlist.entity";
 
+/**
+ * Sección del orden del servicio (pedido de Pablo): en Cultos y Ensayos las canciones se agrupan
+ * en Alabanzas, Adoración y Ofrenda. null = sin sección (Evento Especial, o listas anteriores).
+ */
+export const SETLIST_SECTIONS = ["alabanza", "adoracion", "ofrenda"] as const;
+export type SetlistSection = (typeof SETLIST_SECTIONS)[number];
+
 @Entity("setlist_items")
 export class SetlistItem {
   @PrimaryGeneratedColumn("uuid")
@@ -28,6 +35,9 @@ export class SetlistItem {
 
   @Column({ type: "text", nullable: true })
   note!: string | null;
+
+  @Column({ type: "varchar", nullable: true })
+  section!: SetlistSection | null;
 
   /** Orden dentro del setlist */
   @Column({ type: "int" })

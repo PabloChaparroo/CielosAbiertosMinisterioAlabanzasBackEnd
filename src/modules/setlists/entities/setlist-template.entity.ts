@@ -1,10 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { BaseAuditEntity } from "../../../common/entities/base-audit.entity";
+import type { SetlistSection } from "./setlist-item.entity";
 
 export interface SetlistTemplateItem {
   songId: string;
   key: string;
   note?: string;
+  section?: SetlistSection;
 }
 
 /**

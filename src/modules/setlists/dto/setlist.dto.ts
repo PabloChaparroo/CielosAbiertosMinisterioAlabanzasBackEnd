@@ -13,6 +13,7 @@ import {
   IsObject,
 } from "class-validator";
 import { EVENT_TYPES, EventType } from "../entities/setlist.entity";
+import { SETLIST_SECTIONS, SetlistSection } from "../entities/setlist-item.entity";
 
 export class SetlistItemDto {
   @IsUUID()
@@ -24,6 +25,11 @@ export class SetlistItemDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  /** Alabanzas / Adoración / Ofrenda; sin sección en Evento Especial */
+  @IsOptional()
+  @IsIn(SETLIST_SECTIONS)
+  section?: SetlistSection;
 }
 
 export class CreateSetlistDto {

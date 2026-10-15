@@ -56,6 +56,7 @@ export class SetlistsService {
           song: { id: item.songId } as never,
           key: item.key,
           note: item.note ?? null,
+          section: item.section ?? null,
           position: index,
         }),
       ),
@@ -87,6 +88,7 @@ export class SetlistsService {
           song: { id: item.songId } as never,
           key: item.key,
           note: item.note ?? null,
+          section: item.section ?? null,
           position: index,
         }),
       );
