@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Tarjeta de lista sin "Lidera …" (frontend)
+
+**Pedido de Pablo:** sacar "Lidera …" de las tarjetas de Listas.
+
+**Cambio (`SetlistCard.tsx`):** se sacó la línea. Mostraba quién creó la lista (`leaderId` = quien la arma); estaba desde antes, no era de un cambio reciente. La fila de fotos del equipo solo aparece si la lista tiene equipo. Antes quedaba un hueco vacío.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Acordes: tono y letra en la misma fila en pantallas chicas (frontend)
 
 **Pedido de Pablo:** en un celular chico, "Tono" y "Letra" quedaban uno debajo del otro y "En vivo" se partía en dos líneas.
