@@ -11,8 +11,10 @@ import {
   IsUUID,
   ValidateNested,
   IsObject,
+  MaxLength,
 } from "class-validator";
 import { EVENT_TYPES, EventType } from "../entities/setlist.entity";
+import { SETLIST_SECTIONS, SetlistSection } from "../entities/setlist-item.entity";
 
 export class SetlistItemDto {
   @IsUUID()
@@ -24,6 +26,11 @@ export class SetlistItemDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  /** Alabanzas / Adoración / Ofrenda; sin sección en Evento Especial */
+  @IsOptional()
+  @IsIn(SETLIST_SECTIONS)
+  section?: SetlistSection;
 }
 
 export class CreateSetlistDto {
@@ -57,6 +64,12 @@ export class CreateSetlistDto {
   @IsOptional()
   @IsObject()
   teamInstruments?: Record<string, string[]>;
+
+  /** Notas del líder para el equipo; vacío = sin notas */
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  notes?: string;
 }
 
 export class UpdateSetlistDto extends PartialType(CreateSetlistDto) {}

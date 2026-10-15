@@ -4,6 +4,273 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Canciones: "Filtros" en la fila del buscador (frontend)
+
+**Pedido de Pablo:** poner el botón de filtros a la derecha, en la misma línea que el buscador.
+
+**Cambio (`EscucharPage.tsx`):** el botón "Filtros" pasa a la fila del buscador, después del selector de vista, con la misma altura (40 px). En celular muestra solo el ícono (y el contador si hay filtros activos). La fila de pastillas de filtros activos solo aparece cuando hay alguno.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Historial: buscar por canción para saber cuándo se tocó (frontend)
+
+**Pedido de Pablo:** que el buscador del historial encuentre listas por nombre de canción, para saber cuándo se tocó. También pidió sacar el cartel "Solo líderes pueden crear listas de canciones".
+
+**Cambio:**
+- `SetlistsPage.tsx`: el historial filtra por nombre de la lista **o** por canción (sin acentos ni mayúsculas, `matchesSearch`). Si alguna lista coincide por canción, arriba aparece "Se tocó en N listas. La última vez: domingo, 11 de octubre de 2026" (por fecha del servicio). El placeholder pasa a "Buscar lista o canción…".
+- `SetlistCard.tsx`: prop nueva `highlightSong`. En el historial, las canciones que coinciden con la búsqueda se marcan en dorado en la línea de canciones.
+- Se sacó el `LockedHint` "Solo líderes pueden crear listas de canciones" del encabezado: quien no puede crear simplemente no ve el botón "Nueva lista".
+
+**Verificado:** tsc, 182 tests y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Listas predefinidas solo para líderes y admins (backend + frontend)
+
+**Pedido de Pablo:** las listas predefinidas solo las pueden ver líderes y admins.
+
+**Cambio:**
+- **Backend** (`setlist-templates.controller.ts`): `GET /setlist-templates` pasa a pedir `setlist:write` (el mismo permiso que crear listas) en vez de `setlist:read`. Así un músico tampoco las obtiene llamando a la API.
+- **Frontend** (`SetlistsPage.tsx`): la sección "Listas predefinidas" y su carga solo están con `can("createSetlist")` (= `setlist:write`). Los demás no la ven ni la piden.
+
+Esto deja sin efecto, para quien no es líder ni admin, lo de "abrir una predefinida para ver sus canciones" de hoy. Los líderes la siguen pudiendo abrir.
+
+**Verificado:** backend: tsc y 107 tests. Frontend: tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Menú lateral: fijo solo en compu, ☰ en tablet (frontend)
+
+**Pedido de Pablo:** en tablet el menú lateral ocupaba lugar. Primero se probó un menú angosto de íconos que se abría al pasar el mouse. No le gustó cómo se veía y pidió que en tablet se use el ☰, como en el celular, y que en compu quede abierto y fijo.
+
+**Cambio:** el corte pasa de `lg` (1024 px) a `xl` (1280 px). Desde `xl`, menú fijo de 272 px (`AppLayout`). Debajo, el botón ☰ y el menú deslizable del celular (`MobileSidebar`, `xl:hidden`). Se ajustaron el padding del contenido (`xl:pl-[272px]`), el `MiniPlayer` (`xl:left-[288px]`) y las partículas de Inicio (`xl:left-[272px]`). Se descartó la versión angosta: `Sidebar.tsx` volvió a como estaba antes, sin la prop `collapsible`.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Letras/Acordes en tablet: la lista se pliega (frontend)
+
+**Pedido de Pablo:** en una tablet se veían el menú, la lista de canciones y la hoja en tres columnas, y la hoja quedaba muy angosta.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** la lista de canciones fija al costado aparece recién desde `xl` (1280 px) en vez de `lg` (1024 px). En tablet se comporta como en celular: buscador arriba y la lista se despliega al tocarlo, y la hoja usa todo el ancho que deja el menú. En Acordes, los botones de reproducir y pistas de la tarjeta de la canción también se muestran hasta `xl`, porque sin la lista visible es desde donde se reproduce.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Letras/Acordes desde una lista: el buscador no abre el teclado (frontend)
+
+**Pedido de Pablo:** al entrar a Letras o Acordes desde una lista, el buscador muestra solo las 5 o 6 canciones de la lista. No hace falta escribir, así que no quiere que se abra el teclado del celular.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** con `songIds` (se entró desde una lista), el input queda `readOnly` con `inputMode="none"`: tocarlo despliega las canciones sin abrir el teclado. El placeholder pasa a "Canciones de la lista". Sin lista, el buscador sigue como siempre.
+
+**Verificado:** tsc. **Sin verificar en pantalla** (lo del teclado solo se puede probar en un celular).
+
+---
+
+## 2026-10-15 — Detalle de lista sin selector de tono (frontend)
+
+**Pedido de Pablo:** sacar el selector de tonalidad de cada canción en el detalle de la lista.
+
+**Cambio (`SetlistDetail.tsx`):** se sacó el `select` de tono (y el import de `KEYS`). El tono de cada canción en la lista (`item.key`) se sigue guardando como venía (el de la predefinida o el original). "Copiar lista" lo sigue mostrando entre paréntesis si difiere del original, y el PDF también.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Tarjeta de lista sin "Lidera …" (frontend)
+
+**Pedido de Pablo:** sacar "Lidera …" de las tarjetas de Listas.
+
+**Cambio (`SetlistCard.tsx`):** se sacó la línea. Mostraba quién creó la lista (`leaderId` = quien la arma); estaba desde antes, no era de un cambio reciente. La fila de fotos del equipo solo aparece si la lista tiene equipo. Antes quedaba un hueco vacío.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Acordes: tono y letra en la misma fila en pantallas chicas (frontend)
+
+**Pedido de Pablo:** en un celular chico, "Tono" y "Letra" quedaban uno debajo del otro y "En vivo" se partía en dos líneas.
+
+**Cambio (`AcordesPage.tsx`):** tono y letra van juntos en una fila que no se parte. En pantallas chicas la etiqueta va arriba del control y los controles son un poco más angostos; desde `sm` quedan como antes (etiqueta al lado). Los botones En vivo / PDF / Editar llevan `whitespace-nowrap`.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — "Copiar equipo" y notas del líder (backend + frontend)
+
+**Pedido de Pablo:** además de copiar la lista de canciones, copiar el equipo asignado para esa fecha con el formato que pega el líder en el grupo (instrumento: nombre, Voces en viñetas, Sonido y Multimedia), y sumarle las notas que escribe ("Todos debemos estudiar los temas…").
+
+**Backend:** `Setlist.notes` (text nullable, migración `1760900000000-AddSetlistNotes`). Va en el DTO como opcional, con hasta 4000 caracteres. Al guardar se recorta, y si queda vacío pasa a null.
+
+**Frontend:**
+- `setlists/lib/team-whatsapp.ts` (nuevo, con tests): `teamToWhatsapp`. Título de la lista en negrita; un renglón por instrumento en el orden de `INSTRUMENTS`, también los vacíos ("Bajo:"), para completar como en el mensaje del líder; "*Voces:*" en viñetas; "Sonido:" y "Multimedia:"; y las notas al final. Nombres de pila.
+- `SetlistDetail`: el botón "Copiar" pasa a ser "Copiar lista". Debajo del equipo hay un cuadro "Notas para el equipo", editable por quien puede editar (se guarda al salir del cuadro) y de solo lectura para el resto, y el botón "Copiar equipo".
+- Tipos, servicio y `useApp.updateSetlist` mandan y leen `notes`.
+
+**Deploy:** primero el backend (migración), después el frontend. Con `forbidNonWhitelisted`, un backend viejo rechazaría `notes` al editar una lista.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 182 tests (2 nuevos) y lint sin errores. **Sin verificar en pantalla** ni contra la base real.
+
+---
+
+## 2026-10-15 — Nueva lista: el título con fecha sigue a la fecha (frontend)
+
+**Pedido de Pablo:** al partir de una predefinida llamada "Domingo 04/10" y cambiar la fecha al 25/10, el nombre quedaba "Domingo 04/10".
+
+**Causa y cambio (`NewSetlistModal.tsx`):** el título dejaba de seguir a la fecha si venía de una predefinida o si se había escrito a mano. Ahora, si el título es solo una fecha con el formato de siempre ("Domingo 04/10", ver `isDateTitle`), se sigue actualizando al cambiar la fecha, aunque venga de una predefinida o se haya escrito así. Un título propio ("Santa Cena", "Ensayo general") se respeta como antes.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Listas: predefinidas que se abren y lista asignada destacada (frontend)
+
+**Pedido de Pablo:** que se pueda ver el contenido de una lista predefinida, porque hay gente que entra solo para verla. Y que, cuando entra un músico, se destaque la lista en la que está asignado.
+
+**Cambio:**
+- `SetlistsPage.tsx`: tocar el nombre de una lista predefinida la abre (con una flecha que gira): se ven sus canciones por sección (Alabanzas / Adoración / Ofrenda, con `groupBySection`) y el tono de cada una. Tocar de nuevo la cierra. Funciona para cualquiera que pueda leer listas; "Ponerle fecha" y eliminar siguen siendo solo para quien puede crear. Dice "canción" en singular si hay una sola.
+- `SetlistCard.tsx`: si el usuario está en el equipo de la lista, la tarjeta tiene borde y fondo dorados, un brillo, y la etiqueta "Estás asignado · Voz, Teclado" (con lo que toca en esa lista). En Historial no se atenúa.
+
+**Verificado:** tsc y 180 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Nueva lista: equipo elegido por instrumento (frontend)
+
+**Pedido de Pablo:** dividir "Equipo asignado" por instrumento: "Voces" con los nombres para elegir, "Guitarra eléctrica" con los suyos, y así.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Un grupo por instrumento, en el orden de `INSTRUMENTS` ("Voz" se muestra como "Voces"). Cada grupo lista a los líderes y músicos activos que lo tienen cargado; solo aparecen los grupos con alguien.
+- Tocar un nombre lo asigna a ese instrumento en esta lista (`teamInstruments`) y lo suma al equipo. Si se le sacan todos los instrumentos, sale del equipo. Una persona puede estar en varios grupos.
+- Los que no tienen instrumentos cargados van en "Sin instrumentos cargados", donde se los suma o saca del equipo sin instrumento.
+- Reemplaza a la fila de nombres y al bloque "X toca:".
+- Quien arma la lista ya no entra al equipo por defecto si es admin (los admins no se asignan y no aparecen en la lista).
+
+**Verificado:** tsc y 180 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Orden del servicio dividido en Alabanzas / Adoración / Ofrenda (backend + frontend)
+
+**Pedido de Pablo:** que las listas se armen como las arman sus líderes. En Cultos y Ensayos el orden del servicio se divide en Alabanzas, Adoración y Ofrenda. Al agregar una canción va sola a la sección de su tipo, pero se puede cambiar (por ejemplo, pasar una alabanza a la ofrenda). En Evento Especial, una canción detrás de otra, sin secciones. Las listas predefinidas también guardan la sección. Las canciones sin tipo van a Alabanzas.
+
+**Backend:**
+- `SetlistItem.section`: varchar nullable, con valor `alabanza`, `adoracion` u `ofrenda` (`SETLIST_SECTIONS`). Migración `1760800000000-AddSetlistItemSection`.
+- `SetlistItemDto.section`: opcional, validado con `@IsIn`.
+- `SetlistsService` (create/update) la guarda. Las predefinidas la guardan en su jsonb `items` (`toItems`).
+- null = sin sección: Evento Especial, o listas anteriores.
+
+**Frontend:**
+- `setlists/lib/sections.ts` (nuevo, con tests): `usesSections(type)` (todo menos Evento Especial), `defaultSection` (Adoración → adoracion; el resto, incluso sin tipo, → alabanza), `sectionOf` (la guardada o la del tipo), `groupBySection` e `itemsForType`. Este último, al guardar con secciones, ordena por sección y le pone la suya a cada ítem; en Evento Especial la quita.
+- `NewSetlistModal`: el orden del servicio muestra los tres títulos con sus canciones y numeración corrida. Cada canción tiene un desplegable para cambiar de sección (más fácil que arrastrar en el celular). Se puede arrastrar dentro de una sección, a otra canción (pasa a su sección) o al título de una sección. Una sección vacía muestra "Sin canciones…". Al guardar, `itemsForType`.
+- `SetlistDetail`: títulos de sección; las listas anteriores se muestran agrupadas por el tipo de cada canción. Con permiso de edición, cada canción tiene el desplegable de sección; mover, cambiar tono o quitar guardan ordenado por sección.
+- "Copiar" (`whatsapp.ts`): con secciones guardadas usa esas. Listas anteriores, la deducción de antes (la última canción es la ofrenda). Evento Especial, sin títulos.
+- PDF (`lib/pdf.ts`): títulos de sección en dorado y numeración corrida.
+- Tipos, servicios y `useApp.updateSetlist` mandan y leen `section`.
+
+**Deploy:** primero el backend (con la migración) y después el frontend. Un backend sin la columna rechazaría `section` en el DTO (whitelist) si el frontend nuevo llega antes.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 180 tests (5 nuevos de secciones y 2 de WhatsApp) y `vite build`. **Sin verificar en pantalla** ni contra la base real (la migración no se corrió en local).
+
+---
+
+## 2026-10-15 — Listas predefinidas: explicación en una burbuja "?" (frontend)
+
+**Pedido de Pablo:** la explicación debajo de "Listas predefinidas" ocupaba mucho lugar. Quiere un "?" al lado del título que la muestre en una burbuja.
+
+**Cambio:** componente nuevo `components/common/HelpBubble.tsx`: un ícono "?" que abre un `Popover` de vidrio con el texto, y se cierra tocando afuera. En `SetlistsPage.tsx` el párrafo pasa a la burbuja al lado del título. El componente se puede reusar en otras secciones con explicación.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Nueva lista: filtro de alabanzas / adoraciones (frontend)
+
+**Pedido de Pablo:** un desplegable a la derecha del buscador de canciones para filtrar por alabanzas o adoraciones.
+
+**Cambio (`NewSetlistModal.tsx`):** al lado del buscador hay un `select` con "Todas" y los tipos de las canciones cargadas ("Alabanza" se muestra como "Alabanzas" y "Adoración" como "Adoraciones"). Filtra los resultados junto con la búsqueda y se pone dorado si hay un tipo elegido. Los tipos salen de las canciones ya cargadas, sin pedirlos al backend.
+
+**Verificado:** tsc y 173 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Duración de la lista: primer track, si no YouTube (frontend)
+
+**Pedido de Pablo:** la duración total de una lista se calcula con la duración del primer track subido de cada canción. Si la canción no tiene tracks, con la duración del video de YouTube.
+
+**Cambio (`canciones/lib/sequence-duration.ts`):** `sequenceDuration` sigue este orden: 1) el primer track (menor `order`); 2) si no hay o no se pudo leer, el audio principal; 3) si no, `song.duration`, solo si la canción tiene `youtubeVideoId` y la duración es mayor que 0 (`youtubeDuration`). Antes iba primero el audio principal y nunca usaba YouTube, así que esas canciones contaban como "sin duración". Se actualizaron los textos de ayuda de `ListDuration.tsx`.
+
+**Supuesto:** el pedido no mencionaba el audio principal; quedó como segunda opción, antes de YouTube. Supone que `song.duration` es la duración del video.
+
+**Verificado:** test nuevo de `youtubeDuration`, 173 tests y tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Nueva lista: equipo solo con líderes y músicos, y sus instrumentos (frontend)
+
+**Pedido de Pablo:** en "Equipo asignado" solo tienen que aparecer líderes y músicos, nunca los admins. Y para cada integrante, solo los instrumentos que tiene asignados.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Lista para elegir: activos, que no sean admin (`isAdmin`) y con rol Líder o Músico, con o sin tilde y sin importar mayúsculas. Antes un admin veía a todos (`visibleTeam`).
+- "X toca:" muestra solo `u.instruments`. Antes, si no tenía ninguno cargado, se mostraban todos (`INSTRUMENTS`). Ahora, sin instrumentos aparece "No tiene instrumentos cargados. Se cargan desde Equipo."
+
+**Ojo:** un integrante que sea admin y también músico no aparece, porque el pedido fue excluir a los admins. Los rangos se reconocen por el nombre del rol ("Líder", "Músico"); si se renombran, hay que actualizar el filtro.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Detalle de lista: sin íconos por canción y sin desbordarse (frontend)
+
+**Pedido de Pablo:** al abrir una lista en el celular la pantalla se veía mal (corrida hacia un costado), y no usa los íconos ♪ y T de cada canción.
+
+**Cambio (`SetlistDetail.tsx`):**
+- Se sacaron los botones "Abrir acordes" (♪) y "Abrir letra" (T) de cada fila. Tocar la canción la sigue abriendo según "Abrir canciones como: Acordes / Letras".
+- La grilla usa `minmax(0,1fr)` y la tarjeta `min-w-0`. Antes, un título largo con `truncate` ensanchaba la columna y la página en celular, igual que pasaba con las tarjetas de Listas. El tono y el tacho llevan `shrink-0`.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Listas: tarjeta reacomodada para celulares chicos (frontend)
+
+**Pedido de Pablo:** en un celular chico, la tarjeta de la lista se rompía. El tipo de evento se partía en dos líneas y el título y la fecha quedaban en una franja angosta, porque "6 canciones" y los dos botones ocupaban una columna a la derecha.
+
+**Cambio (`SetlistCard.tsx`):**
+- **Arriba:** el tipo de evento en una línea (se corta con "…") y los botones (guardar como predefinida, próximas) a la derecha.
+- **Debajo, a todo el ancho:** el título, la fecha (con mayúscula inicial) y una línea con "N canciones" (singular si es una) y la duración.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-15 — Nueva lista: buscador arriba al tocarlo y resultados justo debajo (frontend)
+
+**Pedido de Pablo:** en celular, al tocar el buscador el teclado tapa media pantalla. Quiere que el buscador quede primero y las canciones encontradas justo debajo, con las sugeridas en otro lado.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Al enfocar el buscador, a los 300 ms (cuando el teclado ya achicó la pantalla) el modal se desplaza hasta dejar el buscador arriba (`scrollIntoView` con `block: "start"`).
+- La lista de resultados va pegada debajo del buscador. "Menos tocadas (últimos 5 meses)" y "Sugeridas para rotar" pasan abajo de los resultados, antes de "Orden del servicio".
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla** (el desplazamiento con el teclado solo se puede probar en un celular).
+
+---
+
+## 2026-10-15 — Nueva lista: en celular ocupa toda la pantalla (frontend)
+
+**Pedido de Pablo:** primer ajuste del modal "Nueva lista de canciones": que llegue hasta arriba.
+
+**Cambio (`NewSetlistModal.tsx`):** en celular el modal ocupa toda la pantalla (`h-dvh`, respeta el área segura de arriba), en vez de ser una hoja que llegaba al 92 % con la página asomando arriba. Desde `sm` sigue siendo un recuadro centrado con borde y esquinas redondeadas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Letras y Acordes: partículas detrás del buscador (frontend)
 
 **Pedido de Pablo:** partículas doradas detrás de la lista del buscador ("Saltar a canción…").

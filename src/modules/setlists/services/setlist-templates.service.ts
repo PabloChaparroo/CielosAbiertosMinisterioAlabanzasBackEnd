@@ -5,7 +5,12 @@ import { CreateSetlistTemplateDto, UpdateSetlistTemplateDto } from "../dto/setli
 import { SetlistTemplate } from "../entities/setlist-template.entity";
 
 const toItems = (items: CreateSetlistTemplateDto["items"]) =>
-  items.map((it) => ({ songId: it.songId, key: it.key, ...(it.note ? { note: it.note } : {}) }));
+  items.map((it) => ({
+    songId: it.songId,
+    key: it.key,
+    ...(it.note ? { note: it.note } : {}),
+    ...(it.section ? { section: it.section } : {}),
+  }));
 
 @Injectable()
 export class SetlistTemplatesService {
