@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Acordes: tono y letra en la misma fila en pantallas chicas (frontend)
+
+**Pedido de Pablo:** en un celular chico, "Tono" y "Letra" quedaban uno debajo del otro y "En vivo" se partía en dos líneas.
+
+**Cambio (`AcordesPage.tsx`):** tono y letra van juntos en una fila que no se parte. En pantallas chicas la etiqueta va arriba del control y los controles son un poco más angostos; desde `sm` quedan como antes (etiqueta al lado). Los botones En vivo / PDF / Editar llevan `whitespace-nowrap`.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — "Copiar equipo" y notas del líder (backend + frontend)
 
 **Pedido de Pablo:** además de copiar la lista de canciones, copiar el equipo asignado para esa fecha con el formato que pega el líder en el grupo (instrumento: nombre, Voces en viñetas, Sonido y Multimedia), y sumarle las notas que escribe ("Todos debemos estudiar los temas…").
