@@ -4,6 +4,20 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: equipo solo con líderes y músicos, y sus instrumentos (frontend)
+
+**Pedido de Pablo:** en "Equipo asignado" solo tienen que aparecer líderes y músicos, nunca los admins. Y para cada integrante, solo los instrumentos que tiene asignados.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Lista para elegir: activos, que no sean admin (`isAdmin`) y con rol Líder o Músico, con o sin tilde y sin importar mayúsculas. Antes un admin veía a todos (`visibleTeam`).
+- "X toca:" muestra solo `u.instruments`. Antes, si no tenía ninguno cargado, se mostraban todos (`INSTRUMENTS`). Ahora, sin instrumentos aparece "No tiene instrumentos cargados. Se cargan desde Equipo."
+
+**Ojo:** un integrante que sea admin y también músico no aparece, porque el pedido fue excluir a los admins. Los rangos se reconocen por el nombre del rol ("Líder", "Músico"); si se renombran, hay que actualizar el filtro.
+
+**Verificado:** tsc y 172 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Detalle de lista: sin íconos por canción y sin desbordarse (frontend)
 
 **Pedido de Pablo:** al abrir una lista en el celular la pantalla se veía mal (corrida hacia un costado), y no usa los íconos ♪ y T de cada canción.
