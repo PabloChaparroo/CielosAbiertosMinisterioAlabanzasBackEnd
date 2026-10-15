@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: equipo elegido por instrumento (frontend)
+
+**Pedido de Pablo:** dividir "Equipo asignado" por instrumento: "Voces" con los nombres para elegir, "Guitarra eléctrica" con los suyos, y así.
+
+**Cambio (`NewSetlistModal.tsx`):**
+- Un grupo por instrumento, en el orden de `INSTRUMENTS` ("Voz" se muestra como "Voces"). Cada grupo lista a los líderes y músicos activos que lo tienen cargado; solo aparecen los grupos con alguien.
+- Tocar un nombre lo asigna a ese instrumento en esta lista (`teamInstruments`) y lo suma al equipo. Si se le sacan todos los instrumentos, sale del equipo. Una persona puede estar en varios grupos.
+- Los que no tienen instrumentos cargados van en "Sin instrumentos cargados", donde se los suma o saca del equipo sin instrumento.
+- Reemplaza a la fila de nombres y al bloque "X toca:".
+- Quien arma la lista ya no entra al equipo por defecto si es admin (los admins no se asignan y no aparecen en la lista).
+
+**Verificado:** tsc y 180 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Orden del servicio dividido en Alabanzas / Adoración / Ofrenda (backend + frontend)
 
 **Pedido de Pablo:** que las listas se armen como las arman sus líderes. En Cultos y Ensayos el orden del servicio se divide en Alabanzas, Adoración y Ofrenda. Al agregar una canción va sola a la sección de su tipo, pero se puede cambiar (por ejemplo, pasar una alabanza a la ofrenda). En Evento Especial, una canción detrás de otra, sin secciones. Las listas predefinidas también guardan la sección. Las canciones sin tipo van a Alabanzas.
