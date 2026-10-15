@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: filtro de alabanzas / adoraciones (frontend)
+
+**Pedido de Pablo:** un desplegable a la derecha del buscador de canciones para filtrar por alabanzas o adoraciones.
+
+**Cambio (`NewSetlistModal.tsx`):** al lado del buscador hay un `select` con "Todas" y los tipos de las canciones cargadas ("Alabanza" se muestra como "Alabanzas" y "Adoración" como "Adoraciones"). Filtra los resultados junto con la búsqueda y se pone dorado si hay un tipo elegido. Los tipos salen de las canciones ya cargadas, sin pedirlos al backend.
+
+**Verificado:** tsc y 173 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Duración de la lista: primer track, si no YouTube (frontend)
 
 **Pedido de Pablo:** la duración total de una lista se calcula con la duración del primer track subido de cada canción. Si la canción no tiene tracks, con la duración del video de YouTube.
