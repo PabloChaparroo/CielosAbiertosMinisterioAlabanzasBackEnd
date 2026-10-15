@@ -4,6 +4,19 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Historial: buscar por canción para saber cuándo se tocó (frontend)
+
+**Pedido de Pablo:** que el buscador del historial encuentre listas por nombre de canción, para saber cuándo se tocó. También pidió sacar el cartel "Solo líderes pueden crear listas de canciones".
+
+**Cambio:**
+- `SetlistsPage.tsx`: el historial filtra por nombre de la lista **o** por canción (sin acentos ni mayúsculas, `matchesSearch`). Si alguna lista coincide por canción, arriba aparece "Se tocó en N listas. La última vez: domingo, 11 de octubre de 2026" (por fecha del servicio). El placeholder pasa a "Buscar lista o canción…".
+- `SetlistCard.tsx`: prop nueva `highlightSong`. En el historial, las canciones que coinciden con la búsqueda se marcan en dorado en la línea de canciones.
+- Se sacó el `LockedHint` "Solo líderes pueden crear listas de canciones" del encabezado: quien no puede crear simplemente no ve el botón "Nueva lista".
+
+**Verificado:** tsc, 182 tests y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Listas predefinidas solo para líderes y admins (backend + frontend)
 
 **Pedido de Pablo:** las listas predefinidas solo las pueden ver líderes y admins.
