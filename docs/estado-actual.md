@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: en celular ocupa toda la pantalla (frontend)
+
+**Pedido de Pablo:** primer ajuste del modal "Nueva lista de canciones": que llegue hasta arriba.
+
+**Cambio (`NewSetlistModal.tsx`):** en celular el modal ocupa toda la pantalla (`h-dvh`, respeta el área segura de arriba), en vez de ser una hoja que llegaba al 92 % con la página asomando arriba. Desde `sm` sigue siendo un recuadro centrado con borde y esquinas redondeadas.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-13 — Letras y Acordes: partículas detrás del buscador (frontend)
 
 **Pedido de Pablo:** partículas doradas detrás de la lista del buscador ("Saltar a canción…").
