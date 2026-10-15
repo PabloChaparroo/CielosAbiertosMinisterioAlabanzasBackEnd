@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Detalle de lista sin selector de tono (frontend)
+
+**Pedido de Pablo:** sacar el selector de tonalidad de cada canción en el detalle de la lista.
+
+**Cambio (`SetlistDetail.tsx`):** se sacó el `select` de tono (y el import de `KEYS`). El tono de cada canción en la lista (`item.key`) se sigue guardando como venía (el de la predefinida o el original). "Copiar lista" lo sigue mostrando entre paréntesis si difiere del original, y el PDF también.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Tarjeta de lista sin "Lidera …" (frontend)
 
 **Pedido de Pablo:** sacar "Lidera …" de las tarjetas de Listas.
