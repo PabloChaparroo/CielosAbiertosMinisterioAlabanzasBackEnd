@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Letras/Acordes en tablet: la lista se pliega (frontend)
+
+**Pedido de Pablo:** en una tablet se veían el menú, la lista de canciones y la hoja en tres columnas, y la hoja quedaba muy angosta.
+
+**Cambio (`AcordesPage.tsx`, `LetrasPage.tsx`):** la lista de canciones fija al costado aparece recién desde `xl` (1280 px) en vez de `lg` (1024 px). En tablet se comporta como en celular: buscador arriba y la lista se despliega al tocarlo, y la hoja usa todo el ancho que deja el menú. En Acordes, los botones de reproducir y pistas de la tarjeta de la canción también se muestran hasta `xl`, porque sin la lista visible es desde donde se reproduce.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Letras/Acordes desde una lista: el buscador no abre el teclado (frontend)
 
 **Pedido de Pablo:** al entrar a Letras o Acordes desde una lista, el buscador muestra solo las 5 o 6 canciones de la lista. No hace falta escribir, así que no quiere que se abra el teclado del celular.
