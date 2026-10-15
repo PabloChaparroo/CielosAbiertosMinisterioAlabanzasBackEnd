@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Listas: tarjeta reacomodada para celulares chicos (frontend)
+
+**Pedido de Pablo:** en un celular chico, la tarjeta de la lista se rompía. El tipo de evento se partía en dos líneas y el título y la fecha quedaban en una franja angosta, porque "6 canciones" y los dos botones ocupaban una columna a la derecha.
+
+**Cambio (`SetlistCard.tsx`):**
+- **Arriba:** el tipo de evento en una línea (se corta con "…") y los botones (guardar como predefinida, próximas) a la derecha.
+- **Debajo, a todo el ancho:** el título, la fecha (con mayúscula inicial) y una línea con "N canciones" (singular si es una) y la duración.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Nueva lista: buscador arriba al tocarlo y resultados justo debajo (frontend)
 
 **Pedido de Pablo:** en celular, al tocar el buscador el teclado tapa media pantalla. Quiere que el buscador quede primero y las canciones encontradas justo debajo, con las sugeridas en otro lado.
