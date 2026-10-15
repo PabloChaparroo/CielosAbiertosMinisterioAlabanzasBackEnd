@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Nueva lista: el título con fecha sigue a la fecha (frontend)
+
+**Pedido de Pablo:** al partir de una predefinida llamada "Domingo 04/10" y cambiar la fecha al 25/10, el nombre quedaba "Domingo 04/10".
+
+**Causa y cambio (`NewSetlistModal.tsx`):** el título dejaba de seguir a la fecha si venía de una predefinida o si se había escrito a mano. Ahora, si el título es solo una fecha con el formato de siempre ("Domingo 04/10", ver `isDateTitle`), se sigue actualizando al cambiar la fecha, aunque venga de una predefinida o se haya escrito así. Un título propio ("Santa Cena", "Ensayo general") se respeta como antes.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Listas: predefinidas que se abren y lista asignada destacada (frontend)
 
 **Pedido de Pablo:** que se pueda ver el contenido de una lista predefinida, porque hay gente que entra solo para verla. Y que, cuando entra un músico, se destaque la lista en la que está asignado.
