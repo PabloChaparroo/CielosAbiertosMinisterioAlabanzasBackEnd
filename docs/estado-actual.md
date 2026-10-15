@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Detalle de lista: sin íconos por canción y sin desbordarse (frontend)
+
+**Pedido de Pablo:** al abrir una lista en el celular la pantalla se veía mal (corrida hacia un costado), y no usa los íconos ♪ y T de cada canción.
+
+**Cambio (`SetlistDetail.tsx`):**
+- Se sacaron los botones "Abrir acordes" (♪) y "Abrir letra" (T) de cada fila. Tocar la canción la sigue abriendo según "Abrir canciones como: Acordes / Letras".
+- La grilla usa `minmax(0,1fr)` y la tarjeta `min-w-0`. Antes, un título largo con `truncate` ensanchaba la columna y la página en celular, igual que pasaba con las tarjetas de Listas. El tono y el tacho llevan `shrink-0`.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Listas: tarjeta reacomodada para celulares chicos (frontend)
 
 **Pedido de Pablo:** en un celular chico, la tarjeta de la lista se rompía. El tipo de evento se partía en dos líneas y el título y la fecha quedaban en una franja angosta, porque "6 canciones" y los dos botones ocupaban una columna a la derecha.
