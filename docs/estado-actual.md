@@ -4,18 +4,13 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
-## 2026-10-15 — Menú lateral angosto que se abre al pasar el mouse (frontend)
+## 2026-10-15 — Menú lateral: fijo solo en compu, ☰ en tablet (frontend)
 
-**Pedido de Pablo:** que el menú lateral también se pliegue en tablet y se abra al pasar el mouse. En compu, después pidió dejarlo abierto y fijo como antes.
+**Pedido de Pablo:** en tablet el menú lateral ocupaba lugar. Primero se probó un menú angosto de íconos que se abría al pasar el mouse. No le gustó cómo se veía y pidió que en tablet se use el ☰, como en el celular, y que en compu quede abierto y fijo.
 
-**Cambio:**
-- `AppLayout.tsx`: entre `lg` y `xl` (tablet acostada, notebooks chicas) el menú fijo mide 76 px (solo íconos) y se abre a 272 px con `hover` o `focus-within`, con transición de ancho. Se abre por encima del contenido, sin empujarlo (`z-40`, sombra). Desde `xl` (1280 px) queda abierto y fijo como antes (`xl:w-[272px]`). El contenido pasa a `lg:pl-[76px] xl:pl-[272px]`.
-- `Sidebar.tsx`: `SidebarContent` tiene una prop nueva, `collapsible`. Con el menú angosto se ocultan los textos (nombre de la app, títulos de grupo, nombres de los módulos, nombre y rol del perfil, "Cerrar sesión") y aparecen al abrirse. El contenido mantiene 272 px por dentro, así no se reacomoda durante la animación. El menú del celular (☰) no cambia.
-- Corrimientos que dependían del ancho del menú: `MiniPlayer` (`lg:left-[92px] xl:left-[288px]`) y las partículas de Inicio (`lg:left-[76px] xl:left-[272px]`). Los textos ocultos vuelven a verse desde `xl`.
+**Cambio:** el corte pasa de `lg` (1024 px) a `xl` (1280 px). Desde `xl`, menú fijo de 272 px (`AppLayout`). Debajo, el botón ☰ y el menú deslizable del celular (`MobileSidebar`, `xl:hidden`). Se ajustaron el padding del contenido (`xl:pl-[272px]`), el `MiniPlayer` (`xl:left-[288px]`) y las partículas de Inicio (`xl:left-[272px]`). Se descartó la versión angosta: `Sidebar.tsx` volvió a como estaba antes, sin la prop `collapsible`.
 
-**Táctil:** en una tablet sin mouse, tocar un ícono navega directo. El menú se abre entero solo si toma el foco (por ejemplo, al tocar el perfil).
-
-**Verificado:** tsc, 182 tests y `vite build`. **Sin verificar en pantalla.**
+**Verificado:** tsc. **Sin verificar en pantalla.**
 
 ---
 
