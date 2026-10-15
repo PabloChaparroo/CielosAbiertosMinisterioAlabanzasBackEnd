@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Listas predefinidas: explicación en una burbuja "?" (frontend)
+
+**Pedido de Pablo:** la explicación debajo de "Listas predefinidas" ocupaba mucho lugar. Quiere un "?" al lado del título que la muestre en una burbuja.
+
+**Cambio:** componente nuevo `components/common/HelpBubble.tsx`: un ícono "?" que abre un `Popover` de vidrio con el texto, y se cierra tocando afuera. En `SetlistsPage.tsx` el párrafo pasa a la burbuja al lado del título. El componente se puede reusar en otras secciones con explicación.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Nueva lista: filtro de alabanzas / adoraciones (frontend)
 
 **Pedido de Pablo:** un desplegable a la derecha del buscador de canciones para filtrar por alabanzas o adoraciones.
