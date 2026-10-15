@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Listas: predefinidas que se abren y lista asignada destacada (frontend)
+
+**Pedido de Pablo:** que se pueda ver el contenido de una lista predefinida, porque hay gente que entra solo para verla. Y que, cuando entra un músico, se destaque la lista en la que está asignado.
+
+**Cambio:**
+- `SetlistsPage.tsx`: tocar el nombre de una lista predefinida la abre (con una flecha que gira): se ven sus canciones por sección (Alabanzas / Adoración / Ofrenda, con `groupBySection`) y el tono de cada una. Tocar de nuevo la cierra. Funciona para cualquiera que pueda leer listas; "Ponerle fecha" y eliminar siguen siendo solo para quien puede crear. Dice "canción" en singular si hay una sola.
+- `SetlistCard.tsx`: si el usuario está en el equipo de la lista, la tarjeta tiene borde y fondo dorados, un brillo, y la etiqueta "Estás asignado · Voz, Teclado" (con lo que toca en esa lista). En Historial no se atenúa.
+
+**Verificado:** tsc y 180 tests. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Nueva lista: equipo elegido por instrumento (frontend)
 
 **Pedido de Pablo:** dividir "Equipo asignado" por instrumento: "Voces" con los nombres para elegir, "Guitarra eléctrica" con los suyos, y así.
