@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — Canciones: "Filtros" en la fila del buscador (frontend)
+
+**Pedido de Pablo:** poner el botón de filtros a la derecha, en la misma línea que el buscador.
+
+**Cambio (`EscucharPage.tsx`):** el botón "Filtros" pasa a la fila del buscador, después del selector de vista, con la misma altura (40 px). En celular muestra solo el ícono (y el contador si hay filtros activos). La fila de pastillas de filtros activos solo aparece cuando hay alguno.
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Historial: buscar por canción para saber cuándo se tocó (frontend)
 
 **Pedido de Pablo:** que el buscador del historial encuentre listas por nombre de canción, para saber cuándo se tocó. También pidió sacar el cartel "Solo líderes pueden crear listas de canciones".
