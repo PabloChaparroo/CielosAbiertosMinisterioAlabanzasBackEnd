@@ -72,4 +72,8 @@ export class Setlist extends BaseAuditEntity {
   /** Qué toca cada miembro del equipo en esta lista: { [userId]: instrumentos } */
   @Column({ type: "jsonb", default: () => "'{}'" })
   teamInstruments!: Record<string, string[]>;
+
+  /** Notas del líder para el equipo (van al final de "Copiar equipo"); null = sin notas */
+  @Column({ type: "text", nullable: true })
+  notes!: string | null;
 }

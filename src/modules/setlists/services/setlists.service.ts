@@ -51,6 +51,7 @@ export class SetlistsService {
       leader,
       team,
       teamInstruments: cleanTeamInstruments(dto.teamInstruments, dto.teamIds),
+      notes: dto.notes?.trim() || null,
       items: dto.items.map((item, index) =>
         this.setlistItemRepo.create({
           song: { id: item.songId } as never,
@@ -98,6 +99,7 @@ export class SetlistsService {
       ...(dto.date !== undefined && { date: new Date(dto.date) }),
       ...(dto.isUpcoming !== undefined && { isUpcoming: dto.isUpcoming }),
       ...(dto.type !== undefined && { type: dto.type }),
+      ...(dto.notes !== undefined && { notes: dto.notes.trim() || null }),
     });
     return this.setlistRepo.save(setlist);
   }

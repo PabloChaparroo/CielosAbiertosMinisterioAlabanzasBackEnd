@@ -4,6 +4,23 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-15 — "Copiar equipo" y notas del líder (backend + frontend)
+
+**Pedido de Pablo:** además de copiar la lista de canciones, copiar el equipo asignado para esa fecha con el formato que pega el líder en el grupo (instrumento: nombre, Voces en viñetas, Sonido y Multimedia), y sumarle las notas que escribe ("Todos debemos estudiar los temas…").
+
+**Backend:** `Setlist.notes` (text nullable, migración `1760900000000-AddSetlistNotes`). Va en el DTO como opcional, con hasta 4000 caracteres. Al guardar se recorta, y si queda vacío pasa a null.
+
+**Frontend:**
+- `setlists/lib/team-whatsapp.ts` (nuevo, con tests): `teamToWhatsapp`. Título de la lista en negrita; un renglón por instrumento en el orden de `INSTRUMENTS`, también los vacíos ("Bajo:"), para completar como en el mensaje del líder; "*Voces:*" en viñetas; "Sonido:" y "Multimedia:"; y las notas al final. Nombres de pila.
+- `SetlistDetail`: el botón "Copiar" pasa a ser "Copiar lista". Debajo del equipo hay un cuadro "Notas para el equipo", editable por quien puede editar (se guarda al salir del cuadro) y de solo lectura para el resto, y el botón "Copiar equipo".
+- Tipos, servicio y `useApp.updateSetlist` mandan y leen `notes`.
+
+**Deploy:** primero el backend (migración), después el frontend. Con `forbidNonWhitelisted`, un backend viejo rechazaría `notes` al editar una lista.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 182 tests (2 nuevos) y lint sin errores. **Sin verificar en pantalla** ni contra la base real.
+
+---
+
 ## 2026-10-15 — Nueva lista: el título con fecha sigue a la fecha (frontend)
 
 **Pedido de Pablo:** al partir de una predefinida llamada "Domingo 04/10" y cambiar la fecha al 25/10, el nombre quedaba "Domingo 04/10".
