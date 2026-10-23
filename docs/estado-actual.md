@@ -4,6 +4,24 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Listas: editar y eliminar antes de la fecha, bloqueadas después (frontend)
+
+**Pedido de Pablo:** una lista que todavía no se tocó se tiene que poder editar (cambiar la fecha, sumar o sacar integrantes) y eliminar del todo. Una que ya se tocó no se modifica ni se elimina. Sacar el botón de "pasar al historial": pasa sola cuando llega la fecha.
+
+**Regla (`lib/setlist-status.ts`, `isPlayed`):** una lista "ya se tocó" desde el día DESPUÉS de su fecha (la del domingo sigue editable todo el domingo). Antes pasaban al historial las que estaban marcadas así a mano o con fecha vencida; ahora solo cuenta la fecha: Próximos = fecha de hoy en adelante, Historial = fecha pasada.
+
+**Cambio:**
+- `SetlistCard`: se sacó el botón de mandar al historial (y la prop `onToggleUpcoming`).
+- `SetlistsPage`: pasa al detalle `canEdit` (permiso de editar y no se tocó), `canDelete` (permiso de eliminar y no se tocó) y `locked`. Eliminar llama a `removeSetlist` (nuevo en `useApp` y en `SetlistsService.deleteSetlist`; el backend ya tenía `DELETE /setlists/:id`, que es baja lógica).
+- `SetlistDetail`: con `canEdit` aparece "Fecha y hora" (solo de hoy en adelante; si el título era la fecha, la sigue), una ✕ por integrante para sacarlo y "+ Agregar integrante…" (líderes y músicos activos; si toca un solo instrumento se marca solo). Con `canDelete`, un botón de tacho en el encabezado, con confirmación. Si la lista ya se tocó, un aviso "Esta lista ya se tocó: no se puede modificar ni eliminar". "Copiar" y el PDF siguen funcionando.
+- Helpers nuevos: `date-title.ts` y `assignable.ts` (los usa también `NewSetlistModal`).
+
+**Pendiente / ojo:** el bloqueo es solo del frontend; el backend sigue aceptando editar una lista pasada si alguien llama a la API directo. Las listas anteriores que estaban marcadas a mano como historial pero con fecha futura vuelven a aparecer en Próximos.
+
+**Verificado:** tsc, 188 tests (8 nuevos), lint sin errores (con los finales de línea del CI) y `vite build`. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Canciones: "Filtros" en la fila del buscador (frontend)
 
 **Pedido de Pablo:** poner el botón de filtros a la derecha, en la misma línea que el buscador.
