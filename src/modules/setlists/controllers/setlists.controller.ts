@@ -12,6 +12,7 @@ import { crudPermission } from "../../../common/authorization/permission.catalog
 import { Permissions } from "../../../common/decorators/permissions.decorator";
 import { CreateSetlistDto, UpdateSetlistDto } from "../dto/setlist.dto";
 import { SetlistsService } from "../services/setlists.service";
+import { withPublicTeam } from "../public-team";
 
 @Controller("setlists")
 export class SetlistsController {
@@ -19,26 +20,26 @@ export class SetlistsController {
 
   @Get()
   @Permissions(crudPermission("setlist", "read"))
-  findAll() {
-    return this.setlistsService.findAll();
+  async findAll() {
+    return (await this.setlistsService.findAll()).map(withPublicTeam);
   }
 
   @Get(":id")
   @Permissions(crudPermission("setlist", "read"))
-  findOne(@Param("id", ParseUUIDPipe) id: string) {
-    return this.setlistsService.findById(id);
+  async findOne(@Param("id", ParseUUIDPipe) id: string) {
+    return withPublicTeam(await this.setlistsService.findById(id));
   }
 
   @Post()
   @Permissions(crudPermission("setlist", "write"))
-  create(@Body() dto: CreateSetlistDto) {
-    return this.setlistsService.create(dto);
+  async create(@Body() dto: CreateSetlistDto) {
+    return withPublicTeam(await this.setlistsService.create(dto));
   }
 
   @Patch(":id")
   @Permissions(crudPermission("setlist", "update"))
-  update(@Param("id", ParseUUIDPipe) id: string, @Body() dto: UpdateSetlistDto) {
-    return this.setlistsService.update(id, dto);
+  async update(@Param("id", ParseUUIDPipe) id: string, @Body() dto: UpdateSetlistDto) {
+    return withPublicTeam(await this.setlistsService.update(id, dto));
   }
 
   @Delete(":id")

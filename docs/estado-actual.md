@@ -4,6 +4,26 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Ver el equipo de una lista sin el módulo "Equipo" (backend + frontend)
+
+**Pedido de Pablo:** que los músicos no vean el módulo "Equipo y Roles" pero sí a los músicos asignados a cada lista.
+
+**Causa:** el módulo y la lista de usuarios (`GET /equipo`, que alimenta `users` en la app) usan el mismo permiso, `equipo:read`. Sin él, `users` queda vacío y el equipo de una lista no se podía mostrar (la app solo guardaba los ids).
+
+**Backend:** `GET/POST/PATCH /setlists` devuelven el líder y el equipo recortados (`setlists/public-team.ts`, `withPublicTeam`): id, nombre, foto (`avatarKey`, color, iniciales) e instrumentos. Ya no salen el email ni los roles, que antes viajaban en cada lista a cualquiera con permiso de ver listas.
+
+**Frontend:** `Setlist.team` guarda esos datos (`mapSetlist`). `teamMemberOf` usa la lista de usuarios si está cargada y, si no, el integrante que viene con la lista. Lo usan las tarjetas (fotos), el detalle (equipo asignado) y "Copiar equipo". Sin usuarios cargados el detalle muestra al integrante sin su rol (la lista no lo trae).
+
+**Paso manual (no es código): sacar el módulo a los músicos.** En "Roles y Permisos", quitarle a Músico los permisos del módulo Equipo (`equipo:read`). Con eso desaparece del menú y se bloquea la URL. Tiene que tener `setlist:read` para ver las listas con su equipo.
+
+**Pendiente / ojo:** otras pantallas que usan la lista de usuarios y que un músico sin `equipo:read` va a ver sin nombres: autor de las anotaciones (Acordes), nota de las "próximas a sacar" en Inicio y el historial de una canción en Estadísticas.
+
+**Deploy:** no hay migración. Primero el backend, después el frontend; con un backend viejo el equipo se sigue viendo por la lista de usuarios, como hasta ahora.
+
+**Verificado:** backend: tsc, lint y 110 tests (3 nuevos). Frontend: tsc, 206 tests (5 nuevos), lint con las reglas del CI y `vite build`. **Sin verificar en pantalla** ni con un usuario músico real.
+
+---
+
 ## 2026-10-23 — Detalle de lista: "Copiar canciones" junto a "Copiar equipo" (frontend)
 
 **Pedido de Pablo:** poner el botón de copiar las canciones al lado de "Copiar equipo" y sacarlo del encabezado.
