@@ -34,6 +34,11 @@ export class CreateSongDto {
   @IsBoolean()
   proximaASacar?: boolean;
 
+  /** Enganchado (varios temas en un audio); null = sin evaluar */
+  @IsOptional()
+  @IsBoolean()
+  enganchado?: boolean | null;
+
   /** Nombre del audio principal; vacío lo quita (se muestra el título de la canción) */
   @IsOptional()
   @IsString()

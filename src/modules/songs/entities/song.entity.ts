@@ -59,6 +59,14 @@ export class Song extends BaseAuditEntity {
   proximaDesde!: Date | null;
 
   /**
+   * Enganchado: un solo audio con varios temas (3 o 4). Al armar listas aleatorias cuenta por más
+   * de una canción. true/false = decidido (a mano o medido); null = todavía sin evaluar (la app lo
+   * mide: alabanza de más de 10 minutos) y lo guarda.
+   */
+  @Column({ type: "boolean", nullable: true })
+  enganchado!: boolean | null;
+
+  /**
    * Calculado al leer (no es columna): marcada y todavía no tocada, es decir, sin ninguna lista
    * de canciones con fecha desde la marca que ya haya pasado al historial
    */
