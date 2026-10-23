@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Nueva lista: tipo por defecto "Culto Domingo a la tarde" (frontend)
+
+**Pedido de Pablo:** que "Nueva lista" venga con "Culto Domingo a la tarde" elegido (antes, "a la mañana").
+
+**Cambio (`NewSetlistModal.tsx`):** el tipo inicial pasa a "Culto Domingo a la tarde". La hora por defecto del campo de fecha sigue en 10:30 (no se tocó).
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-23 — Listas: editar y eliminar antes de la fecha, bloqueadas después (frontend)
 
 **Pedido de Pablo:** una lista que todavía no se tocó se tiene que poder editar (cambiar la fecha, sumar o sacar integrantes) y eliminar del todo. Una que ya se tocó no se modifica ni se elimina. Sacar el botón de "pasar al historial": pasa sola cuando llega la fecha.
