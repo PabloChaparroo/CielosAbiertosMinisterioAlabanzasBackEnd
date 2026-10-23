@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Detalle de lista: "Copiar canciones" junto a "Copiar equipo" (frontend)
+
+**Pedido de Pablo:** poner el botón de copiar las canciones al lado de "Copiar equipo" y sacarlo del encabezado.
+
+**Cambio (`SetlistDetail.tsx`):** se sacó "Copiar lista" del encabezado (quedan eliminar y PDF). Debajo de las notas del equipo hay dos botones iguales, "Copiar canciones" y "Copiar equipo", uno al lado del otro. El mensaje de las canciones no cambió.
+
+**Verificado:** tsc y lint (con los finales de línea del CI). **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-23 — Generador de listas y canciones "enganchadas" (backend + frontend)
 
 **Pedido de Pablo:** generar listas aleatorias o de un tema, con canciones con secuencia y que hace mucho no se tocan, para rotar el repertorio. La lista es de 3 alabanzas, 2 adoraciones y 1 ofrenda. Algunas canciones son "enganchados" (un audio con 3 o 4 temas): no pueden contar como una alabanza. Se detectan por la duración (alabanza de más de 10 minutos, del primer track o, si no hay, de YouTube) y se pidió que sea un boolean.
