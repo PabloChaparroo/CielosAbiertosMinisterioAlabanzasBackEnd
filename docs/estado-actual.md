@@ -4,6 +4,26 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Generador de listas y canciones "enganchadas" (backend + frontend)
+
+**Pedido de Pablo:** generar listas aleatorias o de un tema, con canciones con secuencia y que hace mucho no se tocan, para rotar el repertorio. La lista es de 3 alabanzas, 2 adoraciones y 1 ofrenda. Algunas canciones son "enganchados" (un audio con 3 o 4 temas): no pueden contar como una alabanza. Se detectan por la duración (alabanza de más de 10 minutos, del primer track o, si no hay, de YouTube) y se pidió que sea un boolean.
+
+**Backend:** `songs.enganchado` (boolean nullable; migración `1761000000000-AddSongEnganchado`), en el DTO como opcional. `true`/`false` = decidido; `null` = sin evaluar.
+
+**Frontend:**
+- `canciones/lib/medley.ts`: `medleyFromDuration` (solo alabanzas; más de 600 s) y `resolveMedley` (usa lo decidido; si no, mide con `sequenceDuration`). Las adoraciones nunca son enganchado.
+- Edición de canción (`UploadModal`): selector "Enganchado" con Automático / Sí / No.
+- `setlists/lib/generator.ts` (con tests): sorteo con pesos. Candidatas: canciones con secuencia (y del tema elegido). Peso = días desde que se tocó por última vez (nunca tocada = 365, el tope); no se sugiere lo tocado hace menos de 14 días si hay otras; el peso baja si ya hay una del mismo artista. Un enganchado ocupa 2 lugares de las 3 alabanzas y entra a lo sumo uno por lista; la ofrenda nunca es un enganchado. Si no alcanzan canciones del tema, completa con otras y lo avisa. `lastPlayedBySong` saca la última vez de las fechas de las listas.
+- `NewSetlistModal`: panel "Sugerir una lista" (tema o al azar, "Generar lista" / "Generar de nuevo"), que carga las canciones y sus secciones. Cada canción tiene un 🎲 para cambiarla por otra del mismo tipo. El enganchado se mide solo al sortear y se guarda en la canción (si quien arma la lista puede editar canciones).
+
+**Supuestos a confirmar:** un enganchado cuenta como 2 alabanzas (`MEDLEY_SLOTS`); la ofrenda sale de las alabanzas; "hace mucho" = más días sin tocarse, con tope de un año; 14 días de descanso. Cuándo se tocó sale de las listas cargadas en la app (no cuentan listas eliminadas ni anteriores a la app). La ofrenda, si cambia a Evento Especial, deja de tener sección.
+
+**Deploy:** primero el backend (migración), después el frontend. Con `forbidNonWhitelisted`, un backend viejo rechazaría `enganchado` al editar una canción.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 201 tests (23 nuevos), lint con las reglas del CI y `vite build`. **Sin verificar en pantalla** ni contra la base real.
+
+---
+
 ## 2026-10-23 — Nueva lista: tipo por defecto "Culto Domingo a la tarde" (frontend)
 
 **Pedido de Pablo:** que "Nueva lista" venga con "Culto Domingo a la tarde" elegido (antes, "a la mañana").
