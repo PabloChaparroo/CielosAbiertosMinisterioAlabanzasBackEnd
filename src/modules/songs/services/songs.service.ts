@@ -114,6 +114,7 @@ export class SongsService {
       audioKey: dto.audioKey ?? null,
       audioName: dto.audioName?.trim() || null,
       proximaDesde: dto.proximaASacar ? new Date() : null,
+      enganchado: dto.enganchado ?? null,
       chordpro: dto.chordpro,
       lyricsImageKey: dto.lyricsImageKey ?? null,
       tags,
@@ -147,6 +148,7 @@ export class SongsService {
       ...(dto.proximaASacar !== undefined && {
         proximaDesde: dto.proximaASacar ? new Date() : null,
       }),
+      ...(dto.enganchado !== undefined && { enganchado: dto.enganchado }),
       ...(dto.chordpro !== undefined && { chordpro: dto.chordpro }),
       ...(dto.lyricsImageKey !== undefined && { lyricsImageKey: dto.lyricsImageKey }),
       ...(dto.coverKey !== undefined && { coverKey: dto.coverKey }),

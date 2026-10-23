@@ -4,6 +4,84 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-23 — Ver el equipo de una lista sin el módulo "Equipo" (backend + frontend)
+
+**Pedido de Pablo:** que los músicos no vean el módulo "Equipo y Roles" pero sí a los músicos asignados a cada lista.
+
+**Causa:** el módulo y la lista de usuarios (`GET /equipo`, que alimenta `users` en la app) usan el mismo permiso, `equipo:read`. Sin él, `users` queda vacío y el equipo de una lista no se podía mostrar (la app solo guardaba los ids).
+
+**Backend:** `GET/POST/PATCH /setlists` devuelven el líder y el equipo recortados (`setlists/public-team.ts`, `withPublicTeam`): id, nombre, foto (`avatarKey`, color, iniciales) e instrumentos. Ya no salen el email ni los roles, que antes viajaban en cada lista a cualquiera con permiso de ver listas.
+
+**Frontend:** `Setlist.team` guarda esos datos (`mapSetlist`). `teamMemberOf` usa la lista de usuarios si está cargada y, si no, el integrante que viene con la lista. Lo usan las tarjetas (fotos), el detalle (equipo asignado) y "Copiar equipo". Sin usuarios cargados el detalle muestra al integrante sin su rol (la lista no lo trae).
+
+**Paso manual (no es código): sacar el módulo a los músicos.** En "Roles y Permisos", quitarle a Músico los permisos del módulo Equipo (`equipo:read`). Con eso desaparece del menú y se bloquea la URL. Tiene que tener `setlist:read` para ver las listas con su equipo.
+
+**Pendiente / ojo:** otras pantallas que usan la lista de usuarios y que un músico sin `equipo:read` va a ver sin nombres: autor de las anotaciones (Acordes), nota de las "próximas a sacar" en Inicio y el historial de una canción en Estadísticas.
+
+**Deploy:** no hay migración. Primero el backend, después el frontend; con un backend viejo el equipo se sigue viendo por la lista de usuarios, como hasta ahora.
+
+**Verificado:** backend: tsc, lint y 110 tests (3 nuevos). Frontend: tsc, 206 tests (5 nuevos), lint con las reglas del CI y `vite build`. **Sin verificar en pantalla** ni con un usuario músico real.
+
+---
+
+## 2026-10-23 — Detalle de lista: "Copiar canciones" junto a "Copiar equipo" (frontend)
+
+**Pedido de Pablo:** poner el botón de copiar las canciones al lado de "Copiar equipo" y sacarlo del encabezado.
+
+**Cambio (`SetlistDetail.tsx`):** se sacó "Copiar lista" del encabezado (quedan eliminar y PDF). Debajo de las notas del equipo hay dos botones iguales, "Copiar canciones" y "Copiar equipo", uno al lado del otro. El mensaje de las canciones no cambió.
+
+**Verificado:** tsc y lint (con los finales de línea del CI). **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-23 — Generador de listas y canciones "enganchadas" (backend + frontend)
+
+**Pedido de Pablo:** generar listas aleatorias o de un tema, con canciones con secuencia y que hace mucho no se tocan, para rotar el repertorio. La lista es de 3 alabanzas, 2 adoraciones y 1 ofrenda. Algunas canciones son "enganchados" (un audio con 3 o 4 temas): no pueden contar como una alabanza. Se detectan por la duración (alabanza de más de 10 minutos, del primer track o, si no hay, de YouTube) y se pidió que sea un boolean.
+
+**Backend:** `songs.enganchado` (boolean nullable; migración `1761000000000-AddSongEnganchado`), en el DTO como opcional. `true`/`false` = decidido; `null` = sin evaluar.
+
+**Frontend:**
+- `canciones/lib/medley.ts`: `medleyFromDuration` (solo alabanzas; más de 600 s) y `resolveMedley` (usa lo decidido; si no, mide con `sequenceDuration`). Las adoraciones nunca son enganchado.
+- Edición de canción (`UploadModal`): selector "Enganchado" con Automático / Sí / No.
+- `setlists/lib/generator.ts` (con tests): sorteo con pesos. Candidatas: canciones con secuencia (y del tema elegido). Peso = días desde que se tocó por última vez (nunca tocada = 365, el tope); no se sugiere lo tocado hace menos de 14 días si hay otras; el peso baja si ya hay una del mismo artista. Un enganchado ocupa 2 lugares de las 3 alabanzas y entra a lo sumo uno por lista; la ofrenda nunca es un enganchado. Si no alcanzan canciones del tema, completa con otras y lo avisa. `lastPlayedBySong` saca la última vez de las fechas de las listas.
+- `NewSetlistModal`: panel "Sugerir una lista" (tema o al azar, "Generar lista" / "Generar de nuevo"), que carga las canciones y sus secciones. Cada canción tiene un 🎲 para cambiarla por otra del mismo tipo. El enganchado se mide solo al sortear y se guarda en la canción (si quien arma la lista puede editar canciones).
+
+**Supuestos a confirmar:** un enganchado cuenta como 2 alabanzas (`MEDLEY_SLOTS`); la ofrenda sale de las alabanzas; "hace mucho" = más días sin tocarse, con tope de un año; 14 días de descanso. Cuándo se tocó sale de las listas cargadas en la app (no cuentan listas eliminadas ni anteriores a la app). La ofrenda, si cambia a Evento Especial, deja de tener sección.
+
+**Deploy:** primero el backend (migración), después el frontend. Con `forbidNonWhitelisted`, un backend viejo rechazaría `enganchado` al editar una canción.
+
+**Verificado:** backend: tsc, lint y 107 tests. Frontend: tsc, 201 tests (23 nuevos), lint con las reglas del CI y `vite build`. **Sin verificar en pantalla** ni contra la base real.
+
+---
+
+## 2026-10-23 — Nueva lista: tipo por defecto "Culto Domingo a la tarde" (frontend)
+
+**Pedido de Pablo:** que "Nueva lista" venga con "Culto Domingo a la tarde" elegido (antes, "a la mañana").
+
+**Cambio (`NewSetlistModal.tsx`):** el tipo inicial pasa a "Culto Domingo a la tarde". La hora por defecto del campo de fecha sigue en 10:30 (no se tocó).
+
+**Verificado:** tsc. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-23 — Listas: editar y eliminar antes de la fecha, bloqueadas después (frontend)
+
+**Pedido de Pablo:** una lista que todavía no se tocó se tiene que poder editar (cambiar la fecha, sumar o sacar integrantes) y eliminar del todo. Una que ya se tocó no se modifica ni se elimina. Sacar el botón de "pasar al historial": pasa sola cuando llega la fecha.
+
+**Regla (`lib/setlist-status.ts`, `isPlayed`):** una lista "ya se tocó" desde el día DESPUÉS de su fecha (la del domingo sigue editable todo el domingo). Antes pasaban al historial las que estaban marcadas así a mano o con fecha vencida; ahora solo cuenta la fecha: Próximos = fecha de hoy en adelante, Historial = fecha pasada.
+
+**Cambio:**
+- `SetlistCard`: se sacó el botón de mandar al historial (y la prop `onToggleUpcoming`).
+- `SetlistsPage`: pasa al detalle `canEdit` (permiso de editar y no se tocó), `canDelete` (permiso de eliminar y no se tocó) y `locked`. Eliminar llama a `removeSetlist` (nuevo en `useApp` y en `SetlistsService.deleteSetlist`; el backend ya tenía `DELETE /setlists/:id`, que es baja lógica).
+- `SetlistDetail`: con `canEdit` aparece "Fecha y hora" (solo de hoy en adelante; si el título era la fecha, la sigue), una ✕ por integrante para sacarlo y "+ Agregar integrante…" (líderes y músicos activos; si toca un solo instrumento se marca solo). Con `canDelete`, un botón de tacho en el encabezado, con confirmación. Si la lista ya se tocó, un aviso "Esta lista ya se tocó: no se puede modificar ni eliminar". "Copiar" y el PDF siguen funcionando.
+- Helpers nuevos: `date-title.ts` y `assignable.ts` (los usa también `NewSetlistModal`).
+
+**Pendiente / ojo:** el bloqueo es solo del frontend; el backend sigue aceptando editar una lista pasada si alguien llama a la API directo. Las listas anteriores que estaban marcadas a mano como historial pero con fecha futura vuelven a aparecer en Próximos.
+
+**Verificado:** tsc, 188 tests (8 nuevos), lint sin errores (con los finales de línea del CI) y `vite build`. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-15 — Canciones: "Filtros" en la fila del buscador (frontend)
 
 **Pedido de Pablo:** poner el botón de filtros a la derecha, en la misma línea que el buscador.
