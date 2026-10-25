@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-25 — Reproductor completo en desktop: controles cortados (frontend)
+
+**Pedido de Pablo:** en desktop se rompía la barra de controles del reproductor completo (se veía la mitad) y el título de arriba quedaba cortado.
+
+**Causa (`FullPlayer.tsx`):** la tarjeta de la izquierda tiene una altura máxima (`lg:max-h-full`) y es una columna flex. Cuando falta lugar, el navegador achica a los hijos con `overflow-hidden` por debajo de su contenido: el encabezado del tema (ya lo tenía) y la barra de controles, a la que le puse `overflow-hidden` para el brillo de vidrio. Con `min-height: auto` ya no se protegían. Solo en desktop porque en celular la lista tiene su propia altura máxima (`55vh`).
+
+**Cambio:** `shrink-0` en el encabezado y en la barra de controles, así solo se achica la lista.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-23 — Ver el equipo de una lista sin el módulo "Equipo" (backend + frontend)
 
 **Pedido de Pablo:** que los músicos no vean el módulo "Equipo y Roles" pero sí a los músicos asignados a cada lista.
