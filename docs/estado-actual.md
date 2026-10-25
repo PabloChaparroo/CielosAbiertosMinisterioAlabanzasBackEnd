@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-25 — Botones de copiar dentro de la tarjeta del equipo (frontend)
+
+**Pedido de Pablo:** "Copiar equipo" quedaba afuera del contenedor (se dedujo: en pantallas angostas, donde los dos botones lado a lado no entraban).
+
+**Cambio (`SetlistDetail.tsx`):** la fila de botones hace `flex-wrap` y cada botón tiene `min-w-fit`: si "Copiar canciones" y "Copiar equipo" no entran juntos, el segundo baja a otra fila en vez de sobresalir.
+
+**Verificado:** tsc y lint con las reglas del CI. **Sin verificar en pantalla** (no llegó la captura; el diagnóstico es una deducción).
+
+---
+
 ## 2026-10-25 — Duración de la lista sin la ofrenda (frontend)
 
 **Pedido de Pablo:** se tocan las 3 alabanzas y las 2 adoraciones, y la ofrenda al terminar la reunión; por eso la ofrenda no tiene que sumar a la duración total de la lista.
