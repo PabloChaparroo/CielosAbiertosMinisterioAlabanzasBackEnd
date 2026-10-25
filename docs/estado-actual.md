@@ -4,6 +4,16 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-25 — Duración de la lista sin la ofrenda (frontend)
+
+**Pedido de Pablo:** se tocan las 3 alabanzas y las 2 adoraciones, y la ofrenda al terminar la reunión; por eso la ofrenda no tiene que sumar a la duración total de la lista.
+
+**Cambio:** `lib/sections.ts`, `beforeOffering(items, type)`: con secciones guardadas, saca las de la sección "ofrenda"; en Evento Especial cuenta todo; en listas anteriores a las secciones, la última canción es la ofrenda (igual que en "Copiar"); una lista de una sola canción no queda vacía. La usan la tarjeta de la lista (`SetlistCard`) y el orden del servicio de "Nueva lista" (`NewSetlistModal`); el texto de ayuda de la duración lo aclara. El contador "N canciones" sigue contando todas.
+
+**Verificado:** tsc, 210 tests (4 nuevos) y lint con las reglas del CI. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-25 — Reproductor completo en desktop: controles cortados (frontend)
 
 **Pedido de Pablo:** en desktop se rompía la barra de controles del reproductor completo (se veía la mitad) y el título de arriba quedaba cortado.
