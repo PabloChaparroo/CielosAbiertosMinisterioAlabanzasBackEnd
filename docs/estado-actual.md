@@ -4,6 +4,84 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-28 — Reproductor completo en celular: más compacto y "Repetir tramo" visible (frontend)
+
+**Pedido de Pablo:** el panel de "Repetir tramo" se veía mal abajo; el reproductor de abajo se veía muy cuadrado y muy grande; y el botón "Reproducir" ocupaba una fila entera.
+
+**Causa de "Repetir tramo" (`FullPlayer.tsx`):** al efecto de vidrio de la barra de controles le había puesto `overflow-hidden`, que recortaba cualquier panel que se abre hacia arriba. También pasaba en computadora. El brillo ahora va en su propia capa recortada (`-z-10`) y la barra ya no recorta.
+
+**Cambios:**
+- **Barra de controles (celular):** flota con esquinas redondeadas (`mx-2 mb-2 rounded-2xl`) y baja de ~220 a 90 px: play de 48 px, anterior/siguiente más chicos, y *Repetir* y *Repetir tramo* pasan a la fila de arriba como íconos (a la izquierda, simétricos con *aleatorio*), en vez de ocupar una fila propia. Desde `md` queda como antes (pegada abajo, con volumen y la fila de "Repetir" con texto).
+- **Panel del tramo (`RepeatControls.tsx`):** props nuevas `align` ("start" lo pega al borde izquierdo, para los íconos de la izquierda) y `hideRange` (no muestra "0:36–1:10" al lado del botón: no entraba). El panel se limita al ancho de la pantalla.
+- **Título (celular):** el botón grande "Reproducir/Pausar" pasa a ser un ícono redondo de play/pausa y el corazón, en la misma fila que el título (que se acorta con "…"). Desde `md` sigue el botón con texto.
+
+**Verificado:** capturas en Chrome con emulación de celular a 375 y 320 px (barra 90 px; panel completo y dentro de la pantalla) y a 1280 px; tsc, 210 tests, lint con las reglas del CI y `vite build`. **No probado en un teléfono real.**
+
+---
+
+## 2026-10-28 — Revisión en iPhone chico: sin desbordes y sin zoom automático (frontend)
+
+**Pedido de Pablo:** un integrante con un iPhone de pantalla más chica veía la app "con zoom" al entrar y tenía que hacer pinch para verla bien. Revisar que se vea bien en todos los tamaños de celular.
+
+**Cómo se revisó:** Chrome (Puppeteer, fuera del proyecto) con emulación de celular a 320, 375, 390 y 430 px y la API simulada. Se midió, en las 11 pantallas y en 14 recorridos (abrir una lista, "Nueva lista" con el generador, abrir/editar un integrante, filtros, "Subir canción", reproductor completo, letras y acordes en vivo, menú lateral), si algún elemento pasa del ancho de la pantalla. Cuando pasa, el navegador agranda el viewport y achica la página (innerWidth 320 → 600): es lo que se ve como "zoom" en iPhone. El primer detector comparaba contra ese ancho ya agrandado y no veía nada; se corrigió para comparar con el ancho real del teléfono, y se comprobó que sí detecta un elemento forzado de 600 px.
+
+**Encontrado y corregido:**
+- **Desbordes a 320 px** (iPhone SE de primera generación y similares): Equipo (tarjetas de integrantes), Estadísticas (títulos de canciones sin `minmax(0,1fr)`) e Instalar (las tres pestañas, que ahora ocultan el ícono por debajo de 400 px).
+- **Anotaciones (Acordes):** el campo y "Publicar" no entraban a 320 px (`min-w-0` / `shrink-0`).
+- **Zoom automático de Safari:** 12 campos de 12–14 px (buscadores, selects, fechas, textareas). Safari de iPhone hace zoom al tocar un campo con letra menor a 16 px y no vuelve solo. `styles.css`: en pantallas táctiles o de menos de 768 px, todos los campos de texto van a 16 px.
+
+**Resultado:** sin desborde en las 11 pantallas y los 14 recorridos a 320, 375, 390 y 430 px (resp. 320–390 en los recorridos), y 0 campos con letra menor a 16 px.
+
+**No verificado:** en un iPhone real ni en Safari (se probó con el motor de Chrome); la API era simulada, con títulos largos a propósito pero no los datos reales. Si en un teléfono real sigue pasando, hace falta una captura de la pantalla y el modelo.
+
+**Verificado:** tsc, 210 tests, lint con las reglas del CI y `vite build`.
+
+---
+
+## 2026-10-28 — Equipo: página de un integrante en celular (frontend)
+
+**Pedido de Pablo:** al entrar a un integrante en Equipo y Roles, en el celular se veía cortado (foto y nombre fuera de pantalla) y el modal "Editar integrante" aparecía corrido.
+
+**Causa (`EquipoPage.tsx`):** la grilla del detalle no tenía columnas definidas en celular, así que la columna tomaba el ancho del texto más largo ("Participación reciente", con los títulos de las canciones). La página quedaba más ancha que la pantalla y los modales, centrados en ese ancho, se veían corridos. Es el mismo problema que ya hubo en Listas.
+
+**Cambio:** grilla con `minmax(0,1fr)` (en compu, `320px` + `minmax(0,1fr)`), `min-w-0` en las dos tarjetas, y el email, el título de la lista y la fecha ya no estiran la fila (el email se corta con "…").
+
+**Verificado:** tsc y lint con las reglas del CI. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-25 — Botones de copiar dentro de la tarjeta del equipo (frontend)
+
+**Pedido de Pablo:** "Copiar equipo" quedaba afuera del contenedor (se dedujo: en pantallas angostas, donde los dos botones lado a lado no entraban).
+
+**Cambio (`SetlistDetail.tsx`):** la fila de botones hace `flex-wrap` y cada botón tiene `min-w-fit`: si "Copiar canciones" y "Copiar equipo" no entran juntos, el segundo baja a otra fila en vez de sobresalir.
+
+**Verificado:** tsc y lint con las reglas del CI. **Sin verificar en pantalla** (no llegó la captura; el diagnóstico es una deducción).
+
+---
+
+## 2026-10-25 — Duración de la lista sin la ofrenda (frontend)
+
+**Pedido de Pablo:** se tocan las 3 alabanzas y las 2 adoraciones, y la ofrenda al terminar la reunión; por eso la ofrenda no tiene que sumar a la duración total de la lista.
+
+**Cambio:** `lib/sections.ts`, `beforeOffering(items, type)`: con secciones guardadas, saca las de la sección "ofrenda"; en Evento Especial cuenta todo; en listas anteriores a las secciones, la última canción es la ofrenda (igual que en "Copiar"); una lista de una sola canción no queda vacía. La usan la tarjeta de la lista (`SetlistCard`) y el orden del servicio de "Nueva lista" (`NewSetlistModal`); el texto de ayuda de la duración lo aclara. El contador "N canciones" sigue contando todas.
+
+**Verificado:** tsc, 210 tests (4 nuevos) y lint con las reglas del CI. **Sin verificar en pantalla.**
+
+---
+
+## 2026-10-25 — Reproductor completo en desktop: controles cortados (frontend)
+
+**Pedido de Pablo:** en desktop se rompía la barra de controles del reproductor completo (se veía la mitad) y el título de arriba quedaba cortado.
+
+**Causa (`FullPlayer.tsx`):** la tarjeta de la izquierda tiene una altura máxima (`lg:max-h-full`) y es una columna flex. Cuando falta lugar, el navegador achica a los hijos con `overflow-hidden` por debajo de su contenido: el encabezado del tema (ya lo tenía) y la barra de controles, a la que le puse `overflow-hidden` para el brillo de vidrio. Con `min-height: auto` ya no se protegían. Solo en desktop porque en celular la lista tiene su propia altura máxima (`55vh`).
+
+**Cambio:** `shrink-0` en el encabezado y en la barra de controles, así solo se achica la lista.
+
+**Verificado:** tsc y lint. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-23 — Ver el equipo de una lista sin el módulo "Equipo" (backend + frontend)
 
 **Pedido de Pablo:** que los músicos no vean el módulo "Equipo y Roles" pero sí a los músicos asignados a cada lista.
