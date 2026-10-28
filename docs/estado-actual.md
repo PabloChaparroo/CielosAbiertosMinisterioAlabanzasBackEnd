@@ -4,6 +4,21 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-28 — Reproductor completo en celular: más compacto y "Repetir tramo" visible (frontend)
+
+**Pedido de Pablo:** el panel de "Repetir tramo" se veía mal abajo; el reproductor de abajo se veía muy cuadrado y muy grande; y el botón "Reproducir" ocupaba una fila entera.
+
+**Causa de "Repetir tramo" (`FullPlayer.tsx`):** al efecto de vidrio de la barra de controles le había puesto `overflow-hidden`, que recortaba cualquier panel que se abre hacia arriba. También pasaba en computadora. El brillo ahora va en su propia capa recortada (`-z-10`) y la barra ya no recorta.
+
+**Cambios:**
+- **Barra de controles (celular):** flota con esquinas redondeadas (`mx-2 mb-2 rounded-2xl`) y baja de ~220 a 90 px: play de 48 px, anterior/siguiente más chicos, y *Repetir* y *Repetir tramo* pasan a la fila de arriba como íconos (a la izquierda, simétricos con *aleatorio*), en vez de ocupar una fila propia. Desde `md` queda como antes (pegada abajo, con volumen y la fila de "Repetir" con texto).
+- **Panel del tramo (`RepeatControls.tsx`):** props nuevas `align` ("start" lo pega al borde izquierdo, para los íconos de la izquierda) y `hideRange` (no muestra "0:36–1:10" al lado del botón: no entraba). El panel se limita al ancho de la pantalla.
+- **Título (celular):** el botón grande "Reproducir/Pausar" pasa a ser un ícono redondo de play/pausa y el corazón, en la misma fila que el título (que se acorta con "…"). Desde `md` sigue el botón con texto.
+
+**Verificado:** capturas en Chrome con emulación de celular a 375 y 320 px (barra 90 px; panel completo y dentro de la pantalla) y a 1280 px; tsc, 210 tests, lint con las reglas del CI y `vite build`. **No probado en un teléfono real.**
+
+---
+
 ## 2026-10-28 — Revisión en iPhone chico: sin desbordes y sin zoom automático (frontend)
 
 **Pedido de Pablo:** un integrante con un iPhone de pantalla más chica veía la app "con zoom" al entrar y tenía que hacer pinch para verla bien. Revisar que se vea bien en todos los tamaños de celular.
