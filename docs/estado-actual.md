@@ -4,6 +4,25 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-28 — Revisión en iPhone chico: sin desbordes y sin zoom automático (frontend)
+
+**Pedido de Pablo:** un integrante con un iPhone de pantalla más chica veía la app "con zoom" al entrar y tenía que hacer pinch para verla bien. Revisar que se vea bien en todos los tamaños de celular.
+
+**Cómo se revisó:** Chrome (Puppeteer, fuera del proyecto) con emulación de celular a 320, 375, 390 y 430 px y la API simulada. Se midió, en las 11 pantallas y en 14 recorridos (abrir una lista, "Nueva lista" con el generador, abrir/editar un integrante, filtros, "Subir canción", reproductor completo, letras y acordes en vivo, menú lateral), si algún elemento pasa del ancho de la pantalla. Cuando pasa, el navegador agranda el viewport y achica la página (innerWidth 320 → 600): es lo que se ve como "zoom" en iPhone. El primer detector comparaba contra ese ancho ya agrandado y no veía nada; se corrigió para comparar con el ancho real del teléfono, y se comprobó que sí detecta un elemento forzado de 600 px.
+
+**Encontrado y corregido:**
+- **Desbordes a 320 px** (iPhone SE de primera generación y similares): Equipo (tarjetas de integrantes), Estadísticas (títulos de canciones sin `minmax(0,1fr)`) e Instalar (las tres pestañas, que ahora ocultan el ícono por debajo de 400 px).
+- **Anotaciones (Acordes):** el campo y "Publicar" no entraban a 320 px (`min-w-0` / `shrink-0`).
+- **Zoom automático de Safari:** 12 campos de 12–14 px (buscadores, selects, fechas, textareas). Safari de iPhone hace zoom al tocar un campo con letra menor a 16 px y no vuelve solo. `styles.css`: en pantallas táctiles o de menos de 768 px, todos los campos de texto van a 16 px.
+
+**Resultado:** sin desborde en las 11 pantallas y los 14 recorridos a 320, 375, 390 y 430 px (resp. 320–390 en los recorridos), y 0 campos con letra menor a 16 px.
+
+**No verificado:** en un iPhone real ni en Safari (se probó con el motor de Chrome); la API era simulada, con títulos largos a propósito pero no los datos reales. Si en un teléfono real sigue pasando, hace falta una captura de la pantalla y el modelo.
+
+**Verificado:** tsc, 210 tests, lint con las reglas del CI y `vite build`.
+
+---
+
 ## 2026-10-28 — Equipo: página de un integrante en celular (frontend)
 
 **Pedido de Pablo:** al entrar a un integrante en Equipo y Roles, en el celular se veía cortado (foto y nombre fuera de pantalla) y el modal "Editar integrante" aparecía corrido.
