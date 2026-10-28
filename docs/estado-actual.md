@@ -4,6 +4,18 @@ Orden cronológico inverso. Cada entrada documenta motivo de negocio, alcance ac
 
 ---
 
+## 2026-10-28 — Equipo: página de un integrante en celular (frontend)
+
+**Pedido de Pablo:** al entrar a un integrante en Equipo y Roles, en el celular se veía cortado (foto y nombre fuera de pantalla) y el modal "Editar integrante" aparecía corrido.
+
+**Causa (`EquipoPage.tsx`):** la grilla del detalle no tenía columnas definidas en celular, así que la columna tomaba el ancho del texto más largo ("Participación reciente", con los títulos de las canciones). La página quedaba más ancha que la pantalla y los modales, centrados en ese ancho, se veían corridos. Es el mismo problema que ya hubo en Listas.
+
+**Cambio:** grilla con `minmax(0,1fr)` (en compu, `320px` + `minmax(0,1fr)`), `min-w-0` en las dos tarjetas, y el email, el título de la lista y la fecha ya no estiran la fila (el email se corta con "…").
+
+**Verificado:** tsc y lint con las reglas del CI. **Sin verificar en pantalla.**
+
+---
+
 ## 2026-10-25 — Botones de copiar dentro de la tarjeta del equipo (frontend)
 
 **Pedido de Pablo:** "Copiar equipo" quedaba afuera del contenedor (se dedujo: en pantallas angostas, donde los dos botones lado a lado no entraban).
