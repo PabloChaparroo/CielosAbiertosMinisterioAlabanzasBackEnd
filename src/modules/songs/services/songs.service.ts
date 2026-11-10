@@ -42,6 +42,9 @@ export class SongsService {
       // "tiene secuencia": cantidad de pistas, sin traer las pistas
       .loadRelationCountAndMap("song.trackCount", "song.tracks")
       .orderBy("song.fechaHoraAlta", "DESC")
+      // desempate: con la misma fecha de alta (ej. importadas juntas) el orden cambiaba entre
+      // pedidos y, al traer de a 100, una canción podía repetirse o quedar afuera
+      .addOrderBy("song.id", "ASC")
       .addOrderBy("links.order", "ASC");
 
     if (query.search) {
